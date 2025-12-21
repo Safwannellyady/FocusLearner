@@ -139,7 +139,7 @@ const DashboardNew = () => {
     }
   };
   return (
-    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -149,150 +149,168 @@ const DashboardNew = () => {
           display="flex"
           justifyContent="space-between"
           alignItems="center"
-          mb={4}
+          mb={5}
           sx={{
-            background: 'linear-gradient(to right, rgba(255,255,255,0.9), rgba(255,255,255,0.5))',
-            borderRadius: 2,
-            p: 2
+            background: 'rgba(255, 255, 255, 0.03)',
+            backdropFilter: 'blur(16px)',
+            borderRadius: 4,
+            p: 3,
+            border: '1px solid rgba(255, 255, 255, 0.08)',
           }}
         >
           <Box>
-            <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" alignItems="center" gap={2}>
               <Box
                 sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(45deg, #2563eb, #7c3aed)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: '16px',
+                  background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem',
-                  boxShadow: '0 4px 10px rgba(37, 99, 235, 0.3)'
+                  fontWeight: '800',
+                  fontSize: '1.5rem',
+                  boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)'
                 }}
               >
                 FL
               </Box>
-              <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', background: 'linear-gradient(45deg, #2563eb, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <Typography variant="h4" component="div" sx={{ fontWeight: 800, background: 'linear-gradient(to right, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.03em' }}>
                 FocusLearner Pro
               </Typography>
             </Box>
-            <Typography variant="body1" color="text.secondary">
-              Welcome back, <strong>{user?.full_name || user?.username}</strong>! Ready to learn something new today?
+            <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1, ml: 1 }}>
+              Welcome back, <strong>{user?.full_name || user?.username}</strong>!
             </Typography>
           </Box>
           <Box>
-            <IconButton onClick={() => navigate('/preferences')} color="primary">
+            <IconButton onClick={() => navigate('/preferences')} sx={{ color: 'text.primary', '&:hover': { background: 'rgba(255,255,255,0.1)' } }}>
               <SettingsIcon />
             </IconButton>
-            <IconButton onClick={handleLogout} color="error">
+            <IconButton onClick={handleLogout} sx={{ color: '#ef4444', '&:hover': { background: 'rgba(239, 68, 68, 0.1)' } }}>
               <LogoutIcon />
             </IconButton>
           </Box>
         </Box>
 
-        <Paper
-          component={motion.div}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          sx={{
-            mb: 3,
-            borderRadius: 3,
-            overflow: 'hidden',
-            background: 'rgba(255, 255, 255, 0.7)',
-            backdropFilter: 'blur(10px)'
-          }}
-          elevation={0}
-        >
-          <Box display="flex" justifyContent="space-between" alignItems="center" p={3} borderBottom={1} borderColor="divider">
-            <Typography variant="h5" sx={{ fontWeight: 600 }}>My Lectures</Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: 'white' }}>My Focus Sessions</Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setCreateDialogOpen(true)}
+            sx={{ borderRadius: 3, textTransform: 'none', px: 3 }}
+          >
+            New Lecture
+          </Button>
+        </Box>
+
+        {lectures.length > 0 ? (
+          <Grid container spacing={3}>
+            {lectures.map((lecture, index) => (
+              <Grid item xs={12} sm={6} md={4} key={lecture.id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card sx={{
+                    height: '100%',
+                    background: 'rgba(20, 20, 35, 0.6)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: 4,
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                    }
+                  }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                        <Chip
+                          label={lecture.subject.split('/')[0]}
+                          size="small"
+                          sx={{
+                            background: 'rgba(139, 92, 246, 0.15)',
+                            color: '#a78bfa',
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            fontWeight: 600
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 700, minHeight: '64px' }}>
+                        {lecture.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {lecture.topic}
+                      </Typography>
+
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={() => navigate(`/lecture/${lecture.id}`)}
+                        sx={{
+                          borderColor: 'rgba(255,255,255,0.1)',
+                          color: 'white',
+                          borderRadius: 2,
+                          '&:hover': {
+                            borderColor: '#8b5cf6',
+                            background: 'rgba(139, 92, 246, 0.1)'
+                          }
+                        }}
+                      >
+                        Start Learning
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Paper
+            sx={{
+              p: 8,
+              textAlign: 'center',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px dashed rgba(255,255,255,0.1)',
+              borderRadius: 4
+            }}
+          >
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Your learning journey starts here.
+            </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setCreateDialogOpen(true)}
-              sx={{ borderRadius: 2 }}
+              sx={{ mt: 2 }}
             >
-              New Lecture
+              Create First Lecture
             </Button>
-          </Box>
-
-          <Box p={2}>
-            {lectures.length > 0 ? (
-              <List>
-                {lectures.map((lecture, index) => (
-                  <motion.div
-                    key={lecture.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 + 0.3 }}
-                  >
-                    <ListItem
-                      divider={index !== lectures.length - 1}
-                      sx={{
-                        borderRadius: 2,
-                        mb: 1,
-                        '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.05)' }
-                      }}
-                    >
-                      <ListItemText
-                        primary={
-                          <Typography variant="subtitle1" fontWeight="600">
-                            {lecture.title}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="body2" color="text.secondary">
-                            {lecture.subject} • {lecture.topic}
-                          </Typography>
-                        }
-                      />
-                      <Chip
-                        label={lecture.subject.split('/')[0]}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                        sx={{ mr: 2 }}
-                      />
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => navigate(`/lecture/${lecture.id}`)}
-                      >
-                        Start Learning
-                      </Button>
-                    </ListItem>
-                  </motion.div>
-                ))}
-              </List>
-            ) : (
-              <Box p={6} textAlign="center">
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  Your learning journey starts here.
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={2}>
-                  Create your first lecture to unlock personalized videos, quizzes, and games.
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setCreateDialogOpen(true)}
-                >
-                  Create Now
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </Paper>
+          </Paper>
+        )}
       </motion.div>
 
-      {/* Legacy Tab Content Removed */}
-
       {/* Create Lecture Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Lecture</DialogTitle>
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: '#0a0a1a',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 3
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>Create New Lecture</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
@@ -300,13 +318,15 @@ const DashboardNew = () => {
             value={newLecture.title}
             onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })}
             margin="normal"
+            variant="filled"
+            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2 } }}
           />
-          <FormControl fullWidth margin="normal">
+          <FormControl fullWidth margin="normal" variant="filled">
             <InputLabel>Subject</InputLabel>
             <Select
               value={newLecture.subject}
-              label="Subject"
               onChange={(e) => setNewLecture({ ...newLecture, subject: e.target.value })}
+              sx={{ background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}
             >
               {subjectOptions.map((subject) => (
                 <MenuItem key={subject} value={subject}>
@@ -321,6 +341,8 @@ const DashboardNew = () => {
             value={newLecture.topic}
             onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })}
             margin="normal"
+            variant="filled"
+            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2 } }}
           />
           <TextField
             fullWidth
@@ -330,12 +352,14 @@ const DashboardNew = () => {
             margin="normal"
             multiline
             rows={3}
+            variant="filled"
+            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2 } }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setCreateDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
           <Button onClick={handleCreateLecture} variant="contained" disabled={!newLecture.title || !newLecture.subject || !newLecture.topic}>
-            Create
+            Create Session
           </Button>
         </DialogActions>
       </Dialog>
