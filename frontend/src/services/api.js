@@ -76,6 +76,10 @@ export const contentAPI = {
     api.get(`/content/transcript/${videoId}`),
 };
 
+export const analyticsAPI = {
+  getSummary: () => api.get('/focus/analytics/summary'),
+};
+
 // Game API
 export const gameAPI = {
   getModules: () => api.get('/game/modules'),
@@ -138,6 +142,13 @@ export const lectureAPI = {
   delete: (id) => api.delete(`/lectures/${id}`),
   generateQuiz: (subject, topic, count) =>
     api.post('/lectures/quiz/generate', { subject, topic, count }),
+};
+
+// Chat API
+export const chatAPI = {
+  send: (message, context) => api.post('/chat/send', { message, context }),
+  getHistory: () => api.get('/chat/history'),
+  clearHistory: () => api.post('/chat/clear'),
 };
 
 export default api;

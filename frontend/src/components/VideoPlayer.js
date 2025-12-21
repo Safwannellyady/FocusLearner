@@ -15,7 +15,8 @@ import {
   Grid,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { focusAPI, contentAPI } from '../services/api';
+import { focusAPI, contentAPI, gameAPI } from '../services/api';
+import AIChatWidget from './AIChatWidget';
 
 const VideoPlayer = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const VideoPlayer = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [xpEarned, setXpEarned] = useState(null);
 
   useEffect(() => {
     // Check if video was passed via navigation state
@@ -101,6 +103,28 @@ const VideoPlayer = () => {
       const currentTime = player.getCurrentTime();
       focusAPI.updateVideo(selectedVideo?.video_id, Math.floor(currentTime));
     }
+    // Track completion (State 0 is ENDED)
+    if (event.data === 0 && selectedVideo) {
+      handleVideoCompletion();
+    }
+  };
+
+  const handleVideoCompletion = async () => {
+    try {
+      // Module ID 'video_completion', 1 point per video (backend multiplies by 50)
+      const response = await gameAPI.submitResult(
+        'video_completion',
+        1,
+        1,
+        selectedVideo.subject_focus || 'General'
+      );
+      if (response.data.progress) {
+        setXpEarned(50); // Hardcoded for visual feedback, or calc from response
+        // Could show a snackbar here
+      }
+    } catch (error) {
+      console.error("Error submitting game result:", error);
+    }
   };
 
   const opts = {
@@ -163,6 +187,11 @@ const VideoPlayer = () => {
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     {selectedVideo.description}
                   </Typography>
+                  {xpEarned && (
+                    <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>
+                      🎉 Video Completed! +{xpEarned} XP Earned!
+                    </Alert>
+                  )}
                 </Box>
               </Box>
             ) : (
@@ -283,7 +312,10 @@ const VideoPlayer = () => {
           </Box>
         </Grid>
       </Grid>
-    </Container>
+
+      {/* AI Tutor Chat Widget */}
+      <AIChatWidget context={`Subject: ${currentSession?.subject_focus || selectedVideo?.subject_focus}, Video: ${selectedVideo?.title}`} />
+    </Container >
   );
 };
 

@@ -32,6 +32,7 @@ from routes.game_routes import game_routes
 from routes.auth_routes import auth_routes
 from routes.preferences_routes import preferences_routes
 from routes.lecture_routes import lecture_routes
+from routes.chat_routes import chat_routes
 
 app.register_blueprint(focus_routes)
 app.register_blueprint(content_routes)
@@ -39,6 +40,7 @@ app.register_blueprint(game_routes)
 app.register_blueprint(auth_routes)
 app.register_blueprint(preferences_routes)
 app.register_blueprint(lecture_routes)
+app.register_blueprint(chat_routes)
 
 @app.route('/api/health', methods=['GET'])
 def health_check():

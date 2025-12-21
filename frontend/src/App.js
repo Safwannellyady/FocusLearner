@@ -14,6 +14,7 @@ import VideoPlayer from './components/VideoPlayer';
 import GameLab from './components/GameLab';
 import KCLChallenge from './components/games/KCLChallenge';
 import AIChallenge from './components/games/AIChallenge';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import LandingPage from './components/LandingPage';
 
 const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
@@ -161,6 +162,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AIChallenge />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <AnalyticsDashboard />
                 </ProtectedRoute>
               }
             />

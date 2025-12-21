@@ -27,8 +27,9 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
+import InsightsIcon from '@mui/icons-material/Insights';
 import { motion } from 'framer-motion';
-import { lectureAPI, authAPI, contentAPI } from '../services/api';
+import { lectureAPI, authAPI, contentAPI, gameAPI } from '../services/api';
 import VideoPlayer from './VideoPlayer';
 
 const subjectOptions = [
@@ -98,10 +99,11 @@ const DashboardNew = () => {
     topic: '',
     description: '',
   });
+  const [gameProgress, setGameProgress] = useState(null);
 
   useEffect(() => {
     loadUser();
-    loadLectures();
+    loadDashboardData();
   }, []);
 
   const loadUser = () => {
@@ -113,12 +115,20 @@ const DashboardNew = () => {
     }
   };
 
-  const loadLectures = async () => {
+  const loadDashboardData = async () => {
     try {
-      const response = await lectureAPI.getAll();
-      setLectures(response.data.lectures || []);
+      const [lecturesRes, progressRes] = await Promise.all([
+        lectureAPI.getAll(),
+        gameAPI.getProgress()
+      ]);
+      setLectures(lecturesRes.data.lectures || []);
+
+      if (progressRes.data.progress && progressRes.data.progress.length > 0) {
+        // Use the first module's progress for the main dashboard widget for now
+        setGameProgress(progressRes.data.progress[0]);
+      }
     } catch (err) {
-      console.error('Error loading lectures:', err);
+      console.error('Error loading dashboard data:', err);
     }
   };
 
@@ -133,7 +143,7 @@ const DashboardNew = () => {
       await lectureAPI.create(newLecture);
       setCreateDialogOpen(false);
       setNewLecture({ title: '', subject: '', topic: '', description: '' });
-      loadLectures();
+      loadDashboardData();
     } catch (err) {
       console.error('Error creating lecture:', err);
     }
@@ -185,7 +195,35 @@ const DashboardNew = () => {
               Welcome back, <strong>{user?.full_name || user?.username}</strong>!
             </Typography>
           </Box>
+
+          {/* Gamification Stats Widget */}
+          {gameProgress && (
+            <Box sx={{
+              ml: 4,
+              pl: 4,
+              borderLeft: '1px solid rgba(255,255,255,0.1)',
+              display: { xs: 'none', md: 'block' }
+            }}>
+              <Box display="flex" alignItems="center" gap={3}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ letterSpacing: 1 }}>LEVEL</Typography>
+                  <Typography variant="h4" sx={{ color: '#a78bfa', fontWeight: 700, lineHeight: 1 }}>{gameProgress.level}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ letterSpacing: 1 }}>TOTAL XP</Typography>
+                  <Typography variant="h5" sx={{ color: 'white', fontWeight: 600, lineHeight: 1 }}>{gameProgress.mastery_points}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ letterSpacing: 1 }}>STREAK</Typography>
+                  <Typography variant="h5" sx={{ color: '#f59e0b', fontWeight: 600, lineHeight: 1 }}>{user?.streak_days || 0} 🔥</Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
           <Box>
+            <IconButton onClick={() => navigate('/analytics')} sx={{ color: '#06b6d4', '&:hover': { background: 'rgba(6, 182, 212, 0.1)' } }}>
+              <InsightsIcon />
+            </IconButton>
             <IconButton onClick={() => navigate('/preferences')} sx={{ color: 'text.primary', '&:hover': { background: 'rgba(255,255,255,0.1)' } }}>
               <SettingsIcon />
             </IconButton>

@@ -134,10 +134,41 @@ class AIService:
         Video should be a tutorial or lecture.
         """
         
-        text_response = self._call_gemini(prompt)
         if text_response:
             return text_response.strip()
         return f"{subject} {user_query} lecture"
+
+    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, str]] = []) -> str:
+        """
+        Chat with the AI Tutor.
+        Args:
+            message: User's message.
+            context: Context about the current video/subject.
+            history: List of previous messages [{'role': 'user'/'model', 'parts': ['text']}]
+        """
+        if not self.api_key:
+            return "I'm your AI Tutor. Since I'm running in mock mode, I can't really see the video, but I'm here to help! (Please configure GOOGLE_API_KEY)"
+
+        # Construct prompt with context
+        system_instruction = "You are a helpful, encouraging AI Tutor called 'FocusBot'. available in FocusLearner Pro app. You help students understand the educational video they are watching. keep answers concise and encouraging."
+        
+        if context:
+            system_instruction += f"\nContext: {context}"
+            
+        # Format history for Gemini API (if using the chat endpoint, but here we use generateContent with history)
+        # Actually, for simple REST stateless usage, we'll just append context to the latest prompt or use a simple history builder.
+        # For this implementation, we will use a simple prompt construction mechanism.
+        
+        full_prompt = f"System: {system_instruction}\n"
+        
+        for msg in history[-5:]: # Keep last 5 turns for context window
+            role = "User" if msg.get("role") == "user" else "Tutor"
+            content = msg.get("parts", [""])[0] 
+            full_prompt += f"{role}: {content}\n"
+            
+        full_prompt += f"User: {message}\nTutor:"
+        
+        return self._call_gemini(full_prompt)
 
     def _get_mock_quiz(self, subject, topic, count):
         """Fallback to high-quality static quizzes if AI fails"""

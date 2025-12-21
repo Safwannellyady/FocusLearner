@@ -159,9 +159,32 @@ def get_focused_content():
         max_results=10
     )
     
+    
     return jsonify({
         'subject_focus': session.subject_focus,
         'videos': videos,
         'count': len(videos)
     }), 200
+
+# Initialize Analytics Service
+from services.analytics_service import AnalyticsService
+analytics_service = AnalyticsService()
+
+@focus_routes.route('/analytics/summary', methods=['GET'])
+@token_required
+def get_analytics_summary():
+    """Get aggregated analytics for dashboard"""
+    user_id = request.current_user_id
+    
+    try:
+        trends = analytics_service.get_weekly_focus_trends(user_id)
+        distribution = analytics_service.get_subject_distribution(user_id)
+        
+        return jsonify({
+            'trends': trends,
+            'distribution': distribution
+        }), 200
+    except Exception as e:
+        print(f"Analytics Error: {e}")
+        return jsonify({'error': 'Failed to fetch analytics'}), 500
 

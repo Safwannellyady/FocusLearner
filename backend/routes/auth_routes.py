@@ -96,6 +96,23 @@ def login():
     
     if not user.is_active:
         return jsonify({'error': 'Account is deactivated'}), 403
+        
+    # Update Streak
+    from datetime import datetime
+    now = datetime.utcnow()
+    
+    if user.last_login_at:
+        # Check difference in days
+        delta = now.date() - user.last_login_at.date()
+        if delta.days == 1:
+            user.streak_days = (user.streak_days or 0) + 1
+        elif delta.days > 1:
+            user.streak_days = 1
+    else:
+        user.streak_days = 1
+        
+    user.last_login_at = now
+    db.session.commit()
     
     # Generate token
     token = generate_token(user.id)
@@ -242,6 +259,22 @@ def google_login():
             )
             db.session.add(preferences)
             db.session.commit()
+        
+        # Update Streak
+        from datetime import datetime
+        now = datetime.utcnow()
+        
+        if user.last_login_at:
+            delta = now.date() - user.last_login_at.date()
+            if delta.days == 1:
+                user.streak_days = (user.streak_days or 0) + 1
+            elif delta.days > 1:
+                user.streak_days = 1
+        else:
+             user.streak_days = 1
+             
+        user.last_login_at = now
+        db.session.commit()
         
         # Generate JWT token
         jwt_token = generate_token(user.id)

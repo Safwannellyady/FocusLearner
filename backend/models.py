@@ -33,6 +33,8 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
+    last_login_at = db.Column(db.DateTime, nullable=True)
+    streak_days = db.Column(db.Integer, default=0)
     
     # Relationships
     focus_sessions = db.relationship('FocusSession', backref='user', lazy=True)
@@ -55,7 +57,9 @@ class User(db.Model):
             'email': self.email,
             'full_name': self.full_name,
             'created_at': self.created_at.isoformat(),
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'streak_days': self.streak_days,
+            'last_login_at': self.last_login_at.isoformat() if self.last_login_at else None
         }
 
 
