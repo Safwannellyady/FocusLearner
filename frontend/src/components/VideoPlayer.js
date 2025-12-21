@@ -121,58 +121,87 @@ const VideoPlayer = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-      <Box display="flex" alignItems="center" mb={2}>
+    <Container maxWidth="xl" sx={{ mt: 3, mb: 4 }}>
+      <Box display="flex" alignItems="center" mb={3}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/')}
-          sx={{ mr: 2 }}
+          sx={{ mr: 2, color: 'text.secondary', '&:hover': { color: 'white', background: 'rgba(255,255,255,0.1)' } }}
         >
           Back
         </Button>
         {currentSession && (
-          <Typography variant="h6" color="primary">
-            Focus: {currentSession.subject_focus}
+          <Typography variant="h6" sx={{ color: '#a78bfa', fontWeight: 600 }}>
+            <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400, mr: 1 }}>Focusing on:</Box>
+            {currentSession.subject_focus}
           </Typography>
         )}
       </Box>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 2, mb: 2 }}>
+          <Box sx={{
+            p: 0,
+            mb: 3,
+            borderRadius: 4,
+            overflow: 'hidden',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            background: '#000'
+          }}>
             {selectedVideo ? (
               <Box>
                 <YouTube
                   videoId={extractVideoId(selectedVideo.url)}
                   opts={opts}
                   onStateChange={handleVideoStateChange}
+                  style={{ width: '100%' }}
                 />
-                <Typography variant="h6" sx={{ mt: 2 }}>
-                  {selectedVideo.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {selectedVideo.description}
-                </Typography>
+                <Box sx={{ p: 3, background: 'rgba(20, 20, 35, 0.9)' }}>
+                  <Typography variant="h5" sx={{ color: 'white', fontWeight: 700, mb: 1 }}>
+                    {selectedVideo.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {selectedVideo.description}
+                  </Typography>
+                </Box>
               </Box>
             ) : (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Box sx={{ textAlign: 'center', py: 10, background: 'rgba(255,255,255,0.03)' }}>
                 <Typography variant="h6" color="text.secondary">
                   Select a video to start learning
                 </Typography>
               </Box>
             )}
-          </Paper>
+          </Box>
 
           {/* Custom Overlay - Next Step */}
           {selectedVideo && (
-            <Paper sx={{ p: 2, bgcolor: 'primary.light', color: 'white' }}>
-              <Typography variant="h6" gutterBottom>
-                Next Step
-              </Typography>
+            <Box sx={{
+              p: 3,
+              borderRadius: 3,
+              background: 'linear-gradient(to right, rgba(107, 33, 168, 0.2), rgba(59, 130, 246, 0.2))',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <Box>
+                <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+                  Ready for the next step?
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#a78bfa' }}>
+                  Continue your momentum with the next recommended video.
+                </Typography>
+              </Box>
               {videos.length > 1 && (
                 <Button
                   variant="contained"
-                  color="secondary"
+                  sx={{
+                    background: 'white',
+                    color: '#6b21a8',
+                    fontWeight: 600,
+                    '&:hover': { background: '#f8fafc' }
+                  }}
                   onClick={() => {
                     const currentIndex = videos.findIndex(
                       (v) => v.video_id === selectedVideo.video_id
@@ -181,42 +210,51 @@ const VideoPlayer = () => {
                     handleVideoSelect(nextVideo);
                   }}
                 >
-                  Continue to Next Video
+                  Next Video
                 </Button>
               )}
-            </Paper>
+            </Box>
           )}
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Filtered Content Library
+          <Box sx={{
+            height: 'fit-content',
+            maxHeight: '80vh',
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'rgba(20, 20, 35, 0.6)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 4,
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            p: 2
+          }}>
+            <Typography variant="h6" gutterBottom sx={{ color: 'white', px: 1, pt: 1, fontWeight: 600 }}>
+              Up Next
             </Typography>
 
-            <Box sx={{ mb: 2 }}>
+            <Box sx={{ mb: 3, px: 1 }}>
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Search videos..."
+                placeholder="Search related content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                sx={{ mb: 1 }}
+                variant="filled"
+                InputProps={{
+                  sx: {
+                    borderRadius: 2,
+                    background: 'rgba(255,255,255,0.05)',
+                    '&:hover': { background: 'rgba(255,255,255,0.08)' }
+                  }
+                }}
               />
-              <Button
-                variant="outlined"
-                fullWidth
-                onClick={handleSearch}
-                disabled={loading}
-              >
-                Search
-              </Button>
             </Box>
 
-            {videos.length > 0 ? (
-              <List>
-                {videos.map((video) => (
+            <List sx={{ overflowY: 'auto', px: 1 }}>
+              {videos.length > 0 ? (
+                videos.map((video) => (
                   <ListItem
                     key={video.video_id}
                     button
@@ -224,24 +262,25 @@ const VideoPlayer = () => {
                     onClick={() => handleVideoSelect(video)}
                     sx={{
                       mb: 1,
-                      border: selectedVideo?.video_id === video.video_id ? 2 : 0,
-                      borderColor: 'primary.main',
-                      borderRadius: 1,
+                      borderRadius: 2,
+                      border: selectedVideo?.video_id === video.video_id ? '1px solid #8b5cf6' : '1px solid transparent',
+                      background: selectedVideo?.video_id === video.video_id ? 'rgba(139, 92, 246, 0.1)' : 'transparent',
+                      '&:hover': { background: 'rgba(255,255,255,0.05)' }
                     }}
                   >
                     <ListItemText
-                      primary={video.title}
-                      secondary={video.channel}
+                      primary={<Typography variant="body1" sx={{ color: 'white', fontWeight: 500 }}>{video.title}</Typography>}
+                      secondary={<Typography variant="caption" sx={{ color: 'text.secondary' }}>{video.channel}</Typography>}
                     />
                   </ListItem>
-                ))}
-              </List>
-            ) : (
-              <Alert severity="info">
-                {loading ? 'Loading...' : 'No videos found. Try a different search.'}
-              </Alert>
-            )}
-          </Paper>
+                ))
+              ) : (
+                <Alert severity="info" sx={{ background: 'transparent', color: 'text.secondary' }}>
+                  {loading ? 'Loading...' : 'No videos found.'}
+                </Alert>
+              )}
+            </List>
+          </Box>
         </Grid>
       </Grid>
     </Container>

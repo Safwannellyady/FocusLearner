@@ -204,57 +204,105 @@ const LectureDetail = () => {
   return (
     <Container maxWidth="xl" sx={{ mt: 3, mb: 4 }}>
       {/* Header */}
-      <Box mb={3} display="flex" alignItems="center">
-        <IconButton onClick={() => navigate('/dashboard')} sx={{ mr: 2 }}>
+      <Box mb={4} display="flex" alignItems="center">
+        <IconButton
+          onClick={() => navigate('/dashboard')}
+          sx={{
+            mr: 2,
+            color: 'white',
+            background: 'rgba(255,255,255,0.05)',
+            '&:hover': { background: 'rgba(255,255,255,0.1)' }
+          }}
+        >
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="h4">{lecture.title}</Typography>
-          <Box display="flex" gap={1} mt={0.5}>
-            <Chip label={lecture.subject} color="primary" size="small" />
-            <Chip label={lecture.topic} variant="outlined" size="small" />
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'white' }}>{lecture.title}</Typography>
+          <Box display="flex" gap={1} mt={1}>
+            <Chip
+              label={lecture.subject}
+              size="small"
+              sx={{
+                background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)',
+                color: 'white',
+                fontWeight: 600
+              }}
+            />
+            <Chip
+              label={lecture.topic}
+              variant="outlined"
+              size="small"
+              sx={{
+                color: 'text.secondary',
+                borderColor: 'rgba(255,255,255,0.2)'
+              }}
+            />
           </Box>
         </Box>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         {/* Left Column: Videos (Practical Lab) */}
-        <Grid item xs={12} md={7}>
-          <Paper sx={{ p: 2, height: '100%', minHeight: '600px' }}>
-            <Typography variant="h5" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+        <Grid item xs={12} md={8}>
+          <Box sx={{
+            p: 3,
+            height: '100%',
+            minHeight: '600px',
+            background: 'rgba(20, 20, 35, 0.6)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 4,
+            border: '1px solid rgba(255, 255, 255, 0.05)'
+          }}>
+            <Typography variant="h5" gutterBottom sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)', pb: 2, color: 'white', fontWeight: 600 }}>
               Practical Lab (Videos)
             </Typography>
 
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: 3 }}>
               {videos.length > 0 ? (
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
                   {videos.map((video) => (
                     <Grid item xs={12} sm={6} key={video.video_id}>
-                      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        {/* Thumbnail placeholder or actual thumbnail if available */}
-                        <Box sx={{ height: 140, bgcolor: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <PlayArrowIcon sx={{ color: 'white', fontSize: 40 }} />
+                      <Card sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: 3,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        transition: 'transform 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(139, 92, 246, 0.3)'
+                        }
+                      }}>
+                        {/* Thumbnail placeholder */}
+                        <Box sx={{ height: 160, bgcolor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                          <Box sx={{
+                            position: 'absolute',
+                            top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, rgba(0,0,0,0) 70%)'
+                          }} />
+                          <PlayArrowIcon sx={{ color: 'white', fontSize: 48, zIndex: 1, opacity: 0.8 }} />
                         </Box>
-                        <CardContent sx={{ flexGrow: 1 }}>
-                          <Typography gutterBottom variant="subtitle1" component="div" noWrap>
+                        <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                          <Typography gutterBottom variant="subtitle1" component="div" noWrap sx={{ color: 'white', fontWeight: 600 }}>
                             {video.title}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" noWrap>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }} noWrap>
                             {video.channel}
                           </Typography>
                           <Button
                             variant="contained"
                             size="small"
                             fullWidth
-                            sx={{ mt: 2 }}
+                            sx={{ mt: 'auto', borderRadius: 2 }}
                             onClick={async () => {
                               try {
-                                // Auto-lock based on lecture subject
                                 await focusAPI.lock(lecture.subject);
                                 navigate('/player', { state: { video } });
                               } catch (e) {
                                 console.error("Auto-lock failed", e);
-                                // Navigate anyway
                                 navigate('/player', { state: { video } });
                               }
                             }}
@@ -270,33 +318,48 @@ const LectureDetail = () => {
                 <Typography color="text.secondary">No related videos found for this topic.</Typography>
               )}
             </Box>
-          </Paper>
+          </Box>
         </Grid>
 
         {/* Right Column: Activities */}
-        <Grid item xs={12} md={5}>
-          <Paper sx={{ height: '100%', minHeight: '600px', display: 'flex', flexDirection: 'column' }}>
+        <Grid item xs={12} md={4}>
+          <Box sx={{
+            height: '100%',
+            minHeight: '600px',
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'rgba(20, 20, 35, 0.6)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 4,
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            overflow: 'hidden'
+          }}>
             <Tabs
               value={activeTab}
               onChange={handleTabChange}
               variant="fullWidth"
-              sx={{ borderBottom: 1, borderColor: 'divider' }}
+              sx={{
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                '& .MuiTab-root': { color: 'text.secondary' },
+                '& .Mui-selected': { color: '#a78bfa' },
+                '& .MuiTabs-indicator': { backgroundColor: '#a78bfa' }
+              }}
             >
               <Tab label="Testing Lab" />
               <Tab label="Games" />
               <Tab label="Exercises" />
             </Tabs>
 
-            <Box sx={{ p: 2, flexGrow: 1, overflowY: 'auto' }}>
+            <Box sx={{ p: 3, flexGrow: 1, overflowY: 'auto' }}>
               {renderRightColumnContent()}
             </Box>
 
-            <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderTop: 1, borderColor: 'divider' }}>
-              <Typography variant="caption" color="text.secondary" display="block" align="center">
-                AI Suggestions Enabled
+            <Box sx={{ p: 2, bgcolor: 'rgba(139, 92, 246, 0.1)', borderTop: '1px solid rgba(139, 92, 246, 0.2)' }}>
+              <Typography variant="caption" sx={{ color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                ✨ AI Suggestions Enabled
               </Typography>
             </Box>
-          </Paper>
+          </Box>
         </Grid>
       </Grid>
     </Container>
