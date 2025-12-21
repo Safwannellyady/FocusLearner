@@ -38,7 +38,9 @@ class User(db.Model):
     
     # Relationships
     focus_sessions = db.relationship('FocusSession', backref='user', lazy=True)
+    focus_sessions = db.relationship('FocusSession', backref='user', lazy=True)
     game_progress = db.relationship('GameProgress', backref='user', lazy=True)
+    distraction_logs = db.relationship('DistractionLog', backref='user', lazy=True)
     preferences = db.relationship('UserPreferences', backref='user', uselist=False, lazy=True)
     lectures = db.relationship('Lecture', backref='user', lazy=True)
     
@@ -229,5 +231,29 @@ class ChatMessage(db.Model):
             'video_id': self.video_id,
             'timestamp': self.timestamp,
             'created_at': self.created_at.isoformat()
+        }
+
+
+class DistractionLog(db.Model):
+    """Model for tracking user distractions (tab switching)"""
+    __tablename__ = 'distraction_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    focus_session_id = db.Column(db.Integer, db.ForeignKey('focus_sessions.id'), nullable=True)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    ended_at = db.Column(db.DateTime, nullable=True)
+    duration = db.Column(db.Integer, nullable=True) # Duration in seconds
+    reason = db.Column(db.String(200), nullable=True) # e.g., "tab_switch", "window_blur"
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'focus_session_id': self.focus_session_id,
+            'started_at': self.started_at.isoformat(),
+            'ended_at': self.ended_at.isoformat() if self.ended_at else None,
+            'duration': self.duration,
+            'reason': self.reason
         }
 

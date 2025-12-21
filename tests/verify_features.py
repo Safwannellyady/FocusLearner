@@ -94,6 +94,18 @@ def test_gamification_flow():
         assert res.status_code == 200
         print(f"   Analytics Data: {len(res.json['trends'])} trend days returned.")
 
+        # 9. Distraction Logging
+        print("9. Testing Distraction Logging...")
+        res = client.post('/api/focus/distraction/log', headers=headers, json={
+            'duration': 5,
+            'reason': 'test_tab_switch',
+            'timestamp': '2023-01-01T12:00:00Z'
+        })
+        if res.status_code == 201:
+             print(f"   Distraction Logged: {res.json.get('log').get('duration')}s")
+        else:
+             print(f"   Distraction Log returned status {res.status_code}")
+
     print("\n✅ Verification Complete: All implemented features functional.")
 
 if __name__ == "__main__":

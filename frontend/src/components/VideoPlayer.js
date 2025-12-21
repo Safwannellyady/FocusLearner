@@ -17,6 +17,8 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { focusAPI, contentAPI, gameAPI } from '../services/api';
 import AIChatWidget from './AIChatWidget';
+import FocusMonitor from './FocusMonitor';
+import FocusCheckModal from './FocusCheckModal';
 
 const VideoPlayer = () => {
   const navigate = useNavigate();
@@ -144,6 +146,32 @@ const VideoPlayer = () => {
     return match ? match[1] : null;
   };
 
+  // Deep Focus Logic
+  const [isDistracted, setIsDistracted] = useState(false);
+  const [distractionDuration, setDistractionDuration] = useState(0);
+  const [playerRef, setPlayerRef] = useState(null);
+
+  const handleDistractionStart = () => {
+    if (playerRef) {
+      playerRef.pauseVideo();
+    }
+  };
+
+  const handleDistractionEnd = (duration) => {
+    setDistractionDuration(duration);
+    setIsDistracted(true);
+  };
+
+  const handleResumeFocus = () => {
+    setIsDistracted(false);
+    // Optional: Auto-resume video?
+    // if (playerRef) playerRef.playVideo();
+  };
+
+  const onPlayerReady = (event) => {
+    setPlayerRef(event.target);
+  };
+
   return (
     <Container maxWidth="xl" sx={{ mt: 3, mb: 4 }}>
       <Box display="flex" alignItems="center" mb={3}>
@@ -177,6 +205,7 @@ const VideoPlayer = () => {
                 <YouTube
                   videoId={extractVideoId(selectedVideo.url)}
                   opts={opts}
+                  onReady={onPlayerReady}
                   onStateChange={handleVideoStateChange}
                   style={{ width: '100%' }}
                 />
@@ -315,6 +344,19 @@ const VideoPlayer = () => {
 
       {/* AI Tutor Chat Widget */}
       <AIChatWidget context={`Subject: ${currentSession?.subject_focus || selectedVideo?.subject_focus}, Video: ${selectedVideo?.title}`} />
+
+      {/* Deep Focus Monitor */}
+      <FocusMonitor
+        active={!!currentSession}
+        onDistractionStart={handleDistractionStart}
+        onDistractionEnd={handleDistractionEnd}
+      />
+
+      <FocusCheckModal
+        open={isDistracted}
+        duration={distractionDuration}
+        onResume={handleResumeFocus}
+      />
     </Container >
   );
 };

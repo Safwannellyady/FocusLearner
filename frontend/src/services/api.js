@@ -60,6 +60,9 @@ export const focusAPI = {
 
   getContent: (query) =>
     api.get('/focus/content', { params: { query } }),
+
+  logDistraction: (duration, reason, timestamp) =>
+    api.post('/focus/distraction/log', { duration, reason, timestamp }),
 };
 
 // Content API

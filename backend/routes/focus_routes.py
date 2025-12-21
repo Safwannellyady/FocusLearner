@@ -4,7 +4,7 @@ API endpoints for managing focus sessions and focus lock
 """
 
 from flask import Blueprint, request, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 import os
 
@@ -187,4 +187,41 @@ def get_analytics_summary():
     except Exception as e:
         print(f"Analytics Error: {e}")
         return jsonify({'error': 'Failed to fetch analytics'}), 500
+
+
+# Distraction Logging Endpoints
+from models import DistractionLog
+
+@focus_routes.route('/distraction/log', methods=['POST'])
+@token_required
+def log_distraction():
+    """Log a completed distraction event"""
+    data = request.get_json()
+    user_id = request.current_user_id
+    
+    duration = data.get('duration')
+    reason = data.get('reason', 'tab_switch')
+    timestamp = data.get('timestamp') # ISO string
+    
+    # Get current active session if any
+    active_session = FocusSession.query.filter_by(
+        user_id=user_id,
+        is_locked=True
+    ).first()
+    
+    log = DistractionLog(
+        user_id=user_id,
+        focus_session_id=active_session.id if active_session else None,
+        duration=duration,
+        reason=reason,
+        started_at=datetime.fromisoformat(timestamp.replace('Z', '+00:00')) if timestamp else datetime.utcnow()
+    )
+    # If we have duration, set ended_at based on started_at + duration
+    if duration:
+        log.ended_at = log.started_at + timedelta(seconds=duration)
+        
+    db.session.add(log)
+    db.session.commit()
+    
+    return jsonify({'message': 'Distraction logged', 'log': log.to_dict()}), 201
 
