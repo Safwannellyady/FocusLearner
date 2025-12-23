@@ -15,7 +15,7 @@ app = Flask(__name__)
 database_url = os.getenv('DATABASE_URL')
 if not database_url:
     # Default to SQLite for easy setup
-    database_url = 'sqlite:///focuslearner.db'
+    database_url = 'sqlite:///focuslearner_v3.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

@@ -142,6 +142,18 @@ const Login = () => {
               <Button
                 fullWidth
                 variant="outlined"
+                onClick={() => {
+                  setUsername('test_gamer');
+                  setPassword('password123');
+                }}
+                sx={{ mb: 2, py: 1.5, borderColor: '#a78bfa', color: '#a78bfa', '&:hover': { borderColor: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)' } }}
+              >
+                Launch Demo Access
+              </Button>
+
+              <Button
+                fullWidth
+                variant="outlined"
                 startIcon={<GoogleIcon />}
                 onClick={handleGoogleLogin}
                 disabled={googleLoading || loading}

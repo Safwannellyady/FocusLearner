@@ -13,6 +13,7 @@ def test_gamification_flow():
     """Test the full gamification flow"""
     with app.test_client() as client:
         with app.app_context():
+            db.create_all()  # Ensure tables exist
             # Clean up old test user
             existing = User.query.filter_by(username='test_gamer').first()
             if existing:
