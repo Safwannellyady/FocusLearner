@@ -170,5 +170,12 @@ export const chatAPI = {
   clearHistory: () => api.post('/chat/clear'),
 };
 
+// Taxonomy API
+export const taxonomyAPI = {
+  getSubjects: () => api.get('/taxonomy/subjects'),
+  getTopics: (subject) => api.get('/taxonomy/topics', { params: { subject } }),
+  getIntent: (id) => api.get(`/taxonomy/intent/${id}`),
+};
+
 export default api;
 

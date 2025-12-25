@@ -29,74 +29,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
 import InsightsIcon from '@mui/icons-material/Insights';
 import { motion } from 'framer-motion';
-import { lectureAPI, authAPI, contentAPI, gameAPI } from '../services/api';
+import { lectureAPI, authAPI, contentAPI, gameAPI, taxonomyAPI } from '../services/api';
 import VideoPlayer from './VideoPlayer';
-
-const subjectOptions = [
-  // Engineering
-  'Engineering/Network Analysis',
-  'Engineering/Circuit Theory',
-  'Engineering/Algorithms',
-  'Engineering/Data Structures',
-  'Engineering/Thermodynamics',
-  'Engineering/Fluid Mechanics',
-  'Engineering/Digital Logic',
-
-  // Medical & Science
-  'Medical/Anatomy',
-  'Medical/Physiology',
-  'Medical/Biochemistry',
-  'Medical/Pharmacology',
-  'Science/Physics',
-  'Science/Chemistry',
-  'Science/Biology',
-
-  // Mathematics
-  'Math/Linear Algebra',
-  'Math/Calculus',
-  'Math/Statistics',
-  'Math/Discrete Math',
-
-  // Commerce & Business
-  'Commerce/Economics',
-  'Commerce/Accounting',
-  'Commerce/Business Studies',
-  'Commerce/Finance',
-  'Commerce/Marketing',
-
-  // Arts & Humanities
-  'Arts/History',
-  'Arts/Political Science',
-  'Arts/Psychology',
-  'Arts/Sociology',
-  'Arts/Literature',
-  'Arts/Philosophy',
-
-  // Law
-  'Law/Constitutional Law',
-  'Law/Criminal Law',
-  'Law/Contract Law',
-
-  // Technology
-  'Tech/Web Development',
-  'Tech/Machine Learning',
-  'Tech/Cybersecurity',
-
-  // Languages
-  'Language/English',
-  'Language/Spanish',
-  'Language/French',
-];
-
-const topicTaxonomy = {
-  "Engineering/Network Analysis": ["Basic Concepts", "KCL & KVL", "Mesh Analysis", "Nodal Analysis", "Theorems", "AC Circuits"],
-  "Engineering/Circuit Theory": ["Resonance", "Two Port Networks", "Transient Analysis", "Graph Theory"],
-  "Engineering/Algorithms": ["Sorting", "Searching", "Graph Algorithms", "Dynamic Programming", "Greedy Algorithms"],
-  "Engineering/Data Structures": ["Arrays", "Linked Lists", "Stacks & Queues", "Trees", "Graphs"],
-  "Math/Linear Algebra": ["Vectors", "Matrices", "System of Equations", "Eigenvalues", "Vector Spaces"],
-  "Math/Calculus": ["Limits", "Derivatives", "Integration", "Applications of Derivatives"],
-  "default": ["General", "Introduction", "Advanced Concepts", "Exam Prep"]
-};
 
 const DashboardNew = () => {
   const navigate = useNavigate();
@@ -110,6 +44,10 @@ const DashboardNew = () => {
     description: '',
   });
   const [gameProgress, setGameProgress] = useState(null);
+
+  // Taxonomy State
+  const [availableSubjects, setAvailableSubjects] = useState([]);
+  const [availableTopics, setAvailableTopics] = useState([]);
 
   useEffect(() => {
     loadUser();
@@ -127,15 +65,20 @@ const DashboardNew = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [lecturesRes, progressRes] = await Promise.all([
+      const [lecturesRes, progressRes, subjectsRes] = await Promise.all([
         lectureAPI.getAll(),
-        gameAPI.getProgress()
+        gameAPI.getProgress(),
+        taxonomyAPI.getSubjects()
       ]);
       setLectures(lecturesRes.data.lectures || []);
 
       if (progressRes.data.progress && progressRes.data.progress.length > 0) {
         // Use the first module's progress for the main dashboard widget for now
         setGameProgress(progressRes.data.progress[0]);
+      }
+
+      if (subjectsRes.data.subjects) {
+        setAvailableSubjects(subjectsRes.data.subjects);
       }
     } catch (err) {
       console.error('Error loading dashboard data:', err);
@@ -146,6 +89,19 @@ const DashboardNew = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
+  };
+
+  const handleSubjectChange = async (subject) => {
+    setNewLecture({ ...newLecture, subject, topic: '' });
+    setAvailableTopics([]); // Clear previous topics
+    try {
+      const res = await taxonomyAPI.getTopics(subject);
+      if (res.data.topics) {
+        setAvailableTopics(res.data.topics);
+      }
+    } catch (err) {
+      console.error("Error fetching topics:", err);
+    }
   };
 
   const handleCreateLecture = async (overrideData = null) => {
@@ -388,12 +344,10 @@ const DashboardNew = () => {
             <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Subject Focus</InputLabel>
             <Select
               value={newLecture.subject}
-              onChange={(e) => {
-                setNewLecture({ ...newLecture, subject: e.target.value, topic: '' }); // Reset topic on subject change
-              }}
+              onChange={(e) => handleSubjectChange(e.target.value)}
               sx={{ background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' }}
             >
-              {subjectOptions.map((subject) => (
+              {availableSubjects.map((subject) => (
                 <MenuItem key={subject} value={subject}>
                   {subject}
                 </MenuItem>
@@ -412,8 +366,8 @@ const DashboardNew = () => {
                 displayEmpty
               >
                 {/* Dynamic Topic Population */}
-                {(topicTaxonomy[newLecture.subject] || topicTaxonomy['default']).map((topic) => (
-                  <MenuItem key={topic} value={topic}>{topic}</MenuItem>
+                {availableTopics.map((intent) => (
+                  <MenuItem key={intent.id} value={intent.topic}>{intent.topic}</MenuItem>
                 ))}
                 <MenuItem value="custom"><em>+ Custom Topic</em></MenuItem>
               </Select>
@@ -476,8 +430,6 @@ const DashboardNew = () => {
     </Container>
   );
 };
-
-
 
 export default DashboardNew;
 ```

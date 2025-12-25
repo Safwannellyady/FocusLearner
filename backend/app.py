@@ -40,7 +40,6 @@ app.register_blueprint(game_routes)
 app.register_blueprint(auth_routes)
 app.register_blueprint(preferences_routes)
 app.register_blueprint(lecture_routes)
-app.register_blueprint(lecture_routes)
 app.register_blueprint(chat_routes)
 from routes.taxonomy_routes import taxonomy_bp
 app.register_blueprint(taxonomy_bp, url_prefix='/api/taxonomy')
