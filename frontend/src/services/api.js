@@ -102,8 +102,13 @@ export const gameAPI = {
       params: { module_id: moduleId },
     }),
 
-  getLeaderboard: (moduleId, limit = 10) =>
-    api.get(`/game/leaderboard/${moduleId}`, { params: { limit } }),
+  getLeaderboard: (moduleId, filters = {}) =>
+    api.get(`/game/leaderboard/${moduleId}`, {
+      params: {
+        limit: 10,
+        ...filters
+      }
+    }),
 
   generateChallenge: (subject, level) =>
     api.post('/game/challenge/generate', { subject, level }),
