@@ -82,7 +82,7 @@ class AIService:
             print(f"Error parsing AI quiz: {e}")
             return self._get_mock_quiz(subject, topic, count)
 
-    def generate_result_based_activity(self, subject: str, topic: str, activity_type: str = "auto") -> Dict[str, Any]:
+    def generate_result_based_activity(self, subject: str, topic: str, activity_type: str = "auto", intent=None) -> Dict[str, Any]:
         """
         Generate a specific type of activity: 'coding', 'lab', 'crossword', 'quiz'.
         If 'auto', decides based on subject.
@@ -96,15 +96,15 @@ class AIService:
                  activity_type = "crossword"
         
         if activity_type == "coding":
-            return self.generate_coding_challenge(subject, topic)
+            return self.generate_coding_challenge(subject, topic, intent)
         elif activity_type == "lab":
-            return self.generate_virtual_lab(subject, topic)
+            return self.generate_virtual_lab(subject, topic, intent)
         elif activity_type == "crossword":
             return self.generate_crossword(subject, topic)
         
         return self.generate_game_content(subject, 1) # Fallback
 
-    def generate_coding_challenge(self, subject: str, topic: str) -> Dict[str, Any]:
+    def generate_coding_challenge(self, subject: str, topic: str, intent=None) -> Dict[str, Any]:
         if not self.api_key:
              return {
                  "type": "coding",
@@ -115,8 +115,22 @@ class AIService:
                  "points": 100
              }
              
+        # Extract intent metadata
+        outcomes = ""
+        difficulty = "Intermediate"
+        if intent:
+             import json
+             try:
+                 outcome_list = json.loads(intent.required_outcomes)
+                 outcomes = f"\nRequired Outcomes: {', '.join(outcome_list)}"
+             except:
+                 pass
+             difficulty = intent.difficulty
+
         prompt = f"""
         Generate a coding challenge for {subject} - {topic}.
+        Difficulty Level: {difficulty}{outcomes}
+        
         Return JSON:
         - title: string
         - description: string (problem statement)
@@ -127,7 +141,7 @@ class AIService:
         """
         return self._parse_json_response(self._call_gemini(prompt), "coding")
 
-    def generate_virtual_lab(self, subject: str, topic: str) -> Dict[str, Any]:
+    def generate_virtual_lab(self, subject: str, topic: str, intent=None) -> Dict[str, Any]:
         if not self.api_key:
             return {
                 "type": "lab",
@@ -138,9 +152,23 @@ class AIService:
                 "options": ["Explosion", "Neutralization", "Nothing"],
                 "correct_answer": "Neutralization"
             }
+        
+        # Extract intent metadata
+        outcomes = ""
+        difficulty = "Intermediate"
+        if intent:
+             import json
+             try:
+                 outcome_list = json.loads(intent.required_outcomes)
+                 outcomes = f"\nRequired Outcomes: {', '.join(outcome_list)}"
+             except:
+                 pass
+             difficulty = intent.difficulty
             
         prompt = f"""
         Generate a Virtual Lab scenario for {subject} - {topic}.
+        Difficulty Level: {difficulty}{outcomes}
+        
         Return JSON:
         - type: "lab"
         - title: string
