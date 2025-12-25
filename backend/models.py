@@ -256,4 +256,78 @@ class DistractionLog(db.Model):
             'duration': self.duration,
             'reason': self.reason
         }
+class GameChallenge(db.Model):
+    """Model for storing generated challenges to verify answers later"""
+    __tablename__ = 'game_challenges'
+    
+    id = db.Column(db.String(36), primary_key=True) # UUID
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) # Optional, if generated for specific user
+    subject = db.Column(db.String(100), nullable=False)
+    topic = db.Column(db.String(200), nullable=False)
+    activity_type = db.Column(db.String(50), nullable=False) # coding, lab, crossword
+    
+    # Store the full generated content including secret solution
+    data = db.Column(db.Text, nullable=False) # JSON string
+    solution = db.Column(db.Text, nullable=False) # JSON string or specific answer
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        import json
+        return {
+            'id': self.id,
+            'subject': self.subject,
+            'topic': self.topic,
+            'type': self.activity_type,
+            'data': json.loads(self.data),
+            'created_at': self.created_at.isoformat()
+        }
 
+class ActivityResult(db.Model):
+    """Immutable log of every activity attempt"""
+    __tablename__ = 'activity_results'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    challenge_id = db.Column(db.String(36), db.ForeignKey('game_challenges.id'), nullable=False)
+    
+    user_answer = db.Column(db.Text, nullable=True) # JSON or string
+    is_correct = db.Column(db.Boolean, nullable=False)
+    score_raw = db.Column(db.Float, default=0.0)
+    xp_earned = db.Column(db.Integer, default=0)
+    
+    feedback = db.Column(db.Text, nullable=True) # Auto-generated feedback
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TopicMasteryState(str, Enum):
+    NOT_STARTED = "NOT_STARTED"
+    IN_PROGRESS = "IN_PROGRESS"
+    MASTERED = "MASTERED"
+    NEEDS_REVIEW = "NEEDS_REVIEW"
+
+class UserTopicMastery(db.Model):
+    """Current mastery state for a user in a specific topic"""
+    __tablename__ = 'user_topic_mastery'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    topic = db.Column(db.String(200), nullable=False)
+    
+    state = db.Column(db.Enum(TopicMasteryState), default=TopicMasteryState.NOT_STARTED)
+    proficiency_score = db.Column(db.Float, default=0.0) # 0 to 100
+    
+    total_attempts = db.Column(db.Integer, default=0)
+    success_rate = db.Column(db.Float, default=0.0)
+    
+    last_activity_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'subject': self.subject,
+            'topic': self.topic,
+            'state': self.state.value,
+            'proficiency': self.proficiency_score,
+            'success_rate': self.success_rate
+        }

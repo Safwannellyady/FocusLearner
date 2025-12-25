@@ -19,8 +19,13 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { motion } from 'framer-motion';
-import { lectureAPI, contentAPI, focusAPI } from '../services/api'; // Fixed import path
+import { lectureAPI, contentAPI, focusAPI, gameAPI } from '../services/api'; // Fixed import path
 import GameLab from './GameLab'; // Fixed import path
+import ActivityView from './ActivityView'; // Import ActivityView
+import LockIcon from '@mui/icons-material/Lock';
+import ScienceIcon from '@mui/icons-material/Science';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
 
 const LectureDetail = () => {
   const { id } = useParams();
@@ -33,6 +38,12 @@ const LectureDetail = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizResult, setQuizResult] = useState(null);
+
+  // Gatekeeping State
+  const [mastery, setMastery] = useState(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [gateActivity, setGateActivity] = useState(null);
+  const [gateOpen, setGateOpen] = useState(false);
 
   useEffect(() => {
     // ... existing useEffect ...
@@ -75,6 +86,22 @@ const LectureDetail = () => {
 
         // Fetch related videos based on lecture subject/topic
         if (lectureData) {
+          // 1. Check Mastery to see if content should be locked
+          try {
+            const masteryRes = await gameAPI.getMastery(lectureData.subject, lectureData.topic);
+            const mState = masteryRes.data.mastery;
+            setMastery(mState);
+
+            // LOCK RULE: If state is NOT_STARTED or proficiency < 30, lock it.
+            // Exception: first ever topic might be open, but we assume all need a baseline "Pre-Lab" if strict.
+            // For UX, let's say: "You must pass the Pre-Flight Check to enter."
+            if (mState.proficiency < 30) {
+              setIsLocked(true);
+            }
+          } catch (e) {
+            console.warn("Failed to check mastery", e);
+          }
+
           const searchQuery = `${lectureData.subject} ${lectureData.topic}`;
           const videoRes = await contentAPI.search('', lectureData.subject); // Using subject for broad match first
           setVideos(videoRes.data.results || []);
@@ -90,6 +117,41 @@ const LectureDetail = () => {
       fetchLectureData();
     }
   }, [id]);
+
+  const handleGateUnlock = async () => {
+    // 1. Generate a quick check activity
+    try {
+      // Force a "Lab" type for science, or "Coding" for CS to verify prerequisite
+      const type = lecture.subject.includes("CS") ? 'coding' : 'lab';
+      const res = await gameAPI.generateActivity(lecture.subject, lecture.topic, type); // Generate specifically for this topic
+      setGateActivity(res.data.activity);
+      setGateOpen(true);
+    } catch (e) {
+      alert("Could not generate entrance gate. Please try again.");
+    }
+  };
+
+  const handleGateSubmit = async (answer) => {
+    try {
+      const response = await gameAPI.submitActivity(gateActivity.challenge_id, answer);
+      const res = response.data.result;
+
+      if (res.is_correct) {
+        alert(`Gate Passed! Access Granted.\n+${res.xp_earned} XP`);
+        setIsLocked(false);
+        setGateOpen(false);
+        // Refresh mastery
+        setMastery({ ...mastery, proficiency: res.new_proficiency, state: res.mastery_state });
+      } else {
+        alert(`Access Denied. Score: ${Math.floor(res.score * 100)}%. Needs better accuracy.`);
+        // Keep locked
+        setGateOpen(false);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Submission error");
+    }
+  };
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -257,7 +319,53 @@ const LectureDetail = () => {
               Practical Lab (Videos)
             </Typography>
 
-            <Box sx={{ mt: 3 }}>
+            <Box sx={{ mt: 3, position: 'relative' }}>
+
+              {/* MANDATORY GATE OVERLAY */}
+              {isLocked && (
+                <Box sx={{
+                  position: 'absolute',
+                  top: -20, left: -20, right: -20, bottom: -20,
+                  backdropFilter: 'blur(10px)',
+                  background: 'rgba(10, 10, 20, 0.85)',
+                  zIndex: 10,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 4,
+                  border: '1px solid rgba(255, 100, 100, 0.3)'
+                }}>
+                  <ScienceIcon sx={{ fontSize: 60, color: '#ef4444', mb: 2 }} />
+                  <Typography variant="h4" color="white" fontWeight="bold">Access Restricted</Typography>
+                  <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 400, textAlign: 'center', mb: 4 }}>
+                    You must demonstrate basic proficiency in <b>{lecture.topic}</b> to access these learning materials.
+                  </Typography>
+
+                  <Box display="flex" gap={2}>
+                    <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <Typography variant="caption" display="block" color="text.secondary">Current Mastery</Typography>
+                      <Typography variant="h6" color="error">{mastery?.proficiency || 0}%</Typography>
+                    </Paper>
+                    <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                      <Typography variant="caption" display="block" color="text.secondary">Required</Typography>
+                      <Typography variant="h6" color="success">30%</Typography>
+                    </Paper>
+                  </Box>
+
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="large"
+                    sx={{ mt: 4, px: 5, py: 1.5, fontSize: '1.1rem' }}
+                    startIcon={<LockIcon />}
+                    onClick={handleGateUnlock}
+                  >
+                    Start Prerequisite Lab
+                  </Button>
+                </Box>
+              )}
+
               {videos.length > 0 ? (
                 <Grid container spacing={3}>
                   {videos.map((video) => (
@@ -363,6 +471,27 @@ const LectureDetail = () => {
         </Grid>
       </Grid>
     </Container>
+      {/* Gate Activity Dialog */ }
+  <Dialog
+    open={gateOpen}
+    onClose={() => setGateOpen(false)}
+    maxWidth="lg"
+    fullWidth
+    PaperProps={{ sx: { bgcolor: '#0f0f15', color: 'white', minHeight: '80vh' } }}
+  >
+    <DialogContent>
+      {gateActivity && (
+        <Box height="100%">
+          <Box display="flex" justifyContent="space-between" mb={2}>
+            <Typography variant="h6" color="error">⚠️ Mandatory Check</Typography>
+            <Button color="inherit" onClick={() => setGateOpen(false)}>Exit (Stays Locked)</Button>
+          </Box>
+          <ActivityView activity={gateActivity} onSubmit={handleGateSubmit} />
+        </Box>
+      )}
+    </DialogContent>
+  </Dialog>
+    </Container >
   );
 };
 

@@ -255,14 +255,23 @@ const DashboardNew = () => {
 
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
           <Typography variant="h5" sx={{ fontWeight: 700, color: 'white' }}>My Focus Sessions</Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateDialogOpen(true)}
-            sx={{ borderRadius: 3, textTransform: 'none', px: 3 }}
-          >
-            New Lecture
-          </Button>
+          <Box>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/progress')}
+              sx={{ mr: 2, borderRadius: 3, textTransform: 'none', borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+            >
+              My Progress
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateDialogOpen(true)}
+              sx={{ borderRadius: 3, textTransform: 'none', px: 3 }}
+            >
+              New Lecture
+            </Button>
+          </Box>
         </Box>
 
         {lectures.length > 0 ? (

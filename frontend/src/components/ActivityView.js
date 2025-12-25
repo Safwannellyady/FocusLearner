@@ -8,32 +8,31 @@ import CodeIcon from '@mui/icons-material/Code';
 import ScienceIcon from '@mui/icons-material/Science';
 import ExtensionIcon from '@mui/icons-material/Extension';
 
-const ActivityView = ({ activity, onComplete }) => {
+const ActivityView = ({ activity, onSubmit }) => {
 
     if (!activity) return <LinearProgress />;
 
     switch (activity.type) {
         case 'coding':
-            return <CodingChallenge activity={activity} onComplete={onComplete} />;
+            return <CodingChallenge activity={activity} onSubmit={onSubmit} />;
         case 'lab':
-            return <VirtualLab activity={activity} onComplete={onComplete} />;
+            return <VirtualLab activity={activity} onSubmit={onSubmit} />;
         case 'crossword':
-            return <CrosswordGame activity={activity} onComplete={onComplete} />;
+            return <CrosswordGame activity={activity} onSubmit={onSubmit} />;
         default:
             return <Typography color="error">Unknown activity type: {activity.type}</Typography>;
     }
 };
 
 // 1. Coding Challenge Component
-const CodingChallenge = ({ activity, onComplete }) => {
+const CodingChallenge = ({ activity, onSubmit }) => {
     const [code, setCode] = useState(activity.starter_code || '');
     const [output, setOutput] = useState('');
-    const [status, setStatus] = useState(null); // 'success', 'error'
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleRun = () => {
-        // Mock execution
-        setOutput("Running tests...\nTest Case 1: Passed\nTest Case 2: Passed\n\nAll tests passed!");
-        setStatus('success');
+        // Mock execution for feedback only
+        setOutput("Running tests locally...\n(Deep evaluation happens on server)\n\nTest Run Complete.");
     };
 
     return (
@@ -61,14 +60,12 @@ const CodingChallenge = ({ activity, onComplete }) => {
             />
 
             <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
-                <Button variant="contained" color="success" onClick={handleRun}>Run Code</Button>
-                {status === 'success' && (
-                    <Button variant="contained" onClick={() => onComplete(activity.points)}>Submit & Claim {activity.points} XP</Button>
-                )}
+                <Button variant="outlined" color="primary" onClick={handleRun}>Test Run</Button>
+                <Button variant="contained" color="success" onClick={() => onSubmit(code)}>Submit Code</Button>
             </Box>
 
             {output && (
-                <Paper sx={{ mt: 2, p: 2, bgcolor: '#000', color: status === 'success' ? '#4caf50' : '#f44336', fontFamily: 'monospace' }}>
+                <Paper sx={{ mt: 2, p: 2, bgcolor: '#000', color: '#4caf50', fontFamily: 'monospace' }}>
                     <pre>{output}</pre>
                 </Paper>
             )}
@@ -77,10 +74,9 @@ const CodingChallenge = ({ activity, onComplete }) => {
 };
 
 // 2. Virtual Lab Component
-const VirtualLab = ({ activity, onComplete }) => {
+const VirtualLab = ({ activity, onSubmit }) => {
     const [step, setStep] = useState(0);
     const [selectedOption, setSelectedOption] = useState('');
-    const [isComplete, setIsComplete] = useState(false);
 
     const handleNext = () => {
         if (step < (activity.steps?.length || 0) - 1) {
@@ -88,12 +84,6 @@ const VirtualLab = ({ activity, onComplete }) => {
         } else {
             // Show quiz
             setStep(99);
-        }
-    };
-
-    const checkAnswer = () => {
-        if (selectedOption === activity.correct_answer) {
-            setIsComplete(true);
         }
     };
 
@@ -123,14 +113,15 @@ const VirtualLab = ({ activity, onComplete }) => {
                         ))}
                     </RadioGroup>
 
-                    {!isComplete ? (
-                        <Button variant="contained" onClick={checkAnswer} sx={{ mt: 2 }} disabled={!selectedOption}>Verify Conclusion</Button>
-                    ) : (
-                        <Box mt={2}>
-                            <Typography color="success.main" fontWeight="bold">Correct! Analysis complete.</Typography>
-                            <Button variant="contained" color="success" sx={{ mt: 1 }} onClick={() => onComplete(activity.points || 50)}>Finish Lab (+50 XP)</Button>
-                        </Box>
-                    )}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{ mt: 2 }}
+                        onClick={() => onSubmit(selectedOption)}
+                        disabled={!selectedOption}
+                    >
+                        Submit Observation
+                    </Button>
                 </Box>
             )}
         </Paper>
@@ -138,7 +129,7 @@ const VirtualLab = ({ activity, onComplete }) => {
 };
 
 // 3. Crossword/Puzzle Component
-const CrosswordGame = ({ activity, onComplete }) => {
+const CrosswordGame = ({ activity, onSubmit }) => {
     const [answers, setAnswers] = useState({});
 
     // Simple list view for "Crossword" (rendering actual grid is complex for this step)
@@ -169,7 +160,7 @@ const CrosswordGame = ({ activity, onComplete }) => {
             <Button
                 variant="contained"
                 sx={{ mt: 4, bgcolor: '#ff9800' }}
-                onClick={() => onComplete(activity.points || 30)}
+                onClick={() => onSubmit(Object.values(answers).join(','))} // Basic string join for submission
             >
                 Submit Puzzle
             </Button>

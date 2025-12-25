@@ -110,6 +110,14 @@ export const gameAPI = {
 
   generateActivity: (subject, topic, type) =>
     api.post('/game/activity/generate', { subject, topic, type }),
+
+  submitActivity: (challengeId, answer) =>
+    api.post('/game/activity/submit', { challenge_id: challengeId, answer }),
+
+  getMastery: (subject, topic) =>
+    api.get('/game/mastery', { params: { subject, topic } }),
+
+  getStats: () => api.get('/game/stats'),
 };
 
 // Auth API

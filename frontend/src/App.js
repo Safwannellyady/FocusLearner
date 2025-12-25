@@ -15,6 +15,7 @@ import GameLab from './components/GameLab';
 import KCLChallenge from './components/games/KCLChallenge';
 import AIChallenge from './components/games/AIChallenge';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
+import ProgressDashboard from './components/ProgressDashboard';
 import LandingPage from './components/LandingPage';
 
 const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
@@ -170,6 +171,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AnalyticsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/progress"
+              element={
+                <ProtectedRoute>
+                  <ProgressDashboard />
                 </ProtectedRoute>
               }
             />

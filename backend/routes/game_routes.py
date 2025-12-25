@@ -128,18 +128,65 @@ def generate_challenge():
 @game_routes.route('/activity/generate', methods=['POST'])
 @token_required
 def generate_activity():
-    """Generate a specific activity (Coding, Lab, Crossword) based on subject/topic"""
+    """Generate a specific activity securely"""
+    user_id = request.current_user_id
     data = request.get_json()
     subject = data.get('subject')
     topic = data.get('topic')
-    activity_type = data.get('type', 'auto') # 'coding', 'lab', 'crossword', 'auto'
+    activity_type = data.get('type', 'auto') 
     
     if not subject or not topic:
         return jsonify({'error': 'Subject and topic are required'}), 400
         
     try:
-        activity = ai_service.generate_result_based_activity(subject, topic, activity_type)
+        # Pass ai_service explicitly
+        activity = game_service.create_activity(ai_service, user_id, subject, topic, activity_type)
         return jsonify({'activity': activity}), 200
     except Exception as e:
         print(f"Activity generation error: {e}")
         return jsonify({'error': 'Failed to generate activity'}), 500
+
+
+@game_routes.route('/activity/submit', methods=['POST'])
+@token_required
+def submit_activity_route():
+    """Submit an activity solution for backend grading"""
+    user_id = request.current_user_id
+    data = request.get_json()
+    challenge_id = data.get('challenge_id')
+    answer = data.get('answer')
+    
+    if not challenge_id or answer is None:
+        return jsonify({'error': 'Challenge ID and Answer are required'}), 400
+        
+    try:
+        result = game_service.submit_activity(user_id, challenge_id, answer)
+        if 'error' in result:
+             return jsonify(result), 404
+             
+        return jsonify({'result': result}), 200
+    except Exception as e:
+        print(f"Submission error: {e}")
+        return jsonify({'error': 'Failed to process submission'}), 500
+@game_routes.route('/mastery', methods=['GET'])
+@token_required
+def get_mastery_state():
+    """Get mastery state for a specific topic"""
+    user_id = request.current_user_id
+    subject = request.args.get('subject')
+    topic = request.args.get('topic')
+    
+    if not subject or not topic:
+        return jsonify({'error': 'Subject and Topic are required'}), 400
+        
+    mastery = game_service.get_topic_mastery(user_id, subject, topic)
+    return jsonify({'mastery': mastery}), 200
+
+
+@game_routes.route('/stats', methods=['GET'])
+@token_required
+def get_detailed_stats():
+    """Get comprehensive user progress stats"""
+    user_id = request.current_user_id
+    stats = game_service.get_detailed_progress(user_id)
+    return jsonify({'stats': stats}), 200
