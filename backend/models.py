@@ -188,6 +188,10 @@ class Lecture(db.Model):
     topic = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     video_ids = db.Column(db.Text, nullable=True)  # JSON array of video IDs
+    
+    # Link to centralized Learning Intent
+    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id'), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -265,6 +269,9 @@ class GameChallenge(db.Model):
     subject = db.Column(db.String(100), nullable=False)
     topic = db.Column(db.String(200), nullable=False)
     activity_type = db.Column(db.String(50), nullable=False) # coding, lab, crossword
+    
+    # Link to centralized Learning Intent
+    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id'), nullable=True)
     
     # Store the full generated content including secret solution
     data = db.Column(db.Text, nullable=False) # JSON string

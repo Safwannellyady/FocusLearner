@@ -15,6 +15,7 @@ if parent_dir not in sys.path:
 from services.game_service import GameService
 from services.ai_service import AIService
 from utils.auth import token_required
+from models import LearningIntent
 
 game_routes = Blueprint('game', __name__, url_prefix='/api/game')
 game_service = GameService()
@@ -140,9 +141,16 @@ def generate_activity():
     if not subject or not topic:
         return jsonify({'error': 'Subject and topic are required'}), 400
         
+from models import LearningIntent
+    
+    # ... (inside generate_activity) ...
+    
+    # Lookup Intent
+    intent = LearningIntent.query.filter_by(subject=subject, topic=topic).first()
+    
     try:
-        # Pass ai_service explicitly
-        activity = game_service.create_activity(ai_service, user_id, subject, topic, activity_type)
+        # Pass ai_service explicitly, and intent
+        activity = game_service.create_activity(ai_service, user_id, subject, topic, activity_type, intent)
         return jsonify({'activity': activity}), 200
     except Exception as e:
         print(f"Activity generation error: {e}")

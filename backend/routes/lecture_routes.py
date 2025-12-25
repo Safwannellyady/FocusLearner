@@ -13,7 +13,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from models import Lecture, db
+from models import Lecture, LearningIntent, db
 from utils.auth import token_required
 from services.ai_service import AIService
 
@@ -66,13 +66,26 @@ def create_lecture():
         video_ids = [v['video_id'] for v in videos]
         print(f"Found {len(video_ids)} videos: {video_ids}")
 
+from models import Lecture, LearningIntent, db
+
+# ... (inside create_lecture) ...
+
+    # Look up Learning Intent
+    intent = LearningIntent.query.filter_by(subject=subject, topic=topic).first()
+    intent_id = intent.id if intent else None
+
+    # Auto-generate content if no videos provided
+    if not video_ids:
+        # ... (existing auto-gen logic) ...
+
     lecture = Lecture(
         user_id=user_id,
         title=title,
         subject=subject,
         topic=topic,
         description=description,
-        video_ids=json.dumps(video_ids) if video_ids else None
+        video_ids=json.dumps(video_ids) if video_ids else None,
+        learning_intent_id=intent_id
     )
     
     db.session.add(lecture)
