@@ -96,8 +96,10 @@ def get_progress():
 def get_leaderboard(module_id: str):
     """Get leaderboard for a game module"""
     limit = request.args.get('limit', 10, type=int)
+    subject = request.args.get('subject')
+    topic = request.args.get('topic')
     
-    leaderboard = game_service.get_leaderboard(module_id, limit)
+    leaderboard = game_service.get_leaderboard(module_id, subject, topic, limit)
     
     return jsonify({
         'module_id': module_id,

@@ -278,18 +278,47 @@ class GameService:
             query = query.filter_by(game_module=module_id)
         return [p.to_dict() for p in query.all()]
 
-    def get_leaderboard(self, module_id, limit=10):
-        # Join with User to get usernames
-        results = db.session.query(GameProgress, User.username)\
-            .join(User)\
-            .filter(GameProgress.game_module == 'all_activities')\
-            .order_by(GameProgress.mastery_points.desc())\
-            .limit(limit)\
-            .all()
+    def get_leaderboard(self, module_id, subject=None, topic=None, limit=10):
+        """
+        Get leaderboard. 
+        If subject/topic provided -> Granular Mastery Leaderboard.
+        Else -> Global XP Leaderboard.
+        """
+        if subject and topic:
+            # Granular Topic Mastery Leaderboard
+            results = db.session.query(UserTopicMastery, User.username)\
+                .join(User)\
+                .filter(UserTopicMastery.subject == subject, UserTopicMastery.topic == topic)\
+                .order_by(UserTopicMastery.proficiency_score.desc())\
+                .limit(limit)\
+                .all()
+                
+            return [{
+                'username': r[1],
+                'level': int(r[0].proficiency_score / 10) + 1, # Approx level from proficiency
+                'score': round(r[0].proficiency_score, 1),
+                'metric': 'Proficiency %',
+                'id': r[0].user_id
+            } for r in results]
             
-        return [{
-            'username': r[1],
-            'level': r[0].level,
-            'xp': r[0].mastery_points,
-            'subject': r[0].subject_focus
-        } for r in results]
+        else:
+            # Global XP Leaderboard (Legacy GameProgress)
+            query = db.session.query(GameProgress, User.username)\
+                .join(User)\
+                .filter(GameProgress.game_module == 'all_activities')
+                
+            if subject:
+                 query = query.filter(GameProgress.subject_focus == subject)
+                 
+            results = query.order_by(GameProgress.mastery_points.desc())\
+                .limit(limit)\
+                .all()
+                
+            return [{
+                'username': r[1],
+                'level': r[0].level,
+                'score': r[0].mastery_points,
+                'metric': 'XP',
+                'subject': r[0].subject_focus,
+                'id': r[0].user_id
+            } for r in results]

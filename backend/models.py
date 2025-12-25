@@ -300,6 +300,32 @@ class ActivityResult(db.Model):
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class LearningIntent(db.Model):
+    """Centralized Learning Intent Object (Taxonomy)"""
+    __tablename__ = 'learning_intents'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(100), nullable=False)
+    topic = db.Column(db.String(200), nullable=False)
+    sub_topic = db.Column(db.String(200), nullable=True)
+    difficulty = db.Column(db.String(50), default='Intermediate') # Beginner, Intermediate, Advanced
+    required_outcomes = db.Column(db.Text, nullable=True) # JSON list of outcomes
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        import json
+        return {
+            'id': self.id,
+            'subject': self.subject,
+            'topic': self.topic,
+            'sub_topic': self.sub_topic,
+            'difficulty': self.difficulty,
+            'required_outcomes': json.loads(self.required_outcomes) if self.required_outcomes else [],
+            'created_at': self.created_at.isoformat()
+        }
+
+
 class TopicMasteryState(str, Enum):
     NOT_STARTED = "NOT_STARTED"
     IN_PROGRESS = "IN_PROGRESS"
