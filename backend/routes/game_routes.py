@@ -109,7 +109,7 @@ def get_leaderboard(module_id: str):
 @game_routes.route('/challenge/generate', methods=['POST'])
 @token_required
 def generate_challenge():
-    "child doc string"
+    """Generate a standard challenge"""
     data = request.get_json()
     subject = data.get('subject')
     level = data.get('level', 1)
@@ -123,3 +123,23 @@ def generate_challenge():
     except Exception as e:
         print(f"Challenge generation error: {e}")
         return jsonify({'error': 'Failed to generate challenge'}), 500
+
+
+@game_routes.route('/activity/generate', methods=['POST'])
+@token_required
+def generate_activity():
+    """Generate a specific activity (Coding, Lab, Crossword) based on subject/topic"""
+    data = request.get_json()
+    subject = data.get('subject')
+    topic = data.get('topic')
+    activity_type = data.get('type', 'auto') # 'coding', 'lab', 'crossword', 'auto'
+    
+    if not subject or not topic:
+        return jsonify({'error': 'Subject and topic are required'}), 400
+        
+    try:
+        activity = ai_service.generate_result_based_activity(subject, topic, activity_type)
+        return jsonify({'activity': activity}), 200
+    except Exception as e:
+        print(f"Activity generation error: {e}")
+        return jsonify({'error': 'Failed to generate activity'}), 500

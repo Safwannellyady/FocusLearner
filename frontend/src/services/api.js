@@ -107,6 +107,9 @@ export const gameAPI = {
 
   generateChallenge: (subject, level) =>
     api.post('/game/challenge/generate', { subject, level }),
+
+  generateActivity: (subject, topic, type) =>
+    api.post('/game/activity/generate', { subject, topic, type }),
 };
 
 // Auth API

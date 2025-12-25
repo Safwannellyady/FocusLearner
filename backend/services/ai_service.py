@@ -82,41 +82,110 @@ class AIService:
             print(f"Error parsing AI quiz: {e}")
             return self._get_mock_quiz(subject, topic, count)
 
-    def generate_game_content(self, subject: str, level: int) -> Dict[str, Any]:
+    def generate_result_based_activity(self, subject: str, topic: str, activity_type: str = "auto") -> Dict[str, Any]:
         """
-        Generate game content/problems based on subject and level.
+        Generate a specific type of activity: 'coding', 'lab', 'crossword', 'quiz'.
+        If 'auto', decides based on subject.
         """
+        if activity_type == "auto":
+             if any(x in subject for x in ["CS", "Computer", "Algorithm", "Web"]):
+                 activity_type = "coding"
+             elif any(x in subject for x in ["Physics", "Chemistry", "Biology", "Medical"]):
+                 activity_type = "lab"
+             else:
+                 activity_type = "crossword"
+        
+        if activity_type == "coding":
+            return self.generate_coding_challenge(subject, topic)
+        elif activity_type == "lab":
+            return self.generate_virtual_lab(subject, topic)
+        elif activity_type == "crossword":
+            return self.generate_crossword(subject, topic)
+        
+        return self.generate_game_content(subject, 1) # Fallback
+
+    def generate_coding_challenge(self, subject: str, topic: str) -> Dict[str, Any]:
         if not self.api_key:
-            return self._get_mock_game_problem(subject, level)
+             return {
+                 "type": "coding",
+                 "title": f"Mock Coding: {topic}",
+                 "description": "Write a function to sum two numbers.",
+                 "starter_code": "def solve(a, b):\n    pass",
+                 "test_cases": [{"input": "1, 2", "output": "3"}],
+                 "points": 100
+             }
+             
+        prompt = f"""
+        Generate a coding challenge for {subject} - {topic}.
+        Return JSON:
+        - title: string
+        - description: string (problem statement)
+        - starter_code: string (python or relevant language)
+        - test_cases: array of objects {{ "input": string, "output": string }}
+        - solution: string (complete solution code)
+        - points: 100
+        """
+        return self._parse_json_response(self._call_gemini(prompt), "coding")
+
+    def generate_virtual_lab(self, subject: str, topic: str) -> Dict[str, Any]:
+        if not self.api_key:
+            return {
+                "type": "lab",
+                "title": f"Virtual Lab: {topic}",
+                "scenario": "You are mixing Acid A with Base B.",
+                "steps": ["Mix", "Observer", "Record"],
+                "question": "What happens?",
+                "options": ["Explosion", "Neutralization", "Nothing"],
+                "correct_answer": "Neutralization"
+            }
             
         prompt = f"""
-        Generate a single challenging problem for a gamified learning app.
-        Subject: "{subject}"
-        Difficulty Level: {level} (1 is easy, 5 is very hard).
-        
-        Return ONLY a raw JSON object. Do not include markdown formatting.
-        The object should have:
-        - 'type': 'problem_solving'
-        - 'question': string (the scenario or problem)
-        - 'context': string (optional context or scenario setup)
-        - 'input_type': 'numeric' or 'text'
-        - 'answer': string or number (the correct solution)
-        - 'hints': array of 2 strings
-        - 'points': integer (based on difficulty, e.g., 10*level)
+        Generate a Virtual Lab scenario for {subject} - {topic}.
+        Return JSON:
+        - type: "lab"
+        - title: string
+        - scenario: string (detailed setup)
+        - steps: array of strings (what user does)
+        - question: string (what they must observe/conclude)
+        - options: array of 4 strings
+        - correct_answer: string
+        - explanation: string
         """
-        
-        text_response = self._call_gemini(prompt)
-        
+        return self._parse_json_response(self._call_gemini(prompt), "lab")
+
+    def generate_crossword(self, subject: str, topic: str) -> Dict[str, Any]:
+         if not self.api_key:
+             return {
+                 "type": "crossword",
+                 "title": f"Crossword: {topic}",
+                 "words": [
+                     {"word": "PYTHON", "clue": "Snake-like language"},
+                     {"word": "JAVA", "clue": "Coffee-like language"}
+                 ]
+             }
+         prompt = f"""
+         Generate a Crossword puzzle for {subject} - {topic}.
+         Return JSON:
+         - type: "crossword"
+         - title: string
+         - words: array of objects {{ "word": string (uppercase), "clue": string }}
+         Generate at least 5 words.
+         """
+         return self._parse_json_response(self._call_gemini(prompt), "crossword")
+
+    def _parse_json_response(self, text_response, fallback_type):
         if not text_response:
-            return self._get_mock_game_problem(subject, level)
-            
+             return {"type": fallback_type, "error": "AI unavailable"}
         try:
-            # Clean up potential markdown formatting
-            cleaned_text = text_response.replace('```json', '').replace('```', '').strip()
-            return json.loads(cleaned_text)
-        except Exception as e:
-            print(f"Error parsing AI game content: {e}")
-            return self._get_mock_game_problem(subject, level)
+             text = text_response.replace('```json', '').replace('```', '').strip()
+             return json.loads(text)
+        except:
+             return {"type": fallback_type, "error": "Parse error"}
+
+    def generate_game_content(self, subject: str, level: int) -> Dict[str, Any]:
+        """
+        Generate generic game content/problems based on subject and level.
+        """
 
     def refine_search_query(self, subject: str, user_query: str) -> str:
         """

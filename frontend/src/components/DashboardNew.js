@@ -88,6 +88,16 @@ const subjectOptions = [
   'Language/French',
 ];
 
+const topicTaxonomy = {
+  "Engineering/Network Analysis": ["Basic Concepts", "KCL & KVL", "Mesh Analysis", "Nodal Analysis", "Theorems", "AC Circuits"],
+  "Engineering/Circuit Theory": ["Resonance", "Two Port Networks", "Transient Analysis", "Graph Theory"],
+  "Engineering/Algorithms": ["Sorting", "Searching", "Graph Algorithms", "Dynamic Programming", "Greedy Algorithms"],
+  "Engineering/Data Structures": ["Arrays", "Linked Lists", "Stacks & Queues", "Trees", "Graphs"],
+  "Math/Linear Algebra": ["Vectors", "Matrices", "System of Equations", "Eigenvalues", "Vector Spaces"],
+  "Math/Calculus": ["Limits", "Derivatives", "Integration", "Applications of Derivatives"],
+  "default": ["General", "Introduction", "Advanced Concepts", "Exam Prep"]
+};
+
 const DashboardNew = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -138,11 +148,21 @@ const DashboardNew = () => {
     navigate('/login');
   };
 
-  const handleCreateLecture = async () => {
+  const handleCreateLecture = async (overrideData = null) => {
     try {
-      await lectureAPI.create(newLecture);
+      // Use override data if provided (for custom topic handling), otherwise usage state
+      let dataToSubmit = overrideData || newLecture;
+
+      // Handle Custom Topic Logic
+      if (dataToSubmit.topic === 'custom' && dataToSubmit.customTopic) {
+        dataToSubmit = { ...dataToSubmit, topic: dataToSubmit.customTopic };
+      }
+      // Remove temporary fields
+      const { customTopic, ...finalPayload } = dataToSubmit;
+
+      await lectureAPI.create(finalPayload);
       setCreateDialogOpen(false);
-      setNewLecture({ title: '', subject: '', topic: '', description: '' });
+      setNewLecture({ title: '', subject: '', topic: '', description: '', customTopic: '' });
       loadDashboardData();
     } catch (err) {
       console.error('Error creating lecture:', err);
@@ -348,23 +368,21 @@ const DashboardNew = () => {
           }
         }}
       >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>Create New Lecture</DialogTitle>
+        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>Plan Your Study Session</DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            label="Lecture Title"
-            value={newLecture.title}
-            onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })}
-            margin="normal"
-            variant="filled"
-            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2 } }}
-          />
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Select a subject and topic to automatically generate a curated learning path.
+          </Typography>
+
+          {/* 1. Subject Selection */}
           <FormControl fullWidth margin="normal" variant="filled">
-            <InputLabel>Subject</InputLabel>
+            <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Subject Focus</InputLabel>
             <Select
               value={newLecture.subject}
-              onChange={(e) => setNewLecture({ ...newLecture, subject: e.target.value })}
-              sx={{ background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}
+              onChange={(e) => {
+                setNewLecture({ ...newLecture, subject: e.target.value, topic: '' }); // Reset topic on subject change
+              }}
+              sx={{ background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' }}
             >
               {subjectOptions.map((subject) => (
                 <MenuItem key={subject} value={subject}>
@@ -373,31 +391,76 @@ const DashboardNew = () => {
               ))}
             </Select>
           </FormControl>
+
+          {/* 2. Topic/Sub-division Selection */}
+          {newLecture.subject && (
+            <FormControl fullWidth margin="normal" variant="filled">
+              <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Topic / Sub-Chapter</InputLabel>
+              <Select
+                value={newLecture.topic}
+                onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })}
+                sx={{ background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' }}
+                displayEmpty
+              >
+                {/* Dynamic Topic Population */}
+                {(topicTaxonomy[newLecture.subject] || topicTaxonomy['default']).map((topic) => (
+                  <MenuItem key={topic} value={topic}>{topic}</MenuItem>
+                ))}
+                <MenuItem value="custom"><em>+ Custom Topic</em></MenuItem>
+              </Select>
+            </FormControl>
+          )}
+
+          {/* Custom Topic Input (if needed) */}
+          {newLecture.topic === 'custom' && (
+            <TextField
+              fullWidth
+              label="Enter Custom Topic"
+              value={newLecture.customTopic || ''}
+              onChange={(e) => setNewLecture({ ...newLecture, topic: 'custom', customTopic: e.target.value })}
+              margin="normal"
+              variant="filled"
+              InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' } }}
+            />
+          )}
+
+          {/* 3. Title */}
           <TextField
             fullWidth
-            label="Topic"
-            value={newLecture.topic}
-            onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })}
+            label="Session Title"
+            placeholder="e.g., My Exam Prep"
+            value={newLecture.title}
+            onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })}
             margin="normal"
             variant="filled"
-            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2 } }}
+            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' } }}
           />
+
           <TextField
             fullWidth
-            label="Description"
+            label="Notes / Description (Optional)"
             value={newLecture.description}
             onChange={(e) => setNewLecture({ ...newLecture, description: e.target.value })}
             margin="normal"
             multiline
-            rows={3}
+            rows={2}
             variant="filled"
-            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2 } }}
+            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' } }}
           />
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
           <Button onClick={() => setCreateDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
-          <Button onClick={handleCreateLecture} variant="contained" disabled={!newLecture.title || !newLecture.subject || !newLecture.topic}>
-            Create Session
+          <Button
+            onClick={() => {
+              // Resolve the final topic before calling handleCreateLecture
+              const finalTopic = newLecture.topic === 'custom' ? newLecture.customTopic : newLecture.topic;
+              handleCreateLecture({ ...newLecture, topic: finalTopic });
+            }}
+            variant="contained"
+            disabled={!newLecture.title || !newLecture.subject || (!newLecture.topic && newLecture.topic !== 'custom') || (newLecture.topic === 'custom' && !newLecture.customTopic)}
+            sx={{ background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)' }}
+          >
+            Create & Auto-Generate
           </Button>
         </DialogActions>
       </Dialog>
@@ -405,5 +468,7 @@ const DashboardNew = () => {
   );
 };
 
-export default DashboardNew;
 
+
+export default DashboardNew;
+```

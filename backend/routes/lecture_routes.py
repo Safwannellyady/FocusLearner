@@ -50,6 +50,22 @@ def create_lecture():
     if not title or not subject or not topic:
         return jsonify({'error': 'Title, subject, and topic are required'}), 400
     
+    # Auto-generate content if no videos provided
+    if not video_ids:
+        print(f"Auto-generating content for: {subject} - {topic}")
+        from services.youtube_service import YouTubeService
+        youtube_service = YouTubeService()
+        
+        # Construct a targeted query
+        query = f"{topic} lecture tutorial"
+        
+        # Search for videos
+        videos = youtube_service.search_videos(query, subject_focus=subject, max_results=5)
+        
+        # Extract IDs
+        video_ids = [v['video_id'] for v in videos]
+        print(f"Found {len(video_ids)} videos: {video_ids}")
+
     lecture = Lecture(
         user_id=user_id,
         title=title,
