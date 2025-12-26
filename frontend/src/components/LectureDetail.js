@@ -19,7 +19,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { motion } from 'framer-motion';
-import { lectureAPI, contentAPI, focusAPI, gameAPI } from '../services/api'; // Fixed import path
+import { lectureAPI, contentAPI, focusAPI, gameAPI, taxonomyAPI } from '../services/api'; // Fixed import path
 import GameLab from './GameLab'; // Fixed import path
 import ActivityView from './ActivityView'; // Import ActivityView
 import LockIcon from '@mui/icons-material/Lock';
@@ -107,6 +107,24 @@ const LectureDetail = () => {
       fetchLectureData();
     }
   }, [id]);
+
+  const handleStartQuiz = async () => {
+    try {
+      // Basic Quiz Generation
+      const res = await lectureAPI.generateQuiz(lecture.subject, lecture.topic, 5);
+      if (res.data.quiz) {
+        setQuiz(res.data.quiz);
+        setShowQuiz(true);
+      }
+    } catch (e) {
+      console.error("Quiz failed", e);
+    }
+  };
+
+  const handleQuizSubmit = () => {
+    // Mock grading for now
+    setQuizResult({ score: 4, total: 5 });
+  };
 
   const handleGateUnlock = async () => {
     // 1. Generate a quick check activity
