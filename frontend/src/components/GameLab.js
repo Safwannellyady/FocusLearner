@@ -33,6 +33,7 @@ const GameLab = () => {
 
   // Dialog for Activity View
   const [activityOpen, setActivityOpen] = useState(false);
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
     // Initial load logic if needed
@@ -55,25 +56,20 @@ const GameLab = () => {
     }
   };
 
-  const handleActivitySubmit = async (answer) => {
+  const handleActivitySubmit = async (answer, violationCount = 0) => {
     try {
-      const response = await gameAPI.submitActivity(activeActivity.challenge_id, answer);
-      const result = response.data.result;
-
-      let message = "";
-      if (result.is_correct) {
-        message = `Success! +${result.xp_earned} XP.\nMastery: ${result.mastery_state} (${result.new_proficiency}%)`;
-      } else {
-        message = `Not quite. Score: ${Math.floor(result.score * 100)}%. +${result.xp_earned} XP.\nFeedback: ${result.feedback}`;
-      }
-
-      alert(message);
-      setActivityOpen(false);
-      setActiveActivity(null);
+      const response = await gameAPI.submitActivity(activeActivity.challenge_id, answer, violationCount);
+      setResult(response.data.result);
     } catch (error) {
       console.error("Submission failed", error);
       alert("Error submitting answer. Please try again.");
     }
+  };
+
+  const handleNext = () => {
+    setActivityOpen(false);
+    setResult(null);
+    setActiveActivity(null);
   };
 
   return (
@@ -194,11 +190,18 @@ const GameLab = () => {
         <DialogContent sx={{ p: 0 }}>
           {activeActivity && (
             <Box sx={{ p: 3 }}>
-              <Box display="flex" justifyContent="space-between" mb={2}>
-                <Chip label={activeActivity.subject} color="primary" variant="outlined" />
-                <Button onClick={() => setActivityOpen(false)} color="error">Quit Activity</Button>
-              </Box>
-              <ActivityView activity={activeActivity} onSubmit={handleActivitySubmit} />
+              {!result && (
+                <Box display="flex" justifyContent="space-between" mb={2}>
+                  <Chip label={activeActivity.subject} color="primary" variant="outlined" />
+                  <Button onClick={() => setActivityOpen(false)} color="error">Quit Activity</Button>
+                </Box>
+              )}
+              <ActivityView
+                activity={activeActivity}
+                onSubmit={handleActivitySubmit}
+                result={result}
+                onNext={handleNext}
+              />
             </Box>
           )}
         </DialogContent>

@@ -66,17 +66,9 @@ def create_lecture():
         video_ids = [v['video_id'] for v in videos]
         print(f"Found {len(video_ids)} videos: {video_ids}")
 
-from models import Lecture, LearningIntent, db
-
-# ... (inside create_lecture) ...
-
     # Look up Learning Intent
     intent = LearningIntent.query.filter_by(subject=subject, topic=topic).first()
     intent_id = intent.id if intent else None
-
-    # Auto-generate content if no videos provided
-    if not video_ids:
-        # ... (existing auto-gen logic) ...
 
     lecture = Lecture(
         user_id=user_id,
@@ -176,3 +168,25 @@ def generate_quiz():
         print(f"Quiz generation error: {e}")
         return jsonify({'error': 'Failed to generate quiz'}), 500
 
+
+from services.learning_loop_service import LearningLoopService
+loop_service = LearningLoopService()
+
+@lecture_routes.route('/<int:lecture_id>/complete', methods=['POST'])
+@token_required
+def complete_lecture(lecture_id):
+    """Mark lecture as complete and advance learning loop"""
+    user_id = request.current_user_id
+    lecture = Lecture.query.filter_by(id=lecture_id, user_id=user_id).first()
+    
+    if not lecture:
+        return jsonify({'error': 'Lecture not found'}), 404
+        
+    loop_status = None
+    if lecture.learning_intent_id:
+        loop_status = loop_service.update_stage(user_id, lecture.learning_intent_id, success=True)
+        
+    return jsonify({
+        'message': 'Lecture completed',
+        'loop_status': loop_status
+    }), 200

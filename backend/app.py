@@ -42,7 +42,9 @@ app.register_blueprint(preferences_routes)
 app.register_blueprint(lecture_routes)
 app.register_blueprint(chat_routes)
 from routes.taxonomy_routes import taxonomy_bp
+from routes.analytics_routes import analytics_bp
 app.register_blueprint(taxonomy_bp, url_prefix='/api/taxonomy')
+app.register_blueprint(analytics_bp)
 
 @app.route('/api/health', methods=['GET'])
 def health_check():

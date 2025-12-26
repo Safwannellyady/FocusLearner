@@ -302,6 +302,7 @@ class ActivityResult(db.Model):
     is_correct = db.Column(db.Boolean, nullable=False)
     score_raw = db.Column(db.Float, default=0.0)
     xp_earned = db.Column(db.Integer, default=0)
+    focus_violations = db.Column(db.Integer, default=0)
     
     feedback = db.Column(db.Text, nullable=True) # Auto-generated feedback
     
@@ -331,6 +332,24 @@ class LearningIntent(db.Model):
             'required_outcomes': json.loads(self.required_outcomes) if self.required_outcomes else [],
             'created_at': self.created_at.isoformat()
         }
+
+class LearningStage(str, Enum):
+    UNDERSTAND = "UNDERSTAND"   # Watch Lecture
+    APPLY = "APPLY"             # Do Activity
+    REMEDIATE = "REMEDIATE"     # Failed, needs review
+    MASTERED = "MASTERED"       # Completed
+
+class LearningLoopState(db.Model):
+    __tablename__ = 'learning_loop_states'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id'), nullable=False)
+    current_stage = db.Column(db.Enum(LearningStage), default=LearningStage.UNDERSTAND)
+    attempts = db.Column(db.Integer, default=0)
+    last_feedback = db.Column(db.Text, nullable=True) # AI analysis of failure
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    intent = db.relationship('LearningIntent', backref='loop_states')
 
 
 class TopicMasteryState(str, Enum):

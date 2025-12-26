@@ -79,9 +79,10 @@ export const contentAPI = {
     api.get(`/content/transcript/${videoId}`),
 };
 
-export const analyticsAPI = {
-  getSummary: () => api.get('/focus/analytics/summary'),
-};
+// NO REPLACEMENT CONTENT IN THIS TOOL CALL - SWITCHING TO MULTI_REPLACE
+// This is just a comment. I will abort and use multi_replace.
+// Wait, I can just use 2 tool calls in parallel? No, sequential is cleaner.
+// I will use multi_replace.
 
 // Game API
 export const gameAPI = {
@@ -116,8 +117,8 @@ export const gameAPI = {
   generateActivity: (subject, topic, type) =>
     api.post('/game/activity/generate', { subject, topic, type }),
 
-  submitActivity: (challengeId, answer) =>
-    api.post('/game/activity/submit', { challenge_id: challengeId, answer }),
+  submitActivity: (challengeId, answer, violationCount = 0) =>
+    api.post('/game/activity/submit', { challenge_id: challengeId, answer, violation_count: violationCount }),
 
   getMastery: (subject, topic) =>
     api.get('/game/mastery', { params: { subject, topic } }),
@@ -170,12 +171,18 @@ export const chatAPI = {
   clearHistory: () => api.post('/chat/clear'),
 };
 
+// Analytics API
+export const analyticsAPI = {
+  getSummary: () => api.get('/focus/analytics/summary'),
+  getHealth: () => api.get('/analytics/health'),
+};
+
 // Taxonomy API
 export const taxonomyAPI = {
   getSubjects: () => api.get('/taxonomy/subjects'),
   getTopics: (subject) => api.get('/taxonomy/topics', { params: { subject } }),
   getIntent: (id) => api.get(`/taxonomy/intent/${id}`),
+  getLoopStatus: (intentId) => api.get('/taxonomy/loop/status', { params: { intent_id: intentId } }),
 };
 
 export default api;
-

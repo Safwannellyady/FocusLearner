@@ -28,9 +28,11 @@ import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
 import InsightsIcon from '@mui/icons-material/Insights';
+import VideoPlayer from './VideoPlayer';
+import LearningHealthDashboard from './LearningHealthDashboard';
 import { motion } from 'framer-motion';
 import { lectureAPI, authAPI, contentAPI, gameAPI, taxonomyAPI } from '../services/api';
-import VideoPlayer from './VideoPlayer';
+// NO REPLACEMENT CONTENT IN THIS TOOL CALL - SWITCHING TO MULTI_REPLACE
 
 const DashboardNew = () => {
   const navigate = useNavigate();
@@ -44,10 +46,12 @@ const DashboardNew = () => {
     description: '',
   });
   const [gameProgress, setGameProgress] = useState(null);
+  const [viewMode, setViewMode] = useState('lectures'); // 'lectures' | 'health'
 
   // Taxonomy State
   const [availableSubjects, setAvailableSubjects] = useState([]);
   const [availableTopics, setAvailableTopics] = useState([]);
+  const [loopStates, setLoopStates] = useState({}); // { intentId: { stage: 'UNDERSTAND', ... } }
 
   useEffect(() => {
     loadUser();
@@ -72,8 +76,24 @@ const DashboardNew = () => {
       ]);
       setLectures(lecturesRes.data.lectures || []);
 
+      // Fetch Loop States for these lectures
+      const fetchedLectures = lecturesRes.data.lectures || [];
+      const states = {};
+
+      // Parallel fetch for speed
+      await Promise.all(fetchedLectures.map(async (lecture) => {
+        if (lecture.learning_intent_id) {
+          try {
+            const stateRes = await taxonomyAPI.getLoopStatus(lecture.learning_intent_id);
+            states[lecture.learning_intent_id] = stateRes.data;
+          } catch (e) {
+            // Silence 404s or errors for clean UI
+          }
+        }
+      }));
+      setLoopStates(states);
+
       if (progressRes.data.progress && progressRes.data.progress.length > 0) {
-        // Use the first module's progress for the main dashboard widget for now
         setGameProgress(progressRes.data.progress[0]);
       }
 
@@ -210,89 +230,155 @@ const DashboardNew = () => {
         </Box>
 
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: 'white' }}>My Focus Sessions</Typography>
-          <Box>
+          <Box display="flex" gap={1} bgcolor="rgba(255,255,255,0.05)" p={0.5} borderRadius={3}>
             <Button
-              variant="outlined"
-              onClick={() => navigate('/progress')}
-              sx={{ mr: 2, borderRadius: 3, textTransform: 'none', borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+              variant={viewMode === 'lectures' ? "contained" : "text"}
+              onClick={() => setViewMode('lectures')}
+              sx={{
+                borderRadius: 2.5,
+                textTransform: 'none',
+                px: 3,
+                bgcolor: viewMode === 'lectures' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' }
+              }}
             >
-              My Progress
+              My Focus Sessions
             </Button>
+            <Button
+              variant={viewMode === 'health' ? "contained" : "text"}
+              onClick={() => setViewMode('health')}
+              sx={{
+                borderRadius: 2.5,
+                textTransform: 'none',
+                px: 3,
+                bgcolor: viewMode === 'health' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' }
+              }}
+            >
+              Learning Health
+            </Button>
+          </Box>
+
+          <Box>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setCreateDialogOpen(true)}
-              sx={{ borderRadius: 3, textTransform: 'none', px: 3 }}
+              sx={{ borderRadius: 3, textTransform: 'none', px: 3, background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)' }}
             >
               New Lecture
             </Button>
           </Box>
         </Box>
 
-        {lectures.length > 0 ? (
+        {viewMode === 'health' ? (
+          <LearningHealthDashboard />
+        ) : lectures.length > 0 ? (
           <Grid container spacing={3}>
-            {lectures.map((lecture, index) => (
-              <Grid item xs={12} sm={6} md={4} key={lecture.id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card sx={{
-                    height: '100%',
-                    background: 'rgba(20, 20, 35, 0.6)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: 4,
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                    '&:hover': {
-                      transform: 'translateY(-5px)',
-                      boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
-                    }
-                  }}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                        <Chip
-                          label={lecture.subject.split('/')[0]}
-                          size="small"
-                          sx={{
-                            background: 'rgba(139, 92, 246, 0.15)',
-                            color: '#a78bfa',
-                            border: '1px solid rgba(139, 92, 246, 0.3)',
-                            fontWeight: 600
-                          }}
-                        />
-                      </Box>
-                      <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 700, minHeight: '64px' }}>
-                        {lecture.title}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {lecture.topic}
-                      </Typography>
+            {lectures.map((lecture, index) => {
+              const intentId = lecture.learning_intent_id;
+              const loopState = intentId ? loopStates[intentId] : null;
+              const currentStage = loopState ? loopState.stage : 'UNDERSTAND'; // Default
 
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => navigate(`/lecture/${lecture.id}`)}
-                        sx={{
-                          borderColor: 'rgba(255,255,255,0.1)',
-                          color: 'white',
-                          borderRadius: 2,
-                          '&:hover': {
-                            borderColor: '#8b5cf6',
-                            background: 'rgba(139, 92, 246, 0.1)'
-                          }
-                        }}
-                      >
-                        Start Learning
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
+              let stageColor = 'default';
+              let stageLabel = 'Watch Lecture';
+              let buttonText = 'Start Learning';
+
+              if (currentStage === 'APPLY') {
+                stageColor = 'warning';
+                stageLabel = 'Apply Integration';
+                buttonText = 'Start Activity';
+              } else if (currentStage === 'MASTERED') {
+                stageColor = 'success';
+                stageLabel = 'Mastered';
+                buttonText = 'Review Topic';
+              } else if (currentStage === 'REMEDIATE') {
+                stageColor = 'error';
+                stageLabel = 'Needs Review';
+                buttonText = 'Watch Remediation';
+              }
+
+              return (
+                <Grid item xs={12} sm={6} md={4} key={lecture.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card sx={{
+                      height: '100%',
+                      background: 'rgba(20, 20, 35, 0.6)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: 4,
+                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                      }
+                    }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                          <Box display="flex" gap={1}>
+                            <Chip
+                              label={lecture.subject.split('/')[0]}
+                              size="small"
+                              sx={{
+                                background: 'rgba(139, 92, 246, 0.15)',
+                                color: '#a78bfa',
+                                border: '1px solid rgba(139, 92, 246, 0.3)',
+                                fontWeight: 600
+                              }}
+                            />
+                            {currentStage !== 'UNDERSTAND' && (
+                              <Chip
+                                label={stageLabel}
+                                color={stageColor}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Box>
+                        <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 700, minHeight: '64px' }}>
+                          {lecture.title}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {lecture.topic}
+                        </Typography>
+
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          onClick={() => {
+                            if (currentStage === 'APPLY') {
+                              // For now, redirect to a generic game activity generator. 
+                              // Ideally we'd have a specific route.
+                              // I'll assume /game/play exists or I'll just go to lecture for now with a param
+                              navigate(`/lecture/${lecture.id}?mode=apply`);
+                            } else {
+                              navigate(`/lecture/${lecture.id}`);
+                            }
+                          }}
+                          sx={{
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            color: 'white',
+                            borderRadius: 2,
+                            '&:hover': {
+                              borderColor: '#8b5cf6',
+                              background: 'rgba(139, 92, 246, 0.1)'
+                            }
+                          }}
+                        >
+                          {buttonText}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              );
+            })}
           </Grid>
         ) : (
           <Paper

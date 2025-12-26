@@ -44,36 +44,14 @@ const LectureDetail = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [gateActivity, setGateActivity] = useState(null);
   const [gateOpen, setGateOpen] = useState(false);
+  const [gateResult, setGateResult] = useState(null);
+  const [loopStatus, setLoopStatus] = useState(null);
 
   useEffect(() => {
     // ... existing useEffect ...
   }, [id]);
 
-  const handleStartQuiz = async () => {
-    try {
-      setLoading(true);
-      const res = await lectureAPI.generateQuiz(lecture.subject, lecture.topic, 5);
-      setQuiz(res.data.quiz);
-      setShowQuiz(true);
-      setQuizAnswers({});
-      setQuizResult(null);
-    } catch (error) {
-      console.error("Error generating quiz:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuizSubmit = () => {
-    let score = 0;
-    quiz.forEach(q => {
-      if (quizAnswers[q.id] === q.correctAnswer) {
-        score++;
-      }
-    });
-    setQuizResult({ score, total: quiz.length });
-  };
-
+  // ... (handleStartQuiz logic) ...
 
   useEffect(() => {
     const fetchLectureData = async () => {
@@ -83,6 +61,16 @@ const LectureDetail = () => {
         const lectureRes = await lectureAPI.getById(id);
         const lectureData = lectureRes.data.lecture;
         setLecture(lectureData);
+
+        // Fetch Loop Status
+        if (lectureData.learning_intent_id) {
+          try {
+            const loopRes = await taxonomyAPI.getLoopStatus(lectureData.learning_intent_id);
+            setLoopStatus(loopRes.data);
+          } catch (e) {
+            console.warn("Failed to load loop status", e);
+          }
+        }
 
         // Fetch related videos based on lecture subject/topic
         if (lectureData) {
@@ -101,6 +89,8 @@ const LectureDetail = () => {
           } catch (e) {
             console.warn("Failed to check mastery", e);
           }
+
+          // ... existing video fetch logic ...
 
           const searchQuery = `${lectureData.subject} ${lectureData.topic}`;
           const videoRes = await contentAPI.search('', lectureData.subject); // Using subject for broad match first
@@ -131,26 +121,26 @@ const LectureDetail = () => {
     }
   };
 
-  const handleGateSubmit = async (answer) => {
+  const handleGateSubmit = async (answer, violationCount = 0) => {
     try {
-      const response = await gameAPI.submitActivity(gateActivity.challenge_id, answer);
+      const response = await gameAPI.submitActivity(gateActivity.challenge_id, answer, violationCount);
       const res = response.data.result;
+      setGateResult(res);
 
       if (res.is_correct) {
-        alert(`Gate Passed! Access Granted.\n+${res.xp_earned} XP`);
+        // Unlock immediately in background
         setIsLocked(false);
-        setGateOpen(false);
-        // Refresh mastery
         setMastery({ ...mastery, proficiency: res.new_proficiency, state: res.mastery_state });
-      } else {
-        alert(`Access Denied. Score: ${Math.floor(res.score * 100)}%. Needs better accuracy.`);
-        // Keep locked
-        setGateOpen(false);
       }
     } catch (e) {
       console.error(e);
       alert("Submission error");
     }
+  };
+
+  const handleGateNext = () => {
+    setGateOpen(false);
+    setGateResult(null);
   };
 
   const handleTabChange = (event, newValue) => {
@@ -302,6 +292,37 @@ const LectureDetail = () => {
           </Box>
         </Box>
       </Box>
+
+      {/* Learning Loop Status Banner */}
+      {loopStatus && (
+        <Box mb={3}>
+          {loopStatus.stage === 'REMEDIATE' && (
+            <Alert severity="warning" variant="filled" sx={{ borderRadius: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold">Guided Retry Mode</Typography>
+              <Typography variant="body2">
+                You missed some key concepts in the last activity.
+                {loopStatus.feedback ? ` Feedback: ${loopStatus.feedback}` : ' Review the video segments below before trying again.'}
+              </Typography>
+            </Alert>
+          )}
+          {loopStatus.stage === 'APPLY' && (
+            <Alert severity="info" variant="outlined" sx={{ borderRadius: 2, borderColor: '#3b82f6', color: '#90caf9' }}>
+              <Typography variant="subtitle1" fontWeight="bold">Application Phase</Typography>
+              <Typography variant="body2">
+                You've completed the lecture! Now, switch to the <strong>Game Lab</strong> or <strong>Exercises</strong> tab to apply what you learned.
+              </Typography>
+            </Alert>
+          )}
+          {loopStatus.stage === 'MASTERED' && (
+            <Alert severity="success" variant="filled" sx={{ borderRadius: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold">Topic Mastered!</Typography>
+              <Typography variant="body2">
+                You have demonstrated proficiency in this topic. Feel free to review or move to the next one.
+              </Typography>
+            </Alert>
+          )}
+        </Box>
+      )}
 
       <Grid container spacing={4}>
         {/* Left Column: Videos (Practical Lab) */}
@@ -486,7 +507,12 @@ const LectureDetail = () => {
             <Typography variant="h6" color="error">⚠️ Mandatory Check</Typography>
             <Button color="inherit" onClick={() => setGateOpen(false)}>Exit (Stays Locked)</Button>
           </Box>
-          <ActivityView activity={gateActivity} onSubmit={handleGateSubmit} />
+          <ActivityView
+            activity={gateActivity}
+            onSubmit={handleGateSubmit}
+            result={gateResult}
+            onNext={handleGateNext}
+          />
         </Box>
       )}
     </DialogContent>

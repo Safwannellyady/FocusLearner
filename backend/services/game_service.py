@@ -32,27 +32,33 @@ class GameService:
 
     # --- New Evaluation Engine Methods ---
 
-    def create_activity(self, ai_service, user_id, subject, topic, activity_type="auto", intent=None):
+    def create_activity(self, ai_service, user_id, subject, topic, activity_type="auto", intent=None, loop_state=None):
         """
         Generates an activity via AI, persists it securely, and returns it to the user.
         """
         # 1. Generate Content
-        generated_data = ai_service.generate_result_based_activity(subject, topic, activity_type, intent)
+        generated_data = ai_service.generate_result_based_activity(subject, topic, activity_type, intent, loop_state)
         
         # 2. Extract Solution (Critical for grading)
         # The AI service should ideally return separate 'content' and 'solution' fields, 
         # or we assume 'answer'/'correct_answer'/'solution' key in the dict is the secure part.
         
         # For simplicity, we assume the whole blob is data, and we extract specific keys for solution.
-        solution = None
+        # 3. Extract Solution & Explanation
+        solution_val = None
         if 'correct_answer' in generated_data:
-            solution = generated_data['correct_answer']
+            solution_val = generated_data['correct_answer']
         elif 'answer' in generated_data:
-            solution = generated_data['answer']
+            solution_val = generated_data['answer']
         elif 'solution' in generated_data:
-            solution = generated_data['solution']
+            solution_val = generated_data['solution']
         else:
-            solution = "manual_review" # Fallback
+            solution_val = "manual_review" 
+            
+        solution_obj = {
+            "answer": solution_val,
+            "explanation": generated_data.get('explanation', '')
+        }
             
         # 3. Create Challenge Record
         challenge_id = str(uuid.uuid4())
@@ -64,7 +70,7 @@ class GameService:
             topic=topic,
             activity_type=generated_data.get('type', 'unknown'),
             data=json.dumps(generated_data),
-            solution=json.dumps(solution),
+            solution=json.dumps(solution_obj),
             learning_intent_id=intent.id if intent else None
         )
         
@@ -77,7 +83,7 @@ class GameService:
         # So we should strip the answer.
         
         sanitized_data = generated_data.copy()
-        for secret in ['answer', 'correct_answer', 'solution']:
+        for secret in ['answer', 'correct_answer', 'solution', 'explanation']:
             if secret in sanitized_data:
                 del sanitized_data[secret]
                 
@@ -86,7 +92,7 @@ class GameService:
         
         return sanitized_data
 
-    def submit_activity(self, user_id, challenge_id, user_answer):
+    def submit_activity(self, user_id, challenge_id, user_answer, violation_count=0):
         """
         Grades the submission on the backend, updates mastery, and returns result.
         """
@@ -95,8 +101,21 @@ class GameService:
             return {'error': 'Challenge not found'}
             
         # 1. Grade the Answer
-        expected_solution = json.loads(challenge.solution)
-        is_correct, raw_score, feedback = self._grade_answer(challenge.activity_type, expected_solution, user_answer)
+        solution_data = json.loads(challenge.solution)
+        # Handle new vs legacy format
+        if isinstance(solution_data, dict) and 'answer' in solution_data:
+            expected_val = solution_data['answer']
+            explanation = solution_data.get('explanation', '')
+        else:
+            expected_val = solution_data
+            explanation = ''
+            
+        is_correct, raw_score, grade_feedback = self._grade_answer(challenge.activity_type, expected_val, user_answer)
+        
+        # Combine for history log
+        final_feedback = grade_feedback
+        if explanation:
+             final_feedback += f" \n\nExplanation: {explanation}"
         
         # 2. Calculate XP (Normalization Rule)
         xp_config = {
@@ -118,7 +137,8 @@ class GameService:
             is_correct=is_correct,
             score_raw=raw_score,
             xp_earned=xp_earned,
-            feedback=feedback
+            focus_violations=violation_count,
+            feedback=final_feedback
         )
         db.session.add(result)
         
@@ -141,7 +161,8 @@ class GameService:
             'is_correct': is_correct,
             'score': raw_score,
             'xp_earned': xp_earned,
-            'feedback': feedback,
+            'feedback': final_feedback,
+            'explanation': explanation,
             'mastery_state': mastery_update['state'],
             'new_proficiency': mastery_update['proficiency']
         }

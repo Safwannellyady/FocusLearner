@@ -82,7 +82,7 @@ class AIService:
             print(f"Error parsing AI quiz: {e}")
             return self._get_mock_quiz(subject, topic, count)
 
-    def generate_result_based_activity(self, subject: str, topic: str, activity_type: str = "auto", intent=None) -> Dict[str, Any]:
+    def generate_result_based_activity(self, subject: str, topic: str, activity_type: str = "auto", intent=None, loop_state=None) -> Dict[str, Any]:
         """
         Generate a specific type of activity: 'coding', 'lab', 'crossword', 'quiz'.
         If 'auto', decides based on subject.
@@ -96,15 +96,15 @@ class AIService:
                  activity_type = "crossword"
         
         if activity_type == "coding":
-            return self.generate_coding_challenge(subject, topic, intent)
+            return self.generate_coding_challenge(subject, topic, intent, loop_state)
         elif activity_type == "lab":
-            return self.generate_virtual_lab(subject, topic, intent)
+            return self.generate_virtual_lab(subject, topic, intent, loop_state)
         elif activity_type == "crossword":
             return self.generate_crossword(subject, topic)
         
         return self.generate_game_content(subject, 1) # Fallback
 
-    def generate_coding_challenge(self, subject: str, topic: str, intent=None) -> Dict[str, Any]:
+    def generate_coding_challenge(self, subject: str, topic: str, intent=None, loop_state=None) -> Dict[str, Any]:
         if not self.api_key:
              return {
                  "type": "coding",
@@ -126,10 +126,16 @@ class AIService:
              except:
                  pass
              difficulty = intent.difficulty
+        
+        # Adaptive Logic
+        adaptation_prompt = ""
+        if loop_state and loop_state.attempts > 0:
+            adaptation_prompt = f"\nUser is retrying ({loop_state.attempts} fails). GENERATE A SIMPLER PROBLEM. Include a specific HINT in the description."
+            difficulty = "Beginner" # Downgrade difficulty
 
         prompt = f"""
         Generate a coding challenge for {subject} - {topic}.
-        Difficulty Level: {difficulty}{outcomes}
+        Difficulty Level: {difficulty}{outcomes}{adaptation_prompt}
         
         Return JSON:
         - title: string
@@ -141,7 +147,7 @@ class AIService:
         """
         return self._parse_json_response(self._call_gemini(prompt), "coding")
 
-    def generate_virtual_lab(self, subject: str, topic: str, intent=None) -> Dict[str, Any]:
+    def generate_virtual_lab(self, subject: str, topic: str, intent=None, loop_state=None) -> Dict[str, Any]:
         if not self.api_key:
             return {
                 "type": "lab",
@@ -214,6 +220,7 @@ class AIService:
         """
         Generate generic game content/problems based on subject and level.
         """
+        return self._get_mock_game_problem(subject, level)
 
     def refine_search_query(self, subject: str, user_query: str) -> str:
         """
@@ -231,9 +238,34 @@ class AIService:
         Video should be a tutorial or lecture.
         """
         
+        text_response = self._call_gemini(prompt)
         if text_response:
             return text_response.strip()
         return f"{subject} {user_query} lecture"
+
+    def analyze_misconception(self, question: str, user_answer: str, correct_answer: str, subject: str) -> Dict[str, str]:
+        """
+        Analyze why a user got a question wrong.
+        """
+        if not self.api_key:
+            return {
+                "analysis": "Incorrect answer. Review the basic concepts.",
+                "remediation_focus": subject
+            }
+
+        prompt = f"""
+        The student is learning {subject}.
+        Question: "{question}"
+        Student Answer: "{user_answer}"
+        Correct Answer: "{correct_answer}"
+
+        Analyze the misconception. Why did they likely choose that answer?
+        Return a JSON object with:
+        - "analysis": string (Direct, constructive feedback to the student, max 2 sentences)
+        - "remediation_focus": string (A specific sub-topic or keyword to search for remediation)
+        """
+        
+        return self._parse_json_response(self._call_gemini(prompt), "misconception")
 
     def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, str]] = []) -> str:
         """

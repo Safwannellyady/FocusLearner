@@ -4,6 +4,7 @@ API endpoints for gamified learning challenges
 """
 
 from flask import Blueprint, request, jsonify
+import json
 import sys
 import os
 
@@ -15,11 +16,13 @@ if parent_dir not in sys.path:
 from services.game_service import GameService
 from services.ai_service import AIService
 from utils.auth import token_required
-from models import LearningIntent
+from models import LearningIntent, GameChallenge
+from services.learning_loop_service import LearningLoopService
 
 game_routes = Blueprint('game', __name__, url_prefix='/api/game')
 game_service = GameService()
 ai_service = AIService()
+loop_service = LearningLoopService()
 
 
 @game_routes.route('/modules', methods=['GET'])
@@ -141,20 +144,21 @@ def generate_activity():
     if not subject or not topic:
         return jsonify({'error': 'Subject and topic are required'}), 400
         
-from models import LearningIntent
-    
-    # ... (inside generate_activity) ...
-    
     # Lookup Intent
     intent = LearningIntent.query.filter_by(subject=subject, topic=topic).first()
+    loop_state = None
+    if intent:
+        loop_state = loop_service.get_current_stage(user_id, intent.id)
     
     try:
         # Pass ai_service explicitly, and intent
-        activity = game_service.create_activity(ai_service, user_id, subject, topic, activity_type, intent)
+        activity = game_service.create_activity(ai_service, user_id, subject, topic, activity_type, intent, loop_state)
         return jsonify({'activity': activity}), 200
     except Exception as e:
         print(f"Activity generation error: {e}")
         return jsonify({'error': 'Failed to generate activity'}), 500
+
+
 
 
 @game_routes.route('/activity/submit', methods=['POST'])
@@ -165,14 +169,36 @@ def submit_activity_route():
     data = request.get_json()
     challenge_id = data.get('challenge_id')
     answer = data.get('answer')
+    violation_count = data.get('violation_count', 0)
     
     if not challenge_id or answer is None:
         return jsonify({'error': 'Challenge ID and Answer are required'}), 400
         
     try:
-        result = game_service.submit_activity(user_id, challenge_id, answer)
+        result = game_service.submit_activity(user_id, challenge_id, answer, violation_count)
         if 'error' in result:
              return jsonify(result), 404
+             
+        # Update Learning Loop State
+        challenge = GameChallenge.query.get(challenge_id)
+        if challenge and challenge.learning_intent_id:
+            # Prepare metadata for AI analysis
+            try:
+                content_data = json.loads(challenge.data)
+                solution_data_local = json.loads(challenge.solution)
+                correct_val = solution_data_local.get('answer') if isinstance(solution_data_local, dict) else solution_data_local
+            except:
+                content_data = {}
+                correct_val = "Unknown"
+                
+            metadata = {
+                "question": content_data.get('question') or content_data.get('description') or "Unknown Question",
+                "user_answer": str(answer),
+                "correct_answer": str(correct_val),
+                "subject": challenge.subject
+            }
+            loop_update = loop_service.update_stage(user_id, challenge.learning_intent_id, result['is_correct'], result.get('score', 0), metadata)
+            result['loop_status'] = loop_update
              
         return jsonify({'result': result}), 200
     except Exception as e:
