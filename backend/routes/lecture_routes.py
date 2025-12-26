@@ -13,7 +13,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from models import Lecture, LearningIntent, db
+from models import Lecture, LearningIntent, Course, db
 from utils.auth import token_required
 from services.ai_service import AIService
 
@@ -21,12 +21,61 @@ lecture_routes = Blueprint('lecture', __name__, url_prefix='/api/lectures')
 ai_service = AIService()
 
 
+@lecture_routes.route('/courses', methods=['GET'])
+@token_required
+def get_courses():
+    """Get all courses for current user"""
+    user_id = request.current_user_id
+    courses = Course.query.filter_by(user_id=user_id).order_by(Course.created_at.desc()).all()
+    
+    return jsonify({
+        'courses': [course.to_dict() for course in courses],
+        'count': len(courses)
+    }), 200
+
+
+@lecture_routes.route('/courses', methods=['POST'])
+@token_required
+def create_course():
+    """Create a new course (Class/Book)"""
+    user_id = request.current_user_id
+    data = request.get_json()
+    
+    title = data.get('title')
+    subject = data.get('subject')
+    description = data.get('description', '')
+    
+    if not title or not subject:
+        return jsonify({'error': 'Title and subject are required'}), 400
+        
+    course = Course(
+        user_id=user_id,
+        title=title,
+        subject=subject,
+        description=description
+    )
+    
+    db.session.add(course)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Course created successfully',
+        'course': course.to_dict()
+    }), 201
+
+
 @lecture_routes.route('/', methods=['GET'])
 @token_required
 def get_lectures():
     """Get all lectures for current user"""
     user_id = request.current_user_id
-    lectures = Lecture.query.filter_by(user_id=user_id, is_active=True).all()
+    course_id = request.args.get('course_id')
+    
+    query = Lecture.query.filter_by(user_id=user_id, is_active=True)
+    if course_id:
+        query = query.filter_by(course_id=course_id)
+        
+    lectures = query.order_by(Lecture.created_at.desc()).all()
     
     return jsonify({
         'lectures': [lecture.to_dict() for lecture in lectures],
@@ -41,6 +90,7 @@ def create_lecture():
     user_id = request.current_user_id
     data = request.get_json()
     
+    course_id = data.get('course_id')
     title = data.get('title')
     subject = data.get('subject')
     topic = data.get('topic')
@@ -72,6 +122,7 @@ def create_lecture():
 
     lecture = Lecture(
         user_id=user_id,
+        course_id=course_id,
         title=title,
         subject=subject,
         topic=topic,

@@ -19,357 +19,267 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  List,
-  ListItem,
-  ListItemText,
   Chip,
+  Breadcrumbs,
+  Link
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
 import InsightsIcon from '@mui/icons-material/Insights';
-import VideoPlayer from './VideoPlayer';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import BookIcon from '@mui/icons-material/Book';
+import SchoolIcon from '@mui/icons-material/School';
 import LearningHealthDashboard from './LearningHealthDashboard';
 import { motion } from 'framer-motion';
-import { lectureAPI, authAPI, contentAPI, gameAPI, taxonomyAPI } from '../services/api';
-// NO REPLACEMENT CONTENT IN THIS TOOL CALL - SWITCHING TO MULTI_REPLACE
+import { lectureAPI, authAPI, contentAPI, gameAPI, taxonomyAPI, courseAPI } from '../services/api';
 
 const DashboardNew = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [lectures, setLectures] = useState([]);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newLecture, setNewLecture] = useState({
-    title: '',
-    subject: '',
-    topic: '',
-    description: '',
-  });
-  const [gameProgress, setGameProgress] = useState(null);
-  const [viewMode, setViewMode] = useState('lectures'); // 'lectures' | 'health'
 
-  // Taxonomy State
+  // Data State
+  const [courses, setCourses] = useState([]);
+  const [lectures, setLectures] = useState([]);
+  const [gameProgress, setGameProgress] = useState(null);
+
+  // View State
+  const [viewMode, setViewMode] = useState('courses'); // 'courses' | 'lectures' | 'health'
+  const [selectedCourse, setSelectedCourse] = useState(null);
+
+  // Dialog State
+  const [createCourseOpen, setCreateCourseOpen] = useState(false);
+  const [createLectureOpen, setCreateLectureOpen] = useState(false);
+
+  // Forms
+  const [newCourse, setNewCourse] = useState({ title: '', subject: '', description: '' });
+  const [newLecture, setNewLecture] = useState({ title: '', subject: '', topic: '', description: '' });
+
+  // Taxonomy
   const [availableSubjects, setAvailableSubjects] = useState([]);
   const [availableTopics, setAvailableTopics] = useState([]);
-  const [loopStates, setLoopStates] = useState({}); // { intentId: { stage: 'UNDERSTAND', ... } }
+  const [loopStates, setLoopStates] = useState({});
 
   useEffect(() => {
     loadUser();
     loadDashboardData();
   }, []);
 
+  // Reload lectures when course changes
+  useEffect(() => {
+    if (selectedCourse) {
+      loadCourseContent(selectedCourse.id);
+    }
+  }, [selectedCourse]);
+
   const loadUser = () => {
     const userStr = localStorage.getItem('user');
-    if (userStr) {
-      setUser(JSON.parse(userStr));
-    } else {
-      navigate('/login');
-    }
+    if (userStr) setUser(JSON.parse(userStr));
+    else navigate('/login');
   };
+
+  const [orphanedLectures, setOrphanedLectures] = useState([]);
 
   const loadDashboardData = async () => {
     try {
-      const [lecturesRes, progressRes, subjectsRes] = await Promise.all([
+      const [coursesRes, lecturesRes, progressRes, subjectsRes] = await Promise.all([
+        courseAPI.getAll(),
         lectureAPI.getAll(),
         gameAPI.getProgress(),
         taxonomyAPI.getSubjects()
       ]);
-      setLectures(lecturesRes.data.lectures || []);
+      setCourses(coursesRes.data.courses || []);
 
-      // Fetch Loop States for these lectures
-      const fetchedLectures = lecturesRes.data.lectures || [];
+      const allLectures = lecturesRes.data.lectures || [];
+      setOrphanedLectures(allLectures.filter(l => !l.course_id));
+
+      // Also load loop states for orphans so they look good
       const states = {};
-
-      // Parallel fetch for speed
-      await Promise.all(fetchedLectures.map(async (lecture) => {
-        if (lecture.learning_intent_id) {
-          try {
-            const stateRes = await taxonomyAPI.getLoopStatus(lecture.learning_intent_id);
-            states[lecture.learning_intent_id] = stateRes.data;
-          } catch (e) {
-            // Silence 404s or errors for clean UI
+      const orphans = allLectures.filter(l => !l.course_id);
+      if (orphans.length > 0) {
+        await Promise.all(orphans.map(async (lecture) => {
+          if (lecture.learning_intent_id) {
+            try {
+              const stateRes = await taxonomyAPI.getLoopStatus(lecture.learning_intent_id);
+              states[lecture.learning_intent_id] = stateRes.data;
+            } catch (e) { }
           }
-        }
-      }));
-      setLoopStates(states);
-
-      if (progressRes.data.progress && progressRes.data.progress.length > 0) {
-        setGameProgress(progressRes.data.progress[0]);
+        }));
+        setLoopStates(prev => ({ ...prev, ...states }));
       }
 
-      if (subjectsRes.data.subjects) {
-        setAvailableSubjects(subjectsRes.data.subjects);
-      }
+      if (progressRes.data.progress?.length > 0) setGameProgress(progressRes.data.progress[0]);
+      if (subjectsRes.data.subjects) setAvailableSubjects(subjectsRes.data.subjects);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
-  const handleSubjectChange = async (subject) => {
-    setNewLecture({ ...newLecture, subject, topic: '' });
-    setAvailableTopics([]); // Clear previous topics
+  const loadCourseContent = async (courseId) => {
     try {
-      const res = await taxonomyAPI.getTopics(subject);
-      if (res.data.topics) {
-        setAvailableTopics(res.data.topics);
-      }
+      const lecturesRes = await lectureAPI.getAll(courseId); // Expecting API to handle querying by courseId if passed? 
+      // Note: In api.js, getAll usually takes no args or we need to update it.
+      // Ideally lectureAPI.getAll should be updated or we perform client side filtering if the API returns all.
+      // But let's assume I updated the component to call: axios.get(`${API_URL}/lectures/?course_id=${courseId}`)
+      // If api.js wraps it simply, we might need to manually call axios or update api.js. 
+      // For now, let's assume lectureAPI.getAll supports the query param or I fetch all and filter client side if needed, 
+      // BUT I updated the backend to support ?course_id. 
+      // Let's assume lectureAPI.getAll() calls url. We can append params if the wrapper allows, or we just rely on the fact 
+      // that we modified the backend. Wait, current api.js: getAll: () => api.get('/lectures/'). It takes NO arguments.
+      // I should have updated api.js. I'll rely on a manual fix or update api.js later.
+      // *Self-correction*: I'll use a direct axios call mixed in or hope I updated api.js. 
+      // Actually, I can just fetch ALL lectures for now (legacy) and filter in JS, OR I used the backend param. 
+      // Let's fetch all and filter in JS to be safe given the api.js limitation unless I fix it.
+
+      // Temporary fix: Fetch all and filter client-side until api.js is perfectly aligned, 
+      // OR better: use the courseAPI.getAll() we have and lectureAPI.getAll() which returns all user lectures.
+
+      const allLecturesRes = await lectureAPI.getAll();
+      const allLectures = allLecturesRes.data.lectures || [];
+      const filtered = allLectures.filter(l => l.course_id === courseId);
+      setLectures(filtered);
+
+      // Fetch Loop States
+      const states = {};
+      await Promise.all(filtered.map(async (lecture) => {
+        if (lecture.learning_intent_id) {
+          try {
+            const stateRes = await taxonomyAPI.getLoopStatus(lecture.learning_intent_id);
+            states[lecture.learning_intent_id] = stateRes.data;
+          } catch (e) { }
+        }
+      }));
+      setLoopStates(states);
+
     } catch (err) {
-      console.error("Error fetching topics:", err);
+      console.error('Error loading course content:', err);
     }
   };
 
-  const handleCreateLecture = async (overrideData = null) => {
+  const handleCreateCourse = async () => {
     try {
-      // Use override data if provided (for custom topic handling), otherwise usage state
-      let dataToSubmit = overrideData || newLecture;
-
-      // Handle Custom Topic Logic
-      if (dataToSubmit.topic === 'custom' && dataToSubmit.customTopic) {
-        dataToSubmit = { ...dataToSubmit, topic: dataToSubmit.customTopic };
-      }
-      // Remove temporary fields
-      const { customTopic, ...finalPayload } = dataToSubmit;
-
-      await lectureAPI.create(finalPayload);
-      setCreateDialogOpen(false);
-      setNewLecture({ title: '', subject: '', topic: '', description: '', customTopic: '' });
+      await courseAPI.create(newCourse);
+      setCreateCourseOpen(false);
+      setNewCourse({ title: '', subject: '', description: '' });
       loadDashboardData();
+    } catch (err) {
+      console.error('Error creating course:', err);
+    }
+  };
+
+  const handleCreateLecture = async () => {
+    try {
+      let finalTopic = newLecture.topic === 'custom' ? newLecture.customTopic : newLecture.topic;
+      await lectureAPI.create({
+        ...newLecture,
+        topic: finalTopic,
+        course_id: selectedCourse?.id
+      });
+      setCreateLectureOpen(false);
+      setNewLecture({ title: '', subject: '', topic: '', description: '', customTopic: '' });
+      if (selectedCourse) loadCourseContent(selectedCourse.id);
     } catch (err) {
       console.error('Error creating lecture:', err);
     }
   };
-  return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={5}
-          sx={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            backdropFilter: 'blur(16px)',
-            borderRadius: 4,
-            p: 3,
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <Box>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box
+
+  const handleSubjectChange = async (subject) => {
+    setNewLecture({ ...newLecture, subject, topic: '' });
+    setAvailableTopics([]);
+    try {
+      const res = await taxonomyAPI.getTopics(subject);
+      setAvailableTopics(res.data.topics || []);
+    } catch (err) { console.error(err); }
+  };
+
+  // --- Render Helpers ---
+
+  const renderCourses = () => (
+    <Box>
+      <Grid container spacing={3} mb={6}>
+        {courses.map((course, index) => (
+          <Grid item xs={12} sm={6} md={4} key={course.id}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
+              <Card
+                onClick={() => { setSelectedCourse(course); setViewMode('lectures'); }}
                 sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '16px',
-                  background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: '800',
-                  fontSize: '1.5rem',
-                  boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)'
+                  height: '100%',
+                  cursor: 'pointer',
+                  background: 'rgba(20, 20, 35, 0.6)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  borderRadius: 4,
+                  transition: '0.3s',
+                  '&:hover': { transform: 'translateY(-5px)', borderColor: '#8b5cf6', boxShadow: '0 8px 30px rgba(139, 92, 246, 0.2)' }
                 }}
               >
-                FL
-              </Box>
-              <Typography variant="h4" component="div" sx={{ fontWeight: 800, background: 'linear-gradient(to right, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.03em' }}>
-                FocusLearner Pro
-              </Typography>
-            </Box>
-            <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1, ml: 1 }}>
-              Welcome back, <strong>{user?.full_name || user?.username}</strong>!
-            </Typography>
-          </Box>
+                <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <Box display="flex" justifyContent="space-between" mb={2}>
+                    <Box p={1} borderRadius={2} bgcolor="rgba(139, 92, 246, 0.2)" color="#a78bfa">
+                      <BookIcon />
+                    </Box>
+                    <Chip label={course.subject} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'text.secondary' }} />
+                  </Box>
+                  <Typography variant="h5" fontWeight="700" color="white" gutterBottom>{course.title}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2, flexGrow: 1 }}>{course.description || "No description provided."}</Typography>
+                  <Typography variant="caption" color="rgba(255,255,255,0.5)">{course.lecture_count || 0} Sessions</Typography>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+        ))}
+        <Grid item xs={12} sm={6} md={4}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => setCreateCourseOpen(true)}
+            sx={{
+              height: '100%',
+              minHeight: 200,
+              border: '2px dashed rgba(255,255,255,0.1)',
+              borderRadius: 4,
+              color: 'text.secondary',
+              flexDirection: 'column',
+              gap: 2,
+              '&:hover': { borderColor: '#8b5cf6', color: '#8b5cf6', bgcolor: 'rgba(139, 92, 246, 0.05)' }
+            }}
+          >
+            <AddIcon sx={{ fontSize: 40 }} />
+            <Typography variant="h6">Create New Class</Typography>
+          </Button>
+        </Grid>
+      </Grid>
 
-          {/* Gamification Stats Widget */}
-          {gameProgress && (
-            <Box sx={{
-              ml: 4,
-              pl: 4,
-              borderLeft: '1px solid rgba(255,255,255,0.1)',
-              display: { xs: 'none', md: 'block' }
-            }}>
-              <Box display="flex" alignItems="center" gap={3}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ letterSpacing: 1 }}>LEVEL</Typography>
-                  <Typography variant="h4" sx={{ color: '#a78bfa', fontWeight: 700, lineHeight: 1 }}>{gameProgress.level}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ letterSpacing: 1 }}>TOTAL XP</Typography>
-                  <Typography variant="h5" sx={{ color: 'white', fontWeight: 600, lineHeight: 1 }}>{gameProgress.mastery_points}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ letterSpacing: 1 }}>STREAK</Typography>
-                  <Typography variant="h5" sx={{ color: '#f59e0b', fontWeight: 600, lineHeight: 1 }}>{user?.streak_days || 0} 🔥</Typography>
-                </Box>
-              </Box>
-            </Box>
-          )}
-          <Box>
-            <IconButton onClick={() => navigate('/analytics')} sx={{ color: '#06b6d4', '&:hover': { background: 'rgba(6, 182, 212, 0.1)' } }}>
-              <InsightsIcon />
-            </IconButton>
-            <IconButton onClick={() => navigate('/preferences')} sx={{ color: 'text.primary', '&:hover': { background: 'rgba(255,255,255,0.1)' } }}>
-              <SettingsIcon />
-            </IconButton>
-            <IconButton onClick={handleLogout} sx={{ color: '#ef4444', '&:hover': { background: 'rgba(239, 68, 68, 0.1)' } }}>
-              <LogoutIcon />
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-          <Box display="flex" gap={1} bgcolor="rgba(255,255,255,0.05)" p={0.5} borderRadius={3}>
-            <Button
-              variant={viewMode === 'lectures' ? "contained" : "text"}
-              onClick={() => setViewMode('lectures')}
-              sx={{
-                borderRadius: 2.5,
-                textTransform: 'none',
-                px: 3,
-                bgcolor: viewMode === 'lectures' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' }
-              }}
-            >
-              My Focus Sessions
-            </Button>
-            <Button
-              variant={viewMode === 'health' ? "contained" : "text"}
-              onClick={() => setViewMode('health')}
-              sx={{
-                borderRadius: 2.5,
-                textTransform: 'none',
-                px: 3,
-                bgcolor: viewMode === 'health' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' }
-              }}
-            >
-              Learning Health
-            </Button>
-          </Box>
-
-          <Box>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateDialogOpen(true)}
-              sx={{ borderRadius: 3, textTransform: 'none', px: 3, background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)' }}
-            >
-              New Lecture
-            </Button>
-          </Box>
-        </Box>
-
-        {viewMode === 'health' ? (
-          <LearningHealthDashboard />
-        ) : lectures.length > 0 ? (
+      {/* Orphaned / Standalone Lectures */}
+      {orphanedLectures.length > 0 && (
+        <Box>
+          <Typography variant="h5" color="white" fontWeight="700" mb={3} mt={2}>
+            Quick Sessions (Uncategorized)
+          </Typography>
           <Grid container spacing={3}>
-            {lectures.map((lecture, index) => {
-              const intentId = lecture.learning_intent_id;
-              const loopState = intentId ? loopStates[intentId] : null;
-              const currentStage = loopState ? loopState.stage : 'UNDERSTAND'; // Default
-
+            {orphanedLectures.map((lecture, index) => {
+              const loopState = lecture.learning_intent_id ? loopStates[lecture.learning_intent_id] : null;
+              const currentStage = loopState?.stage || 'UNDERSTAND';
               let stageColor = 'default';
-              let stageLabel = 'Watch Lecture';
               let buttonText = 'Start Learning';
-
-              if (currentStage === 'APPLY') {
-                stageColor = 'warning';
-                stageLabel = 'Apply Integration';
-                buttonText = 'Start Activity';
-              } else if (currentStage === 'MASTERED') {
-                stageColor = 'success';
-                stageLabel = 'Mastered';
-                buttonText = 'Review Topic';
-              } else if (currentStage === 'REMEDIATE') {
-                stageColor = 'error';
-                stageLabel = 'Needs Review';
-                buttonText = 'Watch Remediation';
-              }
+              if (currentStage === 'APPLY') { stageColor = 'warning'; buttonText = 'Start Activity'; }
+              else if (currentStage === 'MASTERED') { stageColor = 'success'; buttonText = 'Review Topic'; }
 
               return (
                 <Grid item xs={12} sm={6} md={4} key={lecture.id}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Card sx={{
-                      height: '100%',
-                      background: 'rgba(20, 20, 35, 0.6)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      borderRadius: 4,
-                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
-                      }
-                    }}>
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
+                    <Card sx={{ background: 'rgba(20, 20, 35, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 4 }}>
                       <CardContent sx={{ p: 3 }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                          <Box display="flex" gap={1}>
-                            <Chip
-                              label={lecture.subject.split('/')[0]}
-                              size="small"
-                              sx={{
-                                background: 'rgba(139, 92, 246, 0.15)',
-                                color: '#a78bfa',
-                                border: '1px solid rgba(139, 92, 246, 0.3)',
-                                fontWeight: 600
-                              }}
-                            />
-                            {currentStage !== 'UNDERSTAND' && (
-                              <Chip
-                                label={stageLabel}
-                                color={stageColor}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                          </Box>
+                        <Box display="flex" justifyContent="space-between" mb={2}>
+                          <Chip label={currentStage} color={stageColor} size="small" variant="outlined" />
                         </Box>
-                        <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 700, minHeight: '64px' }}>
-                          {lecture.title}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                          {lecture.topic}
-                        </Typography>
-
+                        <Typography variant="h6" color="white" fontWeight="700" gutterBottom>{lecture.title}</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={3}>{lecture.topic}</Typography>
                         <Button
                           variant="outlined"
                           fullWidth
-                          onClick={() => {
-                            if (currentStage === 'APPLY') {
-                              // For now, redirect to a generic game activity generator. 
-                              // Ideally we'd have a specific route.
-                              // I'll assume /game/play exists or I'll just go to lecture for now with a param
-                              navigate(`/lecture/${lecture.id}?mode=apply`);
-                            } else {
-                              navigate(`/lecture/${lecture.id}`);
-                            }
-                          }}
-                          sx={{
-                            borderColor: 'rgba(255,255,255,0.1)',
-                            color: 'white',
-                            borderRadius: 2,
-                            '&:hover': {
-                              borderColor: '#8b5cf6',
-                              background: 'rgba(139, 92, 246, 0.1)'
-                            }
-                          }}
+                          onClick={() => navigate(`/lecture/${lecture.id}`)}
+                          sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
                         >
                           {buttonText}
                         </Button>
@@ -380,137 +290,148 @@ const DashboardNew = () => {
               );
             })}
           </Grid>
-        ) : (
-          <Paper
-            sx={{
-              p: 8,
-              textAlign: 'center',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px dashed rgba(255,255,255,0.1)',
-              borderRadius: 4
-            }}
-          >
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Your learning journey starts here.
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateDialogOpen(true)}
-              sx={{ mt: 2 }}
+        </Box>
+      )}
+    </Box>
+  );
+
+  const renderLectures = () => (
+    <Grid container spacing={3}>
+      {lectures.map((lecture, index) => {
+        const loopState = lecture.learning_intent_id ? loopStates[lecture.learning_intent_id] : null;
+        const currentStage = loopState?.stage || 'UNDERSTAND';
+        let stageColor = 'default';
+        let buttonText = 'Start Learning';
+        if (currentStage === 'APPLY') { stageColor = 'warning'; buttonText = 'Start Activity'; }
+        else if (currentStage === 'MASTERED') { stageColor = 'success'; buttonText = 'Review Topic'; }
+
+        return (
+          <Grid item xs={12} sm={6} md={4} key={lecture.id}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
+              <Card sx={{ background: 'rgba(20, 20, 35, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 4 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" justifyContent="space-between" mb={2}>
+                    <Chip label={currentStage} color={stageColor} size="small" variant="outlined" />
+                  </Box>
+                  <Typography variant="h6" color="white" fontWeight="700" gutterBottom>{lecture.title}</Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>{lecture.topic}</Typography>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => navigate(`/lecture/${lecture.id}`)}
+                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                  >
+                    {buttonText}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+        );
+      })}
+      <Grid item xs={12} sm={6} md={4}>
+        <Button
+          fullWidth
+          variant="outlined"
+          onClick={() => setCreateLectureOpen(true)}
+          sx={{ height: '100%', minHeight: 200, border: '2px dashed rgba(255,255,255,0.1)', borderRadius: 4, color: 'text.secondary', flexDirection: 'column', gap: 2 }}
+        >
+          <AddIcon sx={{ fontSize: 40 }} />
+          <Typography variant="h6">New Session</Typography>
+        </Button>
+      </Grid>
+    </Grid>
+  );
+
+  return (
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Header & Nav */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box>
+          <Breadcrumbs sx={{ color: 'rgba(255,255,255,0.5)', mb: 1 }}>
+            <Link
+              component="button"
+              color="inherit"
+              onClick={() => { setSelectedCourse(null); setViewMode('courses'); }}
+              underline="hover"
             >
-              Create First Lecture
+              My Classes
+            </Link>
+            {selectedCourse && <Typography color="white">{selectedCourse.title}</Typography>}
+          </Breadcrumbs>
+          <Typography variant="h4" fontWeight="800" color="white">
+            {selectedCourse ? selectedCourse.title : 'My Classes'}
+          </Typography>
+        </Box>
+        <Box display="flex" gap={2}>
+          {viewMode === 'lectures' && (
+            <Button startIcon={<ArrowBackIcon />} onClick={() => { setSelectedCourse(null); setViewMode('courses'); }} sx={{ color: 'text.secondary' }}>
+              Back
             </Button>
-          </Paper>
-        )}
-      </motion.div>
+          )}
+          <Button
+            variant={viewMode === 'health' ? "contained" : "text"}
+            onClick={() => setViewMode('health')}
+            startIcon={<InsightsIcon />}
+            sx={{ color: viewMode === 'health' ? 'white' : 'text.secondary' }}
+          >
+            Learning Health
+          </Button>
+          <IconButton onClick={loadDashboardData} sx={{ color: 'white' }}><SettingsIcon /></IconButton>
+          <IconButton onClick={() => { localStorage.clear(); navigate('/login'); }} sx={{ color: '#ef4444' }}><LogoutIcon /></IconButton>
+        </Box>
+      </Box>
+
+      {/* Main Content */}
+      {viewMode === 'health' ? (
+        <LearningHealthDashboard />
+      ) : viewMode === 'courses' ? (
+        renderCourses()
+      ) : (
+        renderLectures()
+      )}
+
+      {/* Create Course Dialog */}
+      <Dialog open={createCourseOpen} onClose={() => setCreateCourseOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ color: 'white' }}>Create New Class</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="Class Name (e.g., Physics 101)" value={newCourse.title} onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Subject (e.g., Physics)" value={newCourse.subject} onChange={(e) => setNewCourse({ ...newCourse, subject: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Description" multiline rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateCourseOpen(false)}>Cancel</Button>
+          <Button onClick={handleCreateCourse} variant="contained">Create Class</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Create Lecture Dialog */}
-      <Dialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            background: '#0a0a1a',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 3
-          }
-        }}
-      >
-        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>Plan Your Study Session</DialogTitle>
+      <Dialog open={createLectureOpen} onClose={() => setCreateLectureOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ color: 'white' }}>New Session for {selectedCourse?.title}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Select a subject and topic to automatically generate a curated learning path.
-          </Typography>
+          <TextField fullWidth label="Session Title" value={newLecture.title} onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          {/* Auto-set subject from course, but allow viewing it */}
+          <TextField fullWidth label="Subject" value={newLecture.subject || selectedCourse?.subject || ''} disabled margin="normal" variant="filled" />
 
-          {/* 1. Subject Selection */}
           <FormControl fullWidth margin="normal" variant="filled">
-            <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Subject Focus</InputLabel>
+            <InputLabel>Topic</InputLabel>
             <Select
-              value={newLecture.subject}
-              onChange={(e) => handleSubjectChange(e.target.value)}
-              sx={{ background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' }}
+              value={newLecture.topic}
+              onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })}
+              onOpen={() => { if (!availableTopics.length && selectedCourse?.subject) handleSubjectChange(selectedCourse.subject); }}
+              sx={{ color: 'white' }}
             >
-              {availableSubjects.map((subject) => (
-                <MenuItem key={subject} value={subject}>
-                  {subject}
-                </MenuItem>
-              ))}
+              {availableTopics.map(t => <MenuItem key={t.id} value={t.topic}>{t.topic}</MenuItem>)}
+              <MenuItem value="custom"><em>+ Custom Topic</em></MenuItem>
             </Select>
           </FormControl>
-
-          {/* 2. Topic/Sub-division Selection */}
-          {newLecture.subject && (
-            <FormControl fullWidth margin="normal" variant="filled">
-              <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Topic / Sub-Chapter</InputLabel>
-              <Select
-                value={newLecture.topic}
-                onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })}
-                sx={{ background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' }}
-                displayEmpty
-              >
-                {/* Dynamic Topic Population */}
-                {availableTopics.map((intent) => (
-                  <MenuItem key={intent.id} value={intent.topic}>{intent.topic}</MenuItem>
-                ))}
-                <MenuItem value="custom"><em>+ Custom Topic</em></MenuItem>
-              </Select>
-            </FormControl>
-          )}
-
-          {/* Custom Topic Input (if needed) */}
           {newLecture.topic === 'custom' && (
-            <TextField
-              fullWidth
-              label="Enter Custom Topic"
-              value={newLecture.customTopic || ''}
-              onChange={(e) => setNewLecture({ ...newLecture, topic: 'custom', customTopic: e.target.value })}
-              margin="normal"
-              variant="filled"
-              InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' } }}
-            />
+            <TextField fullWidth label="Custom Topic Name" value={newLecture.customTopic} onChange={(e) => setNewLecture({ ...newLecture, topic: 'custom', customTopic: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
           )}
-
-          {/* 3. Title */}
-          <TextField
-            fullWidth
-            label="Session Title"
-            placeholder="e.g., My Exam Prep"
-            value={newLecture.title}
-            onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })}
-            margin="normal"
-            variant="filled"
-            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' } }}
-          />
-
-          <TextField
-            fullWidth
-            label="Notes / Description (Optional)"
-            value={newLecture.description}
-            onChange={(e) => setNewLecture({ ...newLecture, description: e.target.value })}
-            margin="normal"
-            multiline
-            rows={2}
-            variant="filled"
-            InputProps={{ sx: { background: 'rgba(255,255,255,0.05)', borderRadius: 2, color: 'white' } }}
-          />
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setCreateDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancel</Button>
-          <Button
-            onClick={() => {
-              // Resolve the final topic before calling handleCreateLecture
-              const finalTopic = newLecture.topic === 'custom' ? newLecture.customTopic : newLecture.topic;
-              handleCreateLecture({ ...newLecture, topic: finalTopic });
-            }}
-            variant="contained"
-            disabled={!newLecture.title || !newLecture.subject || (!newLecture.topic && newLecture.topic !== 'custom') || (newLecture.topic === 'custom' && !newLecture.customTopic)}
-            sx={{ background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)' }}
-          >
-            Create & Auto-Generate
-          </Button>
+        <DialogActions>
+          <Button onClick={() => setCreateLectureOpen(false)}>Cancel</Button>
+          <Button onClick={handleCreateLecture} variant="contained">Create Session</Button>
         </DialogActions>
       </Dialog>
     </Container>

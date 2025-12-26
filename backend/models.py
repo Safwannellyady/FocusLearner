@@ -177,12 +177,38 @@ class UserPreferences(db.Model):
         }
 
 
+class Course(db.Model):
+    """Course model (Class/Book) containing multiple lectures"""
+    __tablename__ = 'courses'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    lectures = db.relationship('Lecture', backref='course', lazy=True, cascade="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'subject': self.subject,
+            'description': self.description,
+            'created_at': self.created_at.isoformat(),
+            'lecture_count': len(self.lectures)
+        }
+
+
 class Lecture(db.Model):
     """Lecture model for user-created learning sessions"""
     __tablename__ = 'lectures'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True) # Optional for now to support old lectures
     title = db.Column(db.String(200), nullable=False)
     subject = db.Column(db.String(100), nullable=False)
     topic = db.Column(db.String(200), nullable=False)
@@ -201,6 +227,7 @@ class Lecture(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'course_id': self.course_id,
             'title': self.title,
             'subject': self.subject,
             'topic': self.topic,

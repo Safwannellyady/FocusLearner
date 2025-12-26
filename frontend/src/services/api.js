@@ -153,6 +153,12 @@ export const preferencesAPI = {
   update: (preferences) => api.put('/preferences/', preferences),
 };
 
+// Course API
+export const courseAPI = {
+  getAll: () => api.get('/lectures/courses'),
+  create: (data) => api.post('/lectures/courses', data),
+};
+
 // Lecture API
 export const lectureAPI = {
   getAll: () => api.get('/lectures/'),
