@@ -491,32 +491,32 @@ const LectureDetail = () => {
           </Box>
         </Grid>
       </Grid>
-    </Container>
-      {/* Gate Activity Dialog */ }
-  <Dialog
-    open={gateOpen}
-    onClose={() => setGateOpen(false)}
-    maxWidth="lg"
-    fullWidth
-    PaperProps={{ sx: { bgcolor: '#0f0f15', color: 'white', minHeight: '80vh' } }}
-  >
-    <DialogContent>
-      {gateActivity && (
-        <Box height="100%">
-          <Box display="flex" justifyContent="space-between" mb={2}>
-            <Typography variant="h6" color="error">⚠️ Mandatory Check</Typography>
-            <Button color="inherit" onClick={() => setGateOpen(false)}>Exit (Stays Locked)</Button>
-          </Box>
-          <ActivityView
-            activity={gateActivity}
-            onSubmit={handleGateSubmit}
-            result={gateResult}
-            onNext={handleGateNext}
-          />
-        </Box>
-      )}
-    </DialogContent>
-  </Dialog>
+
+      {/* Gate Activity Dialog */}
+      <Dialog
+        open={gateOpen}
+        onClose={() => setGateOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{ sx: { bgcolor: '#0f0f15', color: 'white', minHeight: '80vh' } }}
+      >
+        <DialogContent>
+          {gateActivity && (
+            <Box height="100%">
+              <Box display="flex" justifyContent="space-between" mb={2}>
+                <Typography variant="h6" color="error">⚠️ Mandatory Check</Typography>
+                <Button color="inherit" onClick={() => setGateOpen(false)}>Exit (Stays Locked)</Button>
+              </Box>
+              <ActivityView
+                activity={gateActivity}
+                onSubmit={handleGateSubmit}
+                result={gateResult}
+                onNext={handleGateNext}
+              />
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
     </Container >
   );
 };

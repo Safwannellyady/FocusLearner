@@ -10,6 +10,7 @@ import ExtensionIcon from '@mui/icons-material/Extension';
 import WarningIcon from '@mui/icons-material/Warning';
 import useFocusMonitor from '../hooks/useFocusMonitor';
 import ConfettiExplosion from './ConfettiExplosion';
+import { motion } from 'framer-motion';
 // NO REPLACEMENT CONTENT IN THIS TOOL CALL - SWITCHING TO MULTI_REPLACE
 
 const ActivityView = ({ activity, onSubmit, result, onNext }) => {

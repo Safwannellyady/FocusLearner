@@ -518,4 +518,3 @@ const DashboardNew = () => {
 };
 
 export default DashboardNew;
-```
