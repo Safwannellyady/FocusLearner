@@ -16,9 +16,7 @@ if parent_dir not in sys.path:
 
 from models import User, UserPreferences, db
 from utils.auth import (
-    generate_token,
     generate_token_pair,
-    verify_token,
     token_required,
     refresh_token_required,
     blacklist_token,
@@ -314,11 +312,61 @@ def change_password():
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
+@auth_routes.route('/refresh', methods=['POST'])
+@refresh_token_required
+def refresh():
+    """Refresh access token using refresh token"""
+    try:
+        user_id = request.current_user_id
+        user = User.query.get(user_id)
+        
+        if not user or not user.is_active:
+            return jsonify({'error': 'User not found or inactive'}), 404
+        
+        # Generate new token pair
+        tokens = generate_token_pair(user.id)
+        
+        # Blacklist old refresh token
+        old_token = getattr(request, 'current_token', None)
+        if old_token:
+            blacklist_token(old_token)
+        
+        return jsonify({
+            'message': 'Token refreshed successfully',
+            'access_token': tokens['access_token'],
+            'refresh_token': tokens['refresh_token']
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Token refresh error: {e}')
+        return jsonify({'error': 'Failed to refresh token'}), 500
+
+
+@auth_routes.route('/logout', methods=['POST'])
+@token_required
+def logout():
+    """Logout user by blacklisting token"""
+    try:
+        token = getattr(request, 'current_token', None)
+        if token:
+            blacklist_token(token)
+            current_app.logger.info(f'User logged out: {request.current_user_id}')
+        
+        return jsonify({'message': 'Logged out successfully'}), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Logout error: {e}')
+        return jsonify({'error': 'Failed to logout'}), 500
+
+
 @auth_routes.route('/google', methods=['POST'])
 def google_login():
     """Login or register user with Google OAuth"""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
         token = data.get('token')  # Google access token or ID token
         
         if not token:
@@ -328,18 +376,22 @@ def google_login():
         google_user_info = google_auth_service.verify_google_token(token)
         
         if not google_user_info:
-            print(f"Failed to verify Google token. Token received: {token[:20]}...")
+            current_app.logger.warning(f"Failed to verify Google token")
             return jsonify({'error': 'Invalid Google token. Please try again.'}), 401
         
-        email = google_user_info.get('email')
+        email = google_user_info.get('email', '').lower()
         google_id = google_user_info.get('google_id')
-        name = google_user_info.get('name', '')
+        name = google_user_info.get('name', '').strip()
         
         if not email:
             return jsonify({'error': 'Email not provided by Google'}), 400
         
+        if not validate_email(email):
+            return jsonify({'error': 'Invalid email from Google'}), 400
+        
         # Check if user exists by email
         user = User.query.filter_by(email=email).first()
+        is_new_user = False
         
         if not user:
             # Create new user
@@ -355,11 +407,11 @@ def google_login():
             user = User(
                 username=username,
                 email=email,
-                full_name=name,
+                full_name=name if name else None,
                 password_hash=''  # No password for Google users
             )
             db.session.add(user)
-            db.session.commit()
+            db.session.flush()
             
             # Create default preferences
             preferences = UserPreferences(
@@ -370,9 +422,10 @@ def google_login():
             )
             db.session.add(preferences)
             db.session.commit()
+            is_new_user = True
+            current_app.logger.info(f'New Google user registered: {username} ({email})')
         
         # Update Streak
-        from datetime import datetime
         now = datetime.utcnow()
         
         if user.last_login_at:
@@ -382,24 +435,26 @@ def google_login():
             elif delta.days > 1:
                 user.streak_days = 1
         else:
-             user.streak_days = 1
-             
+            user.streak_days = 1
+        
         user.last_login_at = now
         db.session.commit()
         
-        # Generate JWT token
-        jwt_token = generate_token(user.id)
+        # Generate JWT tokens
+        tokens = generate_token_pair(user.id)
+        
+        current_app.logger.info(f'Google login successful: {user.username}')
         
         return jsonify({
             'message': 'Google authentication successful',
-            'token': jwt_token,
+            'access_token': tokens['access_token'],
+            'refresh_token': tokens['refresh_token'],
             'user': user.to_dict(),
-            'is_new_user': not user.password_hash  # True if just created
+            'is_new_user': is_new_user
         }), 200
     
     except Exception as e:
-        print(f"Error in Google login: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.error(f'Google login error: {e}', exc_info=True)
+        db.session.rollback()
         return jsonify({'error': f'Authentication failed: {str(e)}'}), 500
 
