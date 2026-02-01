@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from models import User, ActivityResult, UserTopicMastery, LearningLoopState, DistractionLog
+from models import db, User, ActivityResult, UserTopicMastery, LearningLoopState, DistractionLog
 from utils.auth import token_required
 from datetime import datetime, timedelta
 import sqlalchemy as sa

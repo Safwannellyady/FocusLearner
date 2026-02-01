@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from models import LearningIntent
+from models import db, LearningIntent
 import json
 
 taxonomy_bp = Blueprint('taxonomy', __name__)

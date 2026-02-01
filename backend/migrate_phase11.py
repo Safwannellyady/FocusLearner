@@ -10,7 +10,7 @@ def migrate():
         print("db.create_all() executed.")
         
     # 2. Add course_id to lectures if missing
-    conn = sqlite3.connect('instance/focuslearner.db')
+    conn = sqlite3.connect('instance/focuslearner_v3.db')
     cursor = conn.cursor()
     
     try:

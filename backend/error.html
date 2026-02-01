@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang=en>
+  <head>
+    <title>sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: lectures.learning_intent_id
+[SQL: SELECT lectures.id AS lectures_id, lectures.user_id AS lectures_user_id, lectures.course_id AS lectures_course_id, lectures.title AS lectures_title, lectures.subject AS lectures_subject, lectures.topic AS lectures_topic, lectures.description AS lectures_description, lectures.video_ids AS lectures_video_ids, lectures.learning_intent_id AS lectures_learning_intent_id, lectures.created_at AS lectures_created_at, lectures.updated_at AS lectures_updated_at, lectures.is_active AS lectures_is_active 
+FROM lectures 
+WHERE ? = lectures.course_id]
+[parameters: (38,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ // Werkzeug Debugger</title>
+    <link rel="stylesheet" href="?__debugger__=yes&amp;cmd=resource&amp;f=style.css">
+    <link rel="shortcut icon"
+        href="?__debugger__=yes&amp;cmd=resource&amp;f=console.png">
+    <script src="?__debugger__=yes&amp;cmd=resource&amp;f=debugger.js"></script>
+    <script>
+      var CONSOLE_MODE = false,
+          EVALEX = true,
+          EVALEX_TRUSTED = false,
+          SECRET = "lZvbs51zCSmEIbnxliLn";
+    </script>
+  </head>
+  <body style="background-color: #fff">
+    <div class="debugger">
+<h1>sqlalchemy.exc.OperationalError</h1>
+<div class="detail">
+  <p class="errormsg">sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: lectures.learning_intent_id
+[SQL: SELECT lectures.id AS lectures_id, lectures.user_id AS lectures_user_id, lectures.course_id AS lectures_course_id, lectures.title AS lectures_title, lectures.subject AS lectures_subject, lectures.topic AS lectures_topic, lectures.description AS lectures_description, lectures.video_ids AS lectures_video_ids, lectures.learning_intent_id AS lectures_learning_intent_id, lectures.created_at AS lectures_created_at, lectures.updated_at AS lectures_updated_at, lectures.is_active AS lectures_is_active 
+FROM lectures 
+WHERE ? = lectures.course_id]
+[parameters: (38,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+</p>
+</div>
+<h2 class="traceback">Traceback <em>(most recent call last)</em></h2>
+<div class="traceback">
+  <h3></h3>
+  <ul><li><div class="frame" id="frame-1865889776480">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py"</cite>,
+      line <em class="line">1967</em>,
+      in <code class="function">_exec_single_context</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">                            </span>context,</pre>
+<pre class="line before"><span class="ws">                        </span>):</pre>
+<pre class="line before"><span class="ws">                            </span>evt_handled = True</pre>
+<pre class="line before"><span class="ws">                            </span>break</pre>
+<pre class="line before"><span class="ws">                </span>if not evt_handled:</pre>
+<pre class="line current"><span class="ws">                    </span>self.dialect.do_execute(
+<span class="ws">                    </span>^</pre>
+<pre class="line after"><span class="ws">                        </span>cursor, str_statement, effective_parameters, context</pre>
+<pre class="line after"><span class="ws">                    </span>)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">            </span>if self._has_events or self.engine._has_events:</pre>
+<pre class="line after"><span class="ws">                </span>self.dispatch.after_cursor_execute(</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889776960">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\default.py"</cite>,
+      line <em class="line">952</em>,
+      in <code class="function">do_execute</code></h4>
+  <div class="source "><pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">    </span>def do_executemany(self, cursor, statement, parameters, context=None):</pre>
+<pre class="line before"><span class="ws">        </span>cursor.executemany(statement, parameters)</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">    </span>def do_execute(self, cursor, statement, parameters, context=None):</pre>
+<pre class="line current"><span class="ws">        </span>cursor.execute(statement, parameters)
+<span class="ws">        </span>^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def do_execute_no_params(self, cursor, statement, context=None):</pre>
+<pre class="line after"><span class="ws">        </span>cursor.execute(statement)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def is_disconnect(</pre></div>
+</div>
+
+<li><div class="exc-divider">The above exception was the direct cause of the following exception:</div>
+<li><div class="frame" id="frame-1865889789920">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py"</cite>,
+      line <em class="line">1478</em>,
+      in <code class="function">__call__</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">    </span>def __call__(self, environ: dict, start_response: t.Callable) -&gt; t.Any:</pre>
+<pre class="line before"><span class="ws">        </span>&#34;&#34;&#34;The WSGI server calls the Flask application object as the</pre>
+<pre class="line before"><span class="ws">        </span>WSGI application. This calls :meth:`wsgi_app`, which can be</pre>
+<pre class="line before"><span class="ws">        </span>wrapped to apply middleware.</pre>
+<pre class="line before"><span class="ws">        </span>&#34;&#34;&#34;</pre>
+<pre class="line current"><span class="ws">        </span>return self.wsgi_app(environ, start_response)
+<span class="ws">        </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889781760">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py"</cite>,
+      line <em class="line">1458</em>,
+      in <code class="function">wsgi_app</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>try:</pre>
+<pre class="line before"><span class="ws">                </span>ctx.push()</pre>
+<pre class="line before"><span class="ws">                </span>response = self.full_dispatch_request()</pre>
+<pre class="line before"><span class="ws">            </span>except Exception as e:</pre>
+<pre class="line before"><span class="ws">                </span>error = e</pre>
+<pre class="line current"><span class="ws">                </span>response = self.handle_exception(e)
+<span class="ws">                </span>           ^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">            </span>except:  # noqa: B001</pre>
+<pre class="line after"><span class="ws">                </span>error = sys.exc_info()[1]</pre>
+<pre class="line after"><span class="ws">                </span>raise</pre>
+<pre class="line after"><span class="ws">            </span>return response(environ, start_response)</pre>
+<pre class="line after"><span class="ws">        </span>finally:</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889789760">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask_cors\extension.py"</cite>,
+      line <em class="line">176</em>,
+      in <code class="function">wrapped_function</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span># Wrap exception handlers with cross_origin</pre>
+<pre class="line before"><span class="ws">        </span># These error handlers will still respect the behavior of the route</pre>
+<pre class="line before"><span class="ws">        </span>if options.get(&#39;intercept_exceptions&#39;, True):</pre>
+<pre class="line before"><span class="ws">            </span>def _after_request_decorator(f):</pre>
+<pre class="line before"><span class="ws">                </span>def wrapped_function(*args, **kwargs):</pre>
+<pre class="line current"><span class="ws">                    </span>return cors_after_request(app.make_response(f(*args, **kwargs)))
+<span class="ws">                    </span>                                            ^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">                </span>return wrapped_function</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">            </span>if hasattr(app, &#39;handle_exception&#39;):</pre>
+<pre class="line after"><span class="ws">                </span>app.handle_exception = _after_request_decorator(</pre>
+<pre class="line after"><span class="ws">                    </span>app.handle_exception)</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889775840">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py"</cite>,
+      line <em class="line">1455</em>,
+      in <code class="function">wsgi_app</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>ctx = self.request_context(environ)</pre>
+<pre class="line before"><span class="ws">        </span>error: BaseException | None = None</pre>
+<pre class="line before"><span class="ws">        </span>try:</pre>
+<pre class="line before"><span class="ws">            </span>try:</pre>
+<pre class="line before"><span class="ws">                </span>ctx.push()</pre>
+<pre class="line current"><span class="ws">                </span>response = self.full_dispatch_request()
+<span class="ws">                </span>           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">            </span>except Exception as e:</pre>
+<pre class="line after"><span class="ws">                </span>error = e</pre>
+<pre class="line after"><span class="ws">                </span>response = self.handle_exception(e)</pre>
+<pre class="line after"><span class="ws">            </span>except:  # noqa: B001</pre>
+<pre class="line after"><span class="ws">                </span>error = sys.exc_info()[1]</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889777280">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py"</cite>,
+      line <em class="line">869</em>,
+      in <code class="function">full_dispatch_request</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>request_started.send(self, _async_wrapper=self.ensure_sync)</pre>
+<pre class="line before"><span class="ws">            </span>rv = self.preprocess_request()</pre>
+<pre class="line before"><span class="ws">            </span>if rv is None:</pre>
+<pre class="line before"><span class="ws">                </span>rv = self.dispatch_request()</pre>
+<pre class="line before"><span class="ws">        </span>except Exception as e:</pre>
+<pre class="line current"><span class="ws">            </span>rv = self.handle_user_exception(e)
+<span class="ws">            </span>     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">        </span>return self.finalize_request(rv)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def finalize_request(</pre>
+<pre class="line after"><span class="ws">        </span>self,</pre>
+<pre class="line after"><span class="ws">        </span>rv: ft.ResponseReturnValue | HTTPException,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889787840">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask_cors\extension.py"</cite>,
+      line <em class="line">176</em>,
+      in <code class="function">wrapped_function</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span># Wrap exception handlers with cross_origin</pre>
+<pre class="line before"><span class="ws">        </span># These error handlers will still respect the behavior of the route</pre>
+<pre class="line before"><span class="ws">        </span>if options.get(&#39;intercept_exceptions&#39;, True):</pre>
+<pre class="line before"><span class="ws">            </span>def _after_request_decorator(f):</pre>
+<pre class="line before"><span class="ws">                </span>def wrapped_function(*args, **kwargs):</pre>
+<pre class="line current"><span class="ws">                    </span>return cors_after_request(app.make_response(f(*args, **kwargs)))
+<span class="ws">                    </span>                                            ^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">                </span>return wrapped_function</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">            </span>if hasattr(app, &#39;handle_exception&#39;):</pre>
+<pre class="line after"><span class="ws">                </span>app.handle_exception = _after_request_decorator(</pre>
+<pre class="line after"><span class="ws">                    </span>app.handle_exception)</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889787520">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py"</cite>,
+      line <em class="line">867</em>,
+      in <code class="function">full_dispatch_request</code></h4>
+  <div class="source "><pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>try:</pre>
+<pre class="line before"><span class="ws">            </span>request_started.send(self, _async_wrapper=self.ensure_sync)</pre>
+<pre class="line before"><span class="ws">            </span>rv = self.preprocess_request()</pre>
+<pre class="line before"><span class="ws">            </span>if rv is None:</pre>
+<pre class="line current"><span class="ws">                </span>rv = self.dispatch_request()
+<span class="ws">                </span>     ^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">        </span>except Exception as e:</pre>
+<pre class="line after"><span class="ws">            </span>rv = self.handle_user_exception(e)</pre>
+<pre class="line after"><span class="ws">        </span>return self.finalize_request(rv)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def finalize_request(</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889778720">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py"</cite>,
+      line <em class="line">852</em>,
+      in <code class="function">dispatch_request</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>and req.method == &#34;OPTIONS&#34;</pre>
+<pre class="line before"><span class="ws">        </span>):</pre>
+<pre class="line before"><span class="ws">            </span>return self.make_default_options_response()</pre>
+<pre class="line before"><span class="ws">        </span># otherwise dispatch to the handler for that endpoint</pre>
+<pre class="line before"><span class="ws">        </span>view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]</pre>
+<pre class="line current"><span class="ws">        </span>return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+<span class="ws">        </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def full_dispatch_request(self) -&gt; Response:</pre>
+<pre class="line after"><span class="ws">        </span>&#34;&#34;&#34;Dispatches the request and on top of that performs request</pre>
+<pre class="line after"><span class="ws">        </span>pre and postprocessing as well as HTTP exception catching and</pre>
+<pre class="line after"><span class="ws">        </span>error handling.</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889786400">
+  <h4>File <cite class="filename">"C:\Projects\FocusLearner\backend\utils\auth.py"</cite>,
+      line <em class="line">67</em>,
+      in <code class="function">decorated</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>if not user_id:</pre>
+<pre class="line before"><span class="ws">            </span>return jsonify({&#39;error&#39;: &#39;Token is invalid or expired&#39;}), 401</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span># Add user_id to request context</pre>
+<pre class="line before"><span class="ws">        </span>request.current_user_id = user_id</pre>
+<pre class="line current"><span class="ws">        </span>return f(*args, **kwargs)
+<span class="ws">        </span>       ^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>return decorated</pre>
+<pre class="line after"><span class="ws"></span> </pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889787200">
+  <h4>File <cite class="filename">"C:\Projects\FocusLearner\backend\routes\lecture_routes.py"</cite>,
+      line <em class="line">63</em>,
+      in <code class="function">create_course</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">    </span>db.session.add(course)</pre>
+<pre class="line before"><span class="ws">    </span>db.session.commit()</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">    </span>return jsonify({</pre>
+<pre class="line before"><span class="ws">        </span>&#39;message&#39;: &#39;Course created successfully&#39;,</pre>
+<pre class="line current"><span class="ws">        </span>&#39;course&#39;: course.to_dict()
+<span class="ws">        </span>          ^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">    </span>}), 201</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span>@lecture_routes.route(&#39;/&#39;, methods=[&#39;GET&#39;])</pre>
+<pre class="line after"><span class="ws"></span>@token_required</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889780480">
+  <h4>File <cite class="filename">"C:\Projects\FocusLearner\backend\models.py"</cite>,
+      line <em class="line">201</em>,
+      in <code class="function">to_dict</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>&#39;user_id&#39;: self.user_id,</pre>
+<pre class="line before"><span class="ws">            </span>&#39;title&#39;: self.title,</pre>
+<pre class="line before"><span class="ws">            </span>&#39;subject&#39;: self.subject,</pre>
+<pre class="line before"><span class="ws">            </span>&#39;description&#39;: self.description,</pre>
+<pre class="line before"><span class="ws">            </span>&#39;created_at&#39;: self.created_at.isoformat(),</pre>
+<pre class="line current"><span class="ws">            </span>&#39;lecture_count&#39;: len(self.lectures)
+<span class="ws">            </span>                     ^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">        </span>}</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span>class Lecture(db.Model):</pre>
+<pre class="line after"><span class="ws">    </span>&#34;&#34;&#34;Lecture model for user-created learning sessions&#34;&#34;&#34;</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889790240">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py"</cite>,
+      line <em class="line">569</em>,
+      in <code class="function">__get__</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>else:</pre>
+<pre class="line before"><span class="ws">            </span>try:</pre>
+<pre class="line before"><span class="ws">                </span>state = instance_state(instance)</pre>
+<pre class="line before"><span class="ws">            </span>except AttributeError as err:</pre>
+<pre class="line before"><span class="ws">                </span>raise orm_exc.UnmappedInstanceError(instance) from err</pre>
+<pre class="line current"><span class="ws">            </span>return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+<span class="ws">            </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span>@dataclasses.dataclass(frozen=True)</pre>
+<pre class="line after"><span class="ws"></span>class AdHocHasEntityNamespace(HasCacheKey):</pre>
+<pre class="line after"><span class="ws">    </span>_traverse_internals: ClassVar[_TraverseInternalsType] = [</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889783040">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py"</cite>,
+      line <em class="line">1096</em>,
+      in <code class="function">get</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">                </span>or state.committed_state[key] is NO_VALUE</pre>
+<pre class="line before"><span class="ws">            </span>):</pre>
+<pre class="line before"><span class="ws">                </span>if not passive &amp; CALLABLES_OK:</pre>
+<pre class="line before"><span class="ws">                    </span>return PASSIVE_NO_RESULT</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line current"><span class="ws">                </span>value = self._fire_loader_callables(state, key, passive)
+<span class="ws">                </span>        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">                </span>if value is PASSIVE_NO_RESULT or value is NO_VALUE:</pre>
+<pre class="line after"><span class="ws">                    </span>return value</pre>
+<pre class="line after"><span class="ws">                </span>elif value is ATTR_WAS_SET:</pre>
+<pre class="line after"><span class="ws">                    </span>try:</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889777920">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py"</cite>,
+      line <em class="line">1131</em>,
+      in <code class="function">_fire_loader_callables</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>return state._load_expired(state, passive)</pre>
+<pre class="line before"><span class="ws">        </span>elif key in state.callables:</pre>
+<pre class="line before"><span class="ws">            </span>callable_ = state.callables[key]</pre>
+<pre class="line before"><span class="ws">            </span>return callable_(state, passive)</pre>
+<pre class="line before"><span class="ws">        </span>elif self.callable_:</pre>
+<pre class="line current"><span class="ws">            </span>return self.callable_(state, passive)
+<span class="ws">            </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">        </span>else:</pre>
+<pre class="line after"><span class="ws">            </span>return ATTR_EMPTY</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def append(</pre>
+<pre class="line after"><span class="ws">        </span>self,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889779680">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\strategies.py"</cite>,
+      line <em class="line">978</em>,
+      in <code class="function">_load_for_state</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">                </span>not passive &amp; PassiveFlag.SQL_OK</pre>
+<pre class="line before"><span class="ws">                </span>or not passive &amp; PassiveFlag.RELATED_OBJECT_OK</pre>
+<pre class="line before"><span class="ws">            </span>):</pre>
+<pre class="line before"><span class="ws">                </span>return LoaderCallableStatus.PASSIVE_NO_RESULT</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line current"><span class="ws">        </span>return self._emit_lazyload(
+<span class="ws">        </span>       </pre>
+<pre class="line after"><span class="ws">            </span>session,</pre>
+<pre class="line after"><span class="ws">            </span>state,</pre>
+<pre class="line after"><span class="ws">            </span>primary_key_identity,</pre>
+<pre class="line after"><span class="ws">            </span>passive,</pre>
+<pre class="line after"><span class="ws">            </span>loadopt,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889782560">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\strategies.py"</cite>,
+      line <em class="line">1141</em>,
+      in <code class="function">_emit_lazyload</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>if self._raise_on_sql and not passive &amp; PassiveFlag.NO_RAISE:</pre>
+<pre class="line before"><span class="ws">            </span>self._invoke_raise_load(state, passive, &#34;raise_on_sql&#34;)</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>stmt._where_criteria = (lazy_clause,)</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line current"><span class="ws">        </span>result = session.execute(
+<span class="ws">        </span>         </pre>
+<pre class="line after"><span class="ws">            </span>stmt, params, execution_options=execution_options</pre>
+<pre class="line after"><span class="ws">        </span>)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">        </span>result = result.unique().scalars().all()</pre>
+<pre class="line after"><span class="ws"></span> </pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889783840">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\session.py"</cite>,
+      line <em class="line">2351</em>,
+      in <code class="function">execute</code></h4>
+  <div class="source "><pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>:return: a :class:`_engine.Result` object.</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>&#34;&#34;&#34;</pre>
+<pre class="line current"><span class="ws">        </span>return self._execute_internal(
+<span class="ws">        </span>       </pre>
+<pre class="line after"><span class="ws">            </span>statement,</pre>
+<pre class="line after"><span class="ws">            </span>params,</pre>
+<pre class="line after"><span class="ws">            </span>execution_options=execution_options,</pre>
+<pre class="line after"><span class="ws">            </span>bind_arguments=bind_arguments,</pre>
+<pre class="line after"><span class="ws">            </span>_parent_execute_state=_parent_execute_state,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889780320">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\session.py"</cite>,
+      line <em class="line">2249</em>,
+      in <code class="function">_execute_internal</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>return conn.scalar(</pre>
+<pre class="line before"><span class="ws">                </span>statement, params or {}, execution_options=execution_options</pre>
+<pre class="line before"><span class="ws">            </span>)</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>if compile_state_cls:</pre>
+<pre class="line current"><span class="ws">            </span>result: Result[Any] = compile_state_cls.orm_execute_statement(
+<span class="ws">            </span>                      </pre>
+<pre class="line after"><span class="ws">                </span>self,</pre>
+<pre class="line after"><span class="ws">                </span>statement,</pre>
+<pre class="line after"><span class="ws">                </span>params or {},</pre>
+<pre class="line after"><span class="ws">                </span>execution_options,</pre>
+<pre class="line after"><span class="ws">                </span>bind_arguments,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889788160">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\context.py"</cite>,
+      line <em class="line">306</em>,
+      in <code class="function">orm_execute_statement</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>params,</pre>
+<pre class="line before"><span class="ws">        </span>execution_options,</pre>
+<pre class="line before"><span class="ws">        </span>bind_arguments,</pre>
+<pre class="line before"><span class="ws">        </span>conn,</pre>
+<pre class="line before"><span class="ws">    </span>) -&gt; Result:</pre>
+<pre class="line current"><span class="ws">        </span>result = conn.execute(
+<span class="ws">        </span>         </pre>
+<pre class="line after"><span class="ws">            </span>statement, params or {}, execution_options=execution_options</pre>
+<pre class="line after"><span class="ws">        </span>)</pre>
+<pre class="line after"><span class="ws">        </span>return cls.orm_setup_cursor_result(</pre>
+<pre class="line after"><span class="ws">            </span>session,</pre>
+<pre class="line after"><span class="ws">            </span>statement,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889776000">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py"</cite>,
+      line <em class="line">1419</em>,
+      in <code class="function">execute</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>try:</pre>
+<pre class="line before"><span class="ws">            </span>meth = statement._execute_on_connection</pre>
+<pre class="line before"><span class="ws">        </span>except AttributeError as err:</pre>
+<pre class="line before"><span class="ws">            </span>raise exc.ObjectNotExecutableError(statement) from err</pre>
+<pre class="line before"><span class="ws">        </span>else:</pre>
+<pre class="line current"><span class="ws">            </span>return meth(
+<span class="ws">            </span>       </pre>
+<pre class="line after"><span class="ws">                </span>self,</pre>
+<pre class="line after"><span class="ws">                </span>distilled_parameters,</pre>
+<pre class="line after"><span class="ws">                </span>execution_options or NO_OPTIONS,</pre>
+<pre class="line after"><span class="ws">            </span>)</pre>
+<pre class="line after"><span class="ws"></span> </pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889785280">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\sql\elements.py"</cite>,
+      line <em class="line">527</em>,
+      in <code class="function">_execute_on_connection</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>execution_options: CoreExecuteOptionsParameter,</pre>
+<pre class="line before"><span class="ws">    </span>) -&gt; Result[Any]:</pre>
+<pre class="line before"><span class="ws">        </span>if self.supports_execution:</pre>
+<pre class="line before"><span class="ws">            </span>if TYPE_CHECKING:</pre>
+<pre class="line before"><span class="ws">                </span>assert isinstance(self, Executable)</pre>
+<pre class="line current"><span class="ws">            </span>return connection._execute_clauseelement(
+<span class="ws">            </span>       </pre>
+<pre class="line after"><span class="ws">                </span>self, distilled_params, execution_options</pre>
+<pre class="line after"><span class="ws">            </span>)</pre>
+<pre class="line after"><span class="ws">        </span>else:</pre>
+<pre class="line after"><span class="ws">            </span>raise exc.ObjectNotExecutableError(self)</pre>
+<pre class="line after"><span class="ws"></span> </pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889784320">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py"</cite>,
+      line <em class="line">1641</em>,
+      in <code class="function">_execute_clauseelement</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>column_keys=keys,</pre>
+<pre class="line before"><span class="ws">            </span>for_executemany=for_executemany,</pre>
+<pre class="line before"><span class="ws">            </span>schema_translate_map=schema_translate_map,</pre>
+<pre class="line before"><span class="ws">            </span>linting=self.dialect.compiler_linting | compiler.WARN_LINTING,</pre>
+<pre class="line before"><span class="ws">        </span>)</pre>
+<pre class="line current"><span class="ws">        </span>ret = self._execute_context(
+<span class="ws">        </span>      </pre>
+<pre class="line after"><span class="ws">            </span>dialect,</pre>
+<pre class="line after"><span class="ws">            </span>dialect.execution_ctx_cls._init_compiled,</pre>
+<pre class="line after"><span class="ws">            </span>compiled_sql,</pre>
+<pre class="line after"><span class="ws">            </span>distilled_parameters,</pre>
+<pre class="line after"><span class="ws">            </span>execution_options,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889777440">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py"</cite>,
+      line <em class="line">1846</em>,
+      in <code class="function">_execute_context</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">        </span>context.pre_exec()</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>if context.execute_style is ExecuteStyle.INSERTMANYVALUES:</pre>
+<pre class="line before"><span class="ws">            </span>return self._exec_insertmany_context(dialect, context)</pre>
+<pre class="line before"><span class="ws">        </span>else:</pre>
+<pre class="line current"><span class="ws">            </span>return self._exec_single_context(
+<span class="ws">            </span>       </pre>
+<pre class="line after"><span class="ws">                </span>dialect, context, statement, parameters</pre>
+<pre class="line after"><span class="ws">            </span>)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def _exec_single_context(</pre>
+<pre class="line after"><span class="ws">        </span>self,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889788800">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py"</cite>,
+      line <em class="line">1986</em>,
+      in <code class="function">_exec_single_context</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">            </span>context.post_exec()</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">            </span>result = context._setup_result_proxy()</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>except BaseException as e:</pre>
+<pre class="line current"><span class="ws">            </span>self._handle_dbapi_exception(
+<span class="ws">            </span>^</pre>
+<pre class="line after"><span class="ws">                </span>e, str_statement, effective_parameters, cursor, context</pre>
+<pre class="line after"><span class="ws">            </span>)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">        </span>return result</pre>
+<pre class="line after"><span class="ws"></span> </pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889776640">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py"</cite>,
+      line <em class="line">2363</em>,
+      in <code class="function">_handle_dbapi_exception</code></h4>
+  <div class="source "><pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">            </span>if newraise:</pre>
+<pre class="line before"><span class="ws">                </span>raise newraise.with_traceback(exc_info[2]) from e</pre>
+<pre class="line before"><span class="ws">            </span>elif should_wrap:</pre>
+<pre class="line before"><span class="ws">                </span>assert sqlalchemy_exception is not None</pre>
+<pre class="line current"><span class="ws">                </span>raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+<span class="ws">                </span>^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">            </span>else:</pre>
+<pre class="line after"><span class="ws">                </span>assert exc_info[1] is not None</pre>
+<pre class="line after"><span class="ws">                </span>raise exc_info[1].with_traceback(exc_info[2])</pre>
+<pre class="line after"><span class="ws">        </span>finally:</pre>
+<pre class="line after"><span class="ws">            </span>del self._reentrant_error</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889779840">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py"</cite>,
+      line <em class="line">1967</em>,
+      in <code class="function">_exec_single_context</code></h4>
+  <div class="source "><pre class="line before"><span class="ws">                            </span>context,</pre>
+<pre class="line before"><span class="ws">                        </span>):</pre>
+<pre class="line before"><span class="ws">                            </span>evt_handled = True</pre>
+<pre class="line before"><span class="ws">                            </span>break</pre>
+<pre class="line before"><span class="ws">                </span>if not evt_handled:</pre>
+<pre class="line current"><span class="ws">                    </span>self.dialect.do_execute(
+<span class="ws">                    </span>^</pre>
+<pre class="line after"><span class="ws">                        </span>cursor, str_statement, effective_parameters, context</pre>
+<pre class="line after"><span class="ws">                    </span>)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">            </span>if self._has_events or self.engine._has_events:</pre>
+<pre class="line after"><span class="ws">                </span>self.dispatch.after_cursor_execute(</pre></div>
+</div>
+
+<li><div class="frame" id="frame-1865889783680">
+  <h4>File <cite class="filename">"C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\default.py"</cite>,
+      line <em class="line">952</em>,
+      in <code class="function">do_execute</code></h4>
+  <div class="source "><pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">    </span>def do_executemany(self, cursor, statement, parameters, context=None):</pre>
+<pre class="line before"><span class="ws">        </span>cursor.executemany(statement, parameters)</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">    </span>def do_execute(self, cursor, statement, parameters, context=None):</pre>
+<pre class="line current"><span class="ws">        </span>cursor.execute(statement, parameters)
+<span class="ws">        </span>^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def do_execute_no_params(self, cursor, statement, context=None):</pre>
+<pre class="line after"><span class="ws">        </span>cursor.execute(statement)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def is_disconnect(</pre></div>
+</div>
+</ul>
+  <blockquote>sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: lectures.learning_intent_id
+[SQL: SELECT lectures.id AS lectures_id, lectures.user_id AS lectures_user_id, lectures.course_id AS lectures_course_id, lectures.title AS lectures_title, lectures.subject AS lectures_subject, lectures.topic AS lectures_topic, lectures.description AS lectures_description, lectures.video_ids AS lectures_video_ids, lectures.learning_intent_id AS lectures_learning_intent_id, lectures.created_at AS lectures_created_at, lectures.updated_at AS lectures_updated_at, lectures.is_active AS lectures_is_active 
+FROM lectures 
+WHERE ? = lectures.course_id]
+[parameters: (38,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+</blockquote>
+</div>
+
+<div class="plain">
+    <p>
+      This is the Copy/Paste friendly version of the traceback.
+    </p>
+    <textarea cols="50" rows="10" name="code" readonly>Traceback (most recent call last):
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py&#34;, line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\default.py&#34;, line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such column: lectures.learning_intent_id
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py&#34;, line 1478, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py&#34;, line 1458, in wsgi_app
+    response = self.handle_exception(e)
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask_cors\extension.py&#34;, line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py&#34;, line 1455, in wsgi_app
+    response = self.full_dispatch_request()
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py&#34;, line 869, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask_cors\extension.py&#34;, line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py&#34;, line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py&#34;, line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File &#34;C:\Projects\FocusLearner\backend\utils\auth.py&#34;, line 67, in decorated
+    return f(*args, **kwargs)
+  File &#34;C:\Projects\FocusLearner\backend\routes\lecture_routes.py&#34;, line 63, in create_course
+    &#39;course&#39;: course.to_dict()
+              ~~~~~~~~~~~~~~^^
+  File &#34;C:\Projects\FocusLearner\backend\models.py&#34;, line 201, in to_dict
+    &#39;lecture_count&#39;: len(self.lectures)
+                         ^^^^^^^^^^^^^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py&#34;, line 569, in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py&#34;, line 1096, in get
+    value = self._fire_loader_callables(state, key, passive)
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py&#34;, line 1131, in _fire_loader_callables
+    return self.callable_(state, passive)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\strategies.py&#34;, line 978, in _load_for_state
+    return self._emit_lazyload(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\strategies.py&#34;, line 1141, in _emit_lazyload
+    result = session.execute(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\session.py&#34;, line 2351, in execute
+    return self._execute_internal(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\session.py&#34;, line 2249, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\context.py&#34;, line 306, in orm_execute_statement
+    result = conn.execute(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py&#34;, line 1419, in execute
+    return meth(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\sql\elements.py&#34;, line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py&#34;, line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py&#34;, line 1846, in _execute_context
+    return self._exec_single_context(
+    
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py&#34;, line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py&#34;, line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py&#34;, line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ^
+  File &#34;C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\default.py&#34;, line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: lectures.learning_intent_id
+[SQL: SELECT lectures.id AS lectures_id, lectures.user_id AS lectures_user_id, lectures.course_id AS lectures_course_id, lectures.title AS lectures_title, lectures.subject AS lectures_subject, lectures.topic AS lectures_topic, lectures.description AS lectures_description, lectures.video_ids AS lectures_video_ids, lectures.learning_intent_id AS lectures_learning_intent_id, lectures.created_at AS lectures_created_at, lectures.updated_at AS lectures_updated_at, lectures.is_active AS lectures_is_active 
+FROM lectures 
+WHERE ? = lectures.course_id]
+[parameters: (38,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+</textarea>
+</div>
+<div class="explanation">
+  The debugger caught an exception in your WSGI application.  You can now
+  look at the traceback which led to the error.  <span class="nojavascript">
+  If you enable JavaScript you can also use additional features such as code
+  execution (if the evalex feature is enabled), automatic pasting of the
+  exceptions and much more.</span>
+</div>
+      <div class="footer">
+        Brought to you by <strong class="arthur">DON'T PANIC</strong>, your
+        friendly Werkzeug powered traceback interpreter.
+      </div>
+    </div>
+
+    <div class="pin-prompt">
+      <div class="inner">
+        <h3>Console Locked</h3>
+        <p>
+          The console is locked and needs to be unlocked by entering the PIN.
+          You can find the PIN printed out on the standard output of your
+          shell that runs the server.
+        <form>
+          <p>PIN:
+            <input type=text name=pin size=14>
+            <input type=submit name=btn value="Confirm Pin">
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
+
+<!--
+
+Traceback (most recent call last):
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such column: lectures.learning_intent_id
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py", line 1478, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py", line 1458, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py", line 1455, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py", line 869, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\flask\app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Projects\FocusLearner\backend\utils\auth.py", line 67, in decorated
+    return f(*args, **kwargs)
+  File "C:\Projects\FocusLearner\backend\routes\lecture_routes.py", line 63, in create_course
+    'course': course.to_dict()
+              ~~~~~~~~~~~~~~^^
+  File "C:\Projects\FocusLearner\backend\models.py", line 201, in to_dict
+    'lecture_count': len(self.lectures)
+                         ^^^^^^^^^^^^^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py", line 569, in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py", line 1096, in get
+    value = self._fire_loader_callables(state, key, passive)
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\attributes.py", line 1131, in _fire_loader_callables
+    return self.callable_(state, passive)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\strategies.py", line 978, in _load_for_state
+    return self._emit_lazyload(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\strategies.py", line 1141, in _emit_lazyload
+    result = session.execute(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\session.py", line 2249, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\sql\elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+    
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ^
+  File "C:\Users\G A MAHAMMAD SAFWAN\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: lectures.learning_intent_id
+[SQL: SELECT lectures.id AS lectures_id, lectures.user_id AS lectures_user_id, lectures.course_id AS lectures_course_id, lectures.title AS lectures_title, lectures.subject AS lectures_subject, lectures.topic AS lectures_topic, lectures.description AS lectures_description, lectures.video_ids AS lectures_video_ids, lectures.learning_intent_id AS lectures_learning_intent_id, lectures.created_at AS lectures_created_at, lectures.updated_at AS lectures_updated_at, lectures.is_active AS lectures_is_active 
+FROM lectures 
+WHERE ? = lectures.course_id]
+[parameters: (38,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+
+-->
