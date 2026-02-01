@@ -4,11 +4,16 @@ Service for fetching and managing YouTube content
 """
 
 import os
+import logging
 import requests
 from typing import List, Dict, Optional
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from youtube_transcript_api import YouTubeTranscriptApi
 from .content_filter import ContentFilter
 from .ai_service import AIService
+
+logger = logging.getLogger(__name__)
 
 
 class YouTubeService:
@@ -19,6 +24,17 @@ class YouTubeService:
         self.base_url = 'https://www.googleapis.com/youtube/v3'
         self.content_filter = ContentFilter()
         self.ai_service = AIService()
+        
+        # Configure session with retry strategy
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
     
     def search_videos(self, query: str, subject_focus: str, max_results: int = 10) -> List[Dict]:
         """
@@ -38,7 +54,7 @@ class YouTubeService:
         
         # Use AI to refine the search query for better educational relevance
         refined_query = self.ai_service.refine_search_query(subject_focus, query)
-        print(f"Original Query: {subject_focus} {query} -> Refined: {refined_query}")
+        logger.debug(f"Original Query: {subject_focus} {query} -> Refined: {refined_query}")
         
         params = {
             'part': 'snippet',
@@ -51,33 +67,52 @@ class YouTubeService:
         }
         
         try:
-            response = requests.get(f"{self.base_url}/search", params=params)
+            response = self.session.get(
+                f"{self.base_url}/search",
+                params=params,
+                timeout=10
+            )
             response.raise_for_status()
             data = response.json()
             
             videos = []
             for item in data.get('items', []):
-                video = {
-                    'video_id': item['id']['videoId'],
-                    'title': item['snippet']['title'],
-                    'description': item['snippet']['description'],
-                    'thumbnail': item['snippet']['thumbnails']['medium']['url'],
-                    'channel': item['snippet']['channelTitle'],
-                    'published_at': item['snippet']['publishedAt'],
-                    'url': f"https://www.youtube.com/watch?v={item['id']['videoId']}",
-                    'source': 'youtube',
-                    'subject_focus': subject_focus,
-                    'tags': []  # Tags not available in search API
-                }
-                videos.append(video)
+                try:
+                    video = {
+                        'video_id': item['id']['videoId'],
+                        'title': item['snippet']['title'],
+                        'description': item['snippet']['description'],
+                        'thumbnail': item['snippet']['thumbnails']['medium']['url'],
+                        'channel': item['snippet']['channelTitle'],
+                        'published_at': item['snippet']['publishedAt'],
+                        'url': f"https://www.youtube.com/watch?v={item['id']['videoId']}",
+                        'source': 'youtube',
+                        'subject_focus': subject_focus,
+                        'tags': []  # Tags not available in search API
+                    }
+                    videos.append(video)
+                except (KeyError, TypeError) as e:
+                    logger.warning(f'Error parsing video item: {e}')
+                    continue
             
             # Filter videos using content filter
             filtered_videos = self.content_filter.filter_video_list(videos)
             
+            logger.info(f'Found {len(filtered_videos)} filtered videos for query: {query}')
+            
             return filtered_videos[:max_results]
         
+        except requests.exceptions.Timeout:
+            logger.error('YouTube API request timed out')
+            return self._get_mock_videos(query, subject_focus, max_results)
+        except requests.exceptions.HTTPError as e:
+            logger.error(f'YouTube API HTTP error: {e.response.status_code} - {e.response.text}')
+            return self._get_mock_videos(query, subject_focus, max_results)
+        except requests.exceptions.RequestException as e:
+            logger.error(f'YouTube API request error: {e}')
+            return self._get_mock_videos(query, subject_focus, max_results)
         except Exception as e:
-            print(f"Error fetching YouTube videos: {e}")
+            logger.error(f'Error fetching YouTube videos: {e}', exc_info=True)
             return self._get_mock_videos(query, subject_focus, max_results)
     
     def get_video_transcript(self, video_id: str) -> Optional[List[Dict]]:
@@ -90,11 +125,16 @@ class YouTubeService:
         Returns:
             List of transcript entries with 'text' and 'start' keys, or None
         """
+        if not video_id or not video_id.strip():
+            logger.warning('Empty video_id provided for transcript')
+            return None
+        
         try:
-            transcript = YouTubeTranscriptApi.get_transcript(video_id)
+            transcript = YouTubeTranscriptApi.get_transcript(video_id.strip())
+            logger.info(f'Transcript fetched for video: {video_id}')
             return transcript
         except Exception as e:
-            print(f"Error fetching transcript for video {video_id}: {e}")
+            logger.warning(f"Error fetching transcript for video {video_id}: {e}")
             return None
     
     def _get_mock_videos(self, query: str, subject_focus: str, max_results: int) -> List[Dict]:
