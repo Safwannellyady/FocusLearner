@@ -3,55 +3,55 @@ FocusLearner Pro - Backend API Server
 Main Flask application for handling API requests
 """
 
+import os
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask_caching import Cache
-import os
+from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
+
+from config import get_config
 
 load_dotenv()
 
-# Import configuration
-from config import config
-
+# Initialize Flask app
 app = Flask(__name__)
 
 # Load configuration
-env = os.getenv('FLASK_ENV', 'development')
-app.config.from_object(config.get(env, config['default']))
+config_class = get_config()
+app.config.from_object(config_class)
+config_class.init_app(app)
 
-# Initialize CORS
-CORS(app, origins=app.config.get('CORS_ORIGINS', ['http://localhost:3000']))
-
-# Initialize rate limiting
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=[app.config.get('RATELIMIT_DEFAULT', '100 per hour')],
-    storage_uri=app.config.get('RATELIMIT_STORAGE_URL', 'memory://'),
-    enabled=app.config.get('RATELIMIT_ENABLED', True)
+# Configure CORS with proper settings
+CORS(
+    app,
+    origins=app.config['CORS_ORIGINS'],
+    supports_credentials=app.config['CORS_SUPPORTS_CREDENTIALS'],
+    methods=app.config['CORS_METHODS'],
+    allow_headers=app.config['CORS_HEADERS']
 )
 
-# Initialize caching
-cache = Cache(app, config={
-    'CACHE_TYPE': app.config.get('CACHE_TYPE', 'simple'),
-    'CACHE_DEFAULT_TIMEOUT': app.config.get('CACHE_DEFAULT_TIMEOUT', 300),
-    'CACHE_KEY_PREFIX': app.config.get('CACHE_KEY_PREFIX', 'focuslearner_')
-})
+# Configure logging
+if not app.debug:
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    file_handler = RotatingFileHandler(
+        f"logs/{app.config['LOG_FILE']}",
+        maxBytes=10240000,
+        backupCount=10
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(getattr(logging, app.config['LOG_LEVEL']))
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL']))
+    app.logger.info('FocusLearner Pro startup')
 
 # Import models and initialize db
-from models import db, User, FocusSession, GameProgress, UserPreferences, Lecture
+from models import db
 db.init_app(app)
-
-# Setup logging
-from utils.logger import setup_logging
-setup_logging(app)
-
-# Register error handlers
-from utils.errors import register_error_handlers
-register_error_handlers(app)
 
 # Import and register routes
 from routes.focus_routes import focus_routes
@@ -74,78 +74,130 @@ app.register_blueprint(chat_routes)
 app.register_blueprint(taxonomy_bp, url_prefix='/api/taxonomy')
 app.register_blueprint(analytics_bp)
 
-@app.route('/api/health', methods=['GET'])
-@limiter.exempt
-def health_check():
-    """Comprehensive health check endpoint"""
-    from models import db
-    from datetime import datetime
-    
-    health_status = {
-        'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
-        'version': '1.0.0',
-        'database': 'connected' if _check_database() else 'disconnected',
-        'services': {
-            'api': 'operational',
-            'database': 'operational' if _check_database() else 'degraded'
-        }
-    }
-    
-    status_code = 200 if health_status['database'] == 'connected' else 503
-    return jsonify(health_status), status_code
+# Error handlers
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors"""
+    return jsonify({
+        'error': 'Not found',
+        'message': 'The requested resource was not found',
+        'status_code': 404
+    }), 404
 
-def _check_database():
-    """Check database connectivity"""
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors"""
+    db.session.rollback()
+    app.logger.error(f'Server Error: {error}', exc_info=True)
+    return jsonify({
+        'error': 'Internal server error',
+        'message': 'An unexpected error occurred',
+        'status_code': 500
+    }), 500
+
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(e):
+    """Handle HTTP exceptions"""
+    return jsonify({
+        'error': e.name.lower().replace(' ', '_'),
+        'message': e.description,
+        'status_code': e.code
+    }), e.code
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle all other exceptions"""
+    app.logger.error(f'Unhandled Exception: {e}', exc_info=True)
+    return jsonify({
+        'error': 'Internal server error',
+        'message': 'An unexpected error occurred',
+        'status_code': 500
+    }), 500
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint with database status"""
     try:
+        # Check database connection
         db.session.execute(db.text('SELECT 1'))
-        return True
-    except Exception:
-        return False
+        db_status = 'connected'
+    except Exception as e:
+        app.logger.error(f'Database health check failed: {e}')
+        db_status = 'disconnected'
+    
+    status_code = 200 if db_status == 'connected' else 503
+    
+    return jsonify({
+        'status': 'healthy' if db_status == 'connected' else 'degraded',
+        'message': 'FocusLearner Pro API is running',
+        'database': db_status,
+        'version': app.config['API_VERSION']
+    }), status_code
+
 
 @app.route('/api', methods=['GET'])
-@limiter.exempt
 def api_info():
     """API information endpoint"""
     return jsonify({
         'name': 'FocusLearner Pro API',
-        'version': '1.0.0',
-        'description': 'A Unified, Contextual, and Gamified Learning Ecosystem',
+        'version': app.config['API_VERSION'],
+        'environment': os.getenv('FLASK_ENV', 'development'),
         'endpoints': {
+            'health': '/api/health',
             'auth': '/api/auth',
             'focus': '/api/focus',
             'content': '/api/content',
             'game': '/api/game',
             'lectures': '/api/lectures',
             'chat': '/api/chat',
-            'preferences': '/api/preferences',
-            'taxonomy': '/api/taxonomy',
-            'analytics': '/api/analytics'
-        },
-        'documentation': '/api/docs'  # Future: Add Swagger/OpenAPI docs
+            'analytics': '/api/analytics',
+            'taxonomy': '/api/taxonomy'
+        }
     })
 
-# Create tables on startup
-with app.app_context():
-    try:
-        db.create_all()
-        app.logger.info("Database tables initialized")
-    except Exception as e:
-        app.logger.error(f"Error initializing database: {e}")
+
+@app.before_request
+def before_request():
+    """Log request information"""
+    if app.debug:
+        app.logger.debug(f'{request.method} {request.path} - {request.remote_addr}')
+
+
+@app.after_request
+def after_request(response):
+    """Add security headers and log response"""
+    # Security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    if app.debug:
+        app.logger.debug(f'{request.method} {request.path} - Status: {response.status_code}')
+    
+    return response
 
 if __name__ == '__main__':
     with app.app_context():
         # Create all database tables
-        db.create_all()
-        app.logger.info("FocusLearner Pro API starting...")
-        app.logger.info(f"Environment: {env}")
-        app.logger.info(f"Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
+        try:
+            db.create_all()
+            app.logger.info('Database tables created/verified successfully')
+        except Exception as e:
+            app.logger.error(f'Error creating database tables: {e}')
+            raise
+        
+        # Note: Users should register through /api/auth/register endpoint
+        # No default test user is created automatically
     
-    app.run(
-        debug=app.config.get('DEBUG', False),
-        host='0.0.0.0',
-        port=int(os.getenv('PORT', 5000))
-    )
+    port = int(os.getenv('PORT', 5000))
+    host = os.getenv('HOST', '0.0.0.0')
+    
+    app.logger.info(f'Starting FocusLearner Pro API on {host}:{port}')
+    app.run(debug=app.config['DEBUG'], host=host, port=port)
 
 
 

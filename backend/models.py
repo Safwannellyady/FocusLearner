@@ -37,12 +37,23 @@ class User(db.Model):
     streak_days = db.Column(db.Integer, default=0)
     
     # Relationships
-    focus_sessions = db.relationship('FocusSession', backref='user', lazy=True)
-    focus_sessions = db.relationship('FocusSession', backref='user', lazy=True)
-    game_progress = db.relationship('GameProgress', backref='user', lazy=True)
-    distraction_logs = db.relationship('DistractionLog', backref='user', lazy=True)
-    preferences = db.relationship('UserPreferences', backref='user', uselist=False, lazy=True)
-    lectures = db.relationship('Lecture', backref='user', lazy=True)
+    focus_sessions = db.relationship('FocusSession', backref='user', lazy=True, cascade='all, delete-orphan')
+    game_progress = db.relationship('GameProgress', backref='user', lazy=True, cascade='all, delete-orphan')
+    distraction_logs = db.relationship('DistractionLog', backref='user', lazy=True, cascade='all, delete-orphan')
+    preferences = db.relationship('UserPreferences', backref='user', uselist=False, lazy=True, cascade='all, delete-orphan')
+    lectures = db.relationship('Lecture', backref='user', lazy=True, cascade='all, delete-orphan')
+    chat_messages = db.relationship('ChatMessage', backref='user', lazy=True, cascade='all, delete-orphan')
+    courses = db.relationship('Course', backref='user', lazy=True, cascade='all, delete-orphan')
+    activity_results = db.relationship('ActivityResult', backref='user', lazy=True, cascade='all, delete-orphan')
+    learning_loop_states = db.relationship('LearningLoopState', backref='user', lazy=True, cascade='all, delete-orphan')
+    topic_mastery = db.relationship('UserTopicMastery', backref='user', lazy=True, cascade='all, delete-orphan')
+    
+    # Indexes for performance
+    __table_args__ = (
+        db.Index('idx_user_email', 'email'),
+        db.Index('idx_user_username', 'username'),
+        db.Index('idx_user_active', 'is_active'),
+    )
     
     def set_password(self, password):
         """Hash and set password"""
@@ -70,13 +81,22 @@ class FocusSession(db.Model):
     __tablename__ = 'focus_sessions'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    subject_focus = db.Column(db.String(100), nullable=False)
-    is_locked = db.Column(db.Boolean, default=False)
-    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    subject_focus = db.Column(db.String(100), nullable=False, index=True)
+    is_locked = db.Column(db.Boolean, default=False, index=True)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     ended_at = db.Column(db.DateTime, nullable=True)
     current_video_id = db.Column(db.String(100), nullable=True)
     current_timestamp = db.Column(db.Integer, default=0)  # Video timestamp in seconds
+    
+    # Relationships
+    distraction_logs = db.relationship('DistractionLog', backref='focus_session', lazy=True, cascade='all, delete-orphan')
+    chat_messages = db.relationship('ChatMessage', backref='focus_session', lazy=True, cascade='all, delete-orphan')
+    
+    __table_args__ = (
+        db.Index('idx_focus_user_active', 'user_id', 'is_locked'),
+        db.Index('idx_focus_started', 'started_at'),
+    )
     
     def to_dict(self):
         return {
@@ -98,14 +118,18 @@ class ContentItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(500), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    source = db.Column(db.String(50), nullable=False)  # 'youtube', 'nptel', 'udemy'
-    source_id = db.Column(db.String(200), nullable=False)  # Video ID or course ID
+    source = db.Column(db.String(50), nullable=False, index=True)  # 'youtube', 'nptel', 'udemy'
+    source_id = db.Column(db.String(200), nullable=False, unique=True)  # Video ID or course ID
     url = db.Column(db.String(1000), nullable=False)
-    subject_focus = db.Column(db.String(100), nullable=False)
-    is_approved = db.Column(db.Boolean, default=True)
-    is_filtered = db.Column(db.Boolean, default=False)  # True if filtered out
+    subject_focus = db.Column(db.String(100), nullable=False, index=True)
+    is_approved = db.Column(db.Boolean, default=True, index=True)
+    is_filtered = db.Column(db.Boolean, default=False, index=True)  # True if filtered out
     filter_reason = db.Column(db.String(200), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    __table_args__ = (
+        db.Index('idx_content_subject_approved', 'subject_focus', 'is_approved', 'is_filtered'),
+    )
     
     def to_dict(self):
         return {
@@ -128,14 +152,19 @@ class GameProgress(db.Model):
     __tablename__ = 'game_progress'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    game_module = db.Column(db.String(100), nullable=False)  # e.g., 'kcl_challenge'
-    subject_focus = db.Column(db.String(100), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    game_module = db.Column(db.String(100), nullable=False, index=True)  # e.g., 'kcl_challenge'
+    subject_focus = db.Column(db.String(100), nullable=False, index=True)
     score = db.Column(db.Integer, default=0)
     level = db.Column(db.Integer, default=1)
     mastery_points = db.Column(db.Integer, default=0)
     completed_at = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    __table_args__ = (
+        db.Index('idx_game_user_module', 'user_id', 'game_module'),
+        db.UniqueConstraint('user_id', 'game_module', 'subject_focus', name='uq_user_game_subject'),
+    )
     
     def to_dict(self):
         return {
@@ -156,7 +185,7 @@ class UserPreferences(db.Model):
     __tablename__ = 'user_preferences'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False, index=True)
     preferred_subjects = db.Column(db.Text, nullable=True)  # JSON array of subjects
     preferred_topics = db.Column(db.Text, nullable=True)  # JSON array of topics
     difficulty_level = db.Column(db.String(20), default='intermediate')  # beginner, intermediate, advanced
@@ -182,13 +211,17 @@ class Course(db.Model):
     __tablename__ = 'courses'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     title = db.Column(db.String(200), nullable=False)
-    subject = db.Column(db.String(100), nullable=False)
+    subject = db.Column(db.String(100), nullable=False, index=True)
     description = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     
     lectures = db.relationship('Lecture', backref='course', lazy=True, cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        db.Index('idx_course_user_subject', 'user_id', 'subject'),
+    )
 
     def to_dict(self):
         return {
@@ -207,20 +240,24 @@ class Lecture(db.Model):
     __tablename__ = 'lectures'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True) # Optional for now to support old lectures
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id', ondelete='SET NULL'), nullable=True, index=True) # Optional for now to support old lectures
     title = db.Column(db.String(200), nullable=False)
-    subject = db.Column(db.String(100), nullable=False)
+    subject = db.Column(db.String(100), nullable=False, index=True)
     topic = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     video_ids = db.Column(db.Text, nullable=True)  # JSON array of video IDs
     
     # Link to centralized Learning Intent
-    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id'), nullable=True)
+    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id', ondelete='SET NULL'), nullable=True, index=True)
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    
+    __table_args__ = (
+        db.Index('idx_lecture_user_subject', 'user_id', 'subject', 'is_active'),
+    )
     
     def to_dict(self):
         import json
@@ -244,13 +281,17 @@ class ChatMessage(db.Model):
     __tablename__ = 'chat_messages'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    focus_session_id = db.Column(db.Integer, db.ForeignKey('focus_sessions.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    focus_session_id = db.Column(db.Integer, db.ForeignKey('focus_sessions.id', ondelete='SET NULL'), nullable=True, index=True)
     message = db.Column(db.Text, nullable=False)
     response = db.Column(db.Text, nullable=True)
-    video_id = db.Column(db.String(100), nullable=True)
+    video_id = db.Column(db.String(100), nullable=True, index=True)
     timestamp = db.Column(db.Integer, nullable=True)  # Video timestamp when question was asked
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    __table_args__ = (
+        db.Index('idx_chat_user_session', 'user_id', 'focus_session_id', 'created_at'),
+    )
     
     def to_dict(self):
         return {
@@ -270,12 +311,16 @@ class DistractionLog(db.Model):
     __tablename__ = 'distraction_logs'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    focus_session_id = db.Column(db.Integer, db.ForeignKey('focus_sessions.id'), nullable=True)
-    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    focus_session_id = db.Column(db.Integer, db.ForeignKey('focus_sessions.id', ondelete='CASCADE'), nullable=True, index=True)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     ended_at = db.Column(db.DateTime, nullable=True)
     duration = db.Column(db.Integer, nullable=True) # Duration in seconds
-    reason = db.Column(db.String(200), nullable=True) # e.g., "tab_switch", "window_blur"
+    reason = db.Column(db.String(200), nullable=True, index=True) # e.g., "tab_switch", "window_blur"
+    
+    __table_args__ = (
+        db.Index('idx_distraction_user_session', 'user_id', 'focus_session_id', 'started_at'),
+    )
     
     def to_dict(self):
         return {
@@ -292,19 +337,26 @@ class GameChallenge(db.Model):
     __tablename__ = 'game_challenges'
     
     id = db.Column(db.String(36), primary_key=True) # UUID
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) # Optional, if generated for specific user
-    subject = db.Column(db.String(100), nullable=False)
-    topic = db.Column(db.String(200), nullable=False)
-    activity_type = db.Column(db.String(50), nullable=False) # coding, lab, crossword
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True, index=True) # Optional, if generated for specific user
+    subject = db.Column(db.String(100), nullable=False, index=True)
+    topic = db.Column(db.String(200), nullable=False, index=True)
+    activity_type = db.Column(db.String(50), nullable=False, index=True) # coding, lab, crossword
     
     # Link to centralized Learning Intent
-    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id'), nullable=True)
+    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id', ondelete='SET NULL'), nullable=True, index=True)
     
     # Store the full generated content including secret solution
     data = db.Column(db.Text, nullable=False) # JSON string
     solution = db.Column(db.Text, nullable=False) # JSON string or specific answer
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Relationships
+    activity_results = db.relationship('ActivityResult', backref='challenge', lazy=True, cascade='all, delete-orphan')
+    
+    __table_args__ = (
+        db.Index('idx_challenge_subject_topic', 'subject', 'topic', 'activity_type'),
+    )
     
     def to_dict(self):
         import json
@@ -322,31 +374,45 @@ class ActivityResult(db.Model):
     __tablename__ = 'activity_results'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    challenge_id = db.Column(db.String(36), db.ForeignKey('game_challenges.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    challenge_id = db.Column(db.String(36), db.ForeignKey('game_challenges.id', ondelete='CASCADE'), nullable=False, index=True)
     
     user_answer = db.Column(db.Text, nullable=True) # JSON or string
-    is_correct = db.Column(db.Boolean, nullable=False)
+    is_correct = db.Column(db.Boolean, nullable=False, index=True)
     score_raw = db.Column(db.Float, default=0.0)
     xp_earned = db.Column(db.Integer, default=0)
     focus_violations = db.Column(db.Integer, default=0)
     
     feedback = db.Column(db.Text, nullable=True) # Auto-generated feedback
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    __table_args__ = (
+        db.Index('idx_result_user_challenge', 'user_id', 'challenge_id', 'created_at'),
+    )
 
 class LearningIntent(db.Model):
     """Centralized Learning Intent Object (Taxonomy)"""
     __tablename__ = 'learning_intents'
     
     id = db.Column(db.Integer, primary_key=True)
-    subject = db.Column(db.String(100), nullable=False)
-    topic = db.Column(db.String(200), nullable=False)
+    subject = db.Column(db.String(100), nullable=False, index=True)
+    topic = db.Column(db.String(200), nullable=False, index=True)
     sub_topic = db.Column(db.String(200), nullable=True)
-    difficulty = db.Column(db.String(50), default='Intermediate') # Beginner, Intermediate, Advanced
+    difficulty = db.Column(db.String(50), default='Intermediate', index=True) # Beginner, Intermediate, Advanced
     required_outcomes = db.Column(db.Text, nullable=True) # JSON list of outcomes
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Relationships
+    lectures = db.relationship('Lecture', backref='learning_intent', lazy=True)
+    challenges = db.relationship('GameChallenge', backref='learning_intent', lazy=True)
+    loop_states = db.relationship('LearningLoopState', backref='learning_intent', lazy=True)
+    
+    __table_args__ = (
+        db.Index('idx_intent_subject_topic', 'subject', 'topic'),
+        db.UniqueConstraint('subject', 'topic', 'sub_topic', name='uq_learning_intent'),
+    )
     
     def to_dict(self):
         import json
@@ -369,14 +435,17 @@ class LearningStage(str, Enum):
 class LearningLoopState(db.Model):
     __tablename__ = 'learning_loop_states'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id'), nullable=False)
-    current_stage = db.Column(db.Enum(LearningStage), default=LearningStage.UNDERSTAND)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id', ondelete='CASCADE'), nullable=False, index=True)
+    current_stage = db.Column(db.Enum(LearningStage), default=LearningStage.UNDERSTAND, index=True)
     attempts = db.Column(db.Integer, default=0)
     last_feedback = db.Column(db.Text, nullable=True) # AI analysis of failure
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     
-    intent = db.relationship('LearningIntent', backref='loop_states')
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'learning_intent_id', name='uq_user_learning_loop'),
+        db.Index('idx_loop_user_stage', 'user_id', 'current_stage'),
+    )
 
 
 class TopicMasteryState(str, Enum):
@@ -390,17 +459,22 @@ class UserTopicMastery(db.Model):
     __tablename__ = 'user_topic_mastery'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    subject = db.Column(db.String(100), nullable=False)
-    topic = db.Column(db.String(200), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    subject = db.Column(db.String(100), nullable=False, index=True)
+    topic = db.Column(db.String(200), nullable=False, index=True)
     
-    state = db.Column(db.Enum(TopicMasteryState), default=TopicMasteryState.NOT_STARTED)
+    state = db.Column(db.Enum(TopicMasteryState), default=TopicMasteryState.NOT_STARTED, index=True)
     proficiency_score = db.Column(db.Float, default=0.0) # 0 to 100
     
     total_attempts = db.Column(db.Integer, default=0)
     success_rate = db.Column(db.Float, default=0.0)
     
-    last_activity_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_activity_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'subject', 'topic', name='uq_user_topic_mastery'),
+        db.Index('idx_mastery_user_state', 'user_id', 'state'),
+    )
     
     def to_dict(self):
         return {
