@@ -5,24 +5,101 @@ Service for interacting with Google Gemini AI for content generation
 
 import os
 import json
+import hashlib
+import time
+import logging
 import requests
 from typing import List, Dict, Any, Optional
+from functools import lru_cache
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+logger = logging.getLogger(__name__)
+
 
 class AIService:
     """Service for AI-powered content generation using Gemini REST API"""
     
     def __init__(self):
-        self.api_key = os.getenv('GOOGLE_API_KEY')
-        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+        from flask import current_app
+        try:
+            self.api_key = current_app.config.get('GOOGLE_API_KEY') or os.getenv('GOOGLE_API_KEY')
+            self.model = current_app.config.get('GEMINI_MODEL', 'gemini-1.5-flash')
+            self.max_tokens = current_app.config.get('GEMINI_MAX_TOKENS', 1024)
+            self.temperature = current_app.config.get('GEMINI_TEMPERATURE', 0.7)
+        except RuntimeError:
+            # Outside app context
+            self.api_key = os.getenv('GOOGLE_API_KEY')
+            self.model = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
+            self.max_tokens = int(os.getenv('GEMINI_MAX_TOKENS', '1024'))
+            self.temperature = float(os.getenv('GEMINI_TEMPERATURE', '0.7'))
+        
+        self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
+        
+        # Configure session with retry strategy
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["POST"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        
+        # Simple in-memory cache (use Redis in production)
+        self._cache = {}
+        self._cache_ttl = 3600  # 1 hour
         
         if not self.api_key:
-            print("Warning: GOOGLE_API_KEY not found. AI features will use fallback mock data.")
+            logger.warning("GOOGLE_API_KEY not found. AI features will use fallback mock data.")
 
-    def _call_gemini(self, prompt: str) -> Optional[str]:
-        """Helper to call Gemini REST API"""
+    def _get_cache_key(self, prompt: str) -> str:
+        """Generate cache key from prompt"""
+        return hashlib.md5(prompt.encode()).hexdigest()
+    
+    def _get_cached_response(self, cache_key: str) -> Optional[str]:
+        """Get cached response if available and not expired"""
+        if cache_key in self._cache:
+            cached_data, timestamp = self._cache[cache_key]
+            if time.time() - timestamp < self._cache_ttl:
+                return cached_data
+            else:
+                del self._cache[cache_key]
+        return None
+    
+    def _cache_response(self, cache_key: str, response: str):
+        """Cache response with timestamp"""
+        self._cache[cache_key] = (response, time.time())
+        # Limit cache size
+        if len(self._cache) > 100:
+            # Remove oldest entries
+            sorted_items = sorted(self._cache.items(), key=lambda x: x[1][1])
+            for key, _ in sorted_items[:20]:
+                del self._cache[key]
+
+    def _call_gemini(self, prompt: str, use_cache: bool = True) -> Optional[str]:
+        """
+        Helper to call Gemini REST API with retry logic and caching
+        
+        Args:
+            prompt: The prompt to send to Gemini
+            use_cache: Whether to use cached responses
+        
+        Returns:
+            Response text or None if error
+        """
         if not self.api_key:
             return None
-            
+        
+        # Check cache
+        if use_cache:
+            cache_key = self._get_cache_key(prompt)
+            cached = self._get_cached_response(cache_key)
+            if cached:
+                logger.debug("Using cached AI response")
+                return cached
+        
         headers = {
             'Content-Type': 'application/json'
         }
@@ -32,23 +109,54 @@ class AIService:
                 "parts": [{"text": prompt}]
             }],
             "generationConfig": {
-                "temperature": 0.7,
+                "temperature": self.temperature,
                 "topK": 40,
                 "topP": 0.95,
-                "maxOutputTokens": 1024,
+                "maxOutputTokens": self.max_tokens,
             }
         }
         
         try:
-            response = requests.post(f"{self.base_url}?key={self.api_key}", headers=headers, json=data)
+            start_time = time.time()
+            response = self.session.post(
+                f"{self.base_url}?key={self.api_key}",
+                headers=headers,
+                json=data,
+                timeout=30
+            )
             response.raise_for_status()
             result = response.json()
+            
             # Extract text from response
-            return result['candidates'][0]['content']['parts'][0]['text']
+            if 'candidates' in result and len(result['candidates']) > 0:
+                text = result['candidates'][0]['content']['parts'][0]['text']
+                
+                # Cache successful response
+                if use_cache:
+                    self._cache_response(cache_key, text)
+                
+                elapsed = time.time() - start_time
+                logger.info(f"Gemini API call successful in {elapsed:.2f}s")
+                
+                return text
+            else:
+                logger.warning("Gemini API returned no candidates")
+                return None
+                
+        except requests.exceptions.Timeout:
+            logger.error("Gemini API request timed out")
+            return None
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"Gemini API HTTP error: {e.response.status_code} - {e.response.text}")
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Gemini API request error: {e}")
+            return None
+        except (KeyError, IndexError) as e:
+            logger.error(f"Gemini API response parsing error: {e}")
+            return None
         except Exception as e:
-            print(f"Gemini API Error: {e}")
-            if response.status_code != 200:
-                print(f"Response: {response.text}")
+            logger.error(f"Unexpected Gemini API error: {e}", exc_info=True)
             return None
 
     def generate_quiz(self, subject: str, topic: str, count: int = 5) -> List[Dict[str, Any]]:

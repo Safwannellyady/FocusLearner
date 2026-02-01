@@ -191,7 +191,7 @@ def refresh_token_required(f):
     return decorated
 
 
-def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
+def validate_password_strength(password: str):
     """
     Validate password strength
     
