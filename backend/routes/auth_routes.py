@@ -3,9 +3,12 @@ FocusLearner Pro - Authentication Routes
 API endpoints for user registration, login, and account management
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import sys
 import os
+import logging
 
 # Add parent directory to path for imports
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,65 +17,102 @@ if parent_dir not in sys.path:
 
 from models import User, UserPreferences, db
 from utils.auth import generate_token, token_required
+from utils.validators import Validator
+from utils.errors import ValidationError, ConflictError, AuthenticationError, NotFoundError
 from services.google_auth import GoogleAuthService
 
 auth_routes = Blueprint('auth', __name__, url_prefix='/api/auth')
 google_auth_service = GoogleAuthService()
+logger = logging.getLogger(__name__)
+
+# Rate limiter instance (will be initialized in app.py)
+limiter = None
+
+def init_limiter(app_limiter):
+    """Initialize rate limiter for auth routes"""
+    global limiter
+    limiter = app_limiter
 
 
 @auth_routes.route('/register', methods=['POST'])
 def register():
-    """Register a new user"""
-    data = request.get_json()
-    
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
-    full_name = data.get('full_name', '')
-    
-    # Validation
-    if not username or not email or not password:
-        return jsonify({'error': 'Username, email, and password are required'}), 400
-    
-    if len(password) < 6:
-        return jsonify({'error': 'Password must be at least 6 characters'}), 400
-    
-    # Check if user already exists
-    if User.query.filter_by(username=username).first():
-        return jsonify({'error': 'Username already exists'}), 400
-    
-    if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already exists'}), 400
-    
-    # Create new user
-    user = User(
-        username=username,
-        email=email,
-        full_name=full_name
-    )
-    user.set_password(password)
-    
-    db.session.add(user)
-    db.session.commit()
-    
-    # Create default preferences
-    preferences = UserPreferences(
-        user_id=user.id,
-        preferred_subjects='[]',
-        preferred_topics='[]',
-        difficulty_level='intermediate'
-    )
-    db.session.add(preferences)
-    db.session.commit()
-    
-    # Generate token
-    token = generate_token(user.id)
-    
-    return jsonify({
-        'message': 'User registered successfully',
-        'token': token,
-        'user': user.to_dict()
-    }), 201
+    """Register a new user with enhanced validation"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            raise ValidationError("Request body is required")
+        
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        full_name = Validator.sanitize_string(data.get('full_name', ''), max_length=200)
+        
+        # Validate inputs
+        is_valid, error = Validator.validate_username(username)
+        if not is_valid:
+            raise ValidationError(error, field='username')
+        
+        is_valid, error = Validator.validate_email(email)
+        if not is_valid:
+            raise ValidationError(error, field='email')
+        
+        is_valid, error = Validator.validate_password(password)
+        if not is_valid:
+            raise ValidationError(error, field='password')
+        
+        # Check if user already exists
+        if User.query.filter_by(username=username).first():
+            raise ConflictError("Username already exists", field='username')
+        
+        if User.query.filter_by(email=email).first():
+            raise ConflictError("Email already exists", field='email')
+        
+        # Create new user
+        try:
+            user = User(
+                username=username,
+                email=email,
+                full_name=full_name
+            )
+            user.set_password(password)
+            
+            db.session.add(user)
+            db.session.flush()  # Get user.id without committing
+            
+            # Create default preferences
+            preferences = UserPreferences(
+                user_id=user.id,
+                preferred_subjects='[]',
+                preferred_topics='[]',
+                difficulty_level='intermediate'
+            )
+            db.session.add(preferences)
+            db.session.commit()
+            
+            logger.info(f"New user registered: {username} ({email})")
+            
+            # Generate token
+            token = generate_token(user.id)
+            
+            return jsonify({
+                'message': 'User registered successfully',
+                'token': token,
+                'user': user.to_dict()
+            }), 201
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error creating user: {e}")
+            raise ValidationError("Failed to create user account")
+            
+    except ValidationError as e:
+        return jsonify({'error': e.message, 'field': getattr(e, 'field', None)}), 400
+    except ConflictError as e:
+        return jsonify({'error': e.message, 'field': getattr(e, 'field', None)}), 409
+    except Exception as e:
+        logger.exception(f"Unexpected error in register: {e}")
+        return jsonify({'error': 'Registration failed. Please try again.'}), 500
 
 
 @auth_routes.route('/login', methods=['POST'])
