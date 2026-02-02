@@ -157,6 +157,8 @@ export const preferencesAPI = {
 export const courseAPI = {
   getAll: () => api.get('/lectures/courses'),
   create: (data) => api.post('/lectures/courses', data),
+  update: (id, data) => api.put(`/lectures/courses/${id}`, data),
+  delete: (id) => api.delete(`/lectures/courses/${id}`),
 };
 
 // Lecture API

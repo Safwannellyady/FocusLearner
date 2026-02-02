@@ -64,6 +64,49 @@ def create_course():
     }), 201
 
 
+@lecture_routes.route('/courses/<int:course_id>', methods=['PUT'])
+@token_required
+def update_course(course_id):
+    """Update a course"""
+    user_id = request.current_user_id
+    course = Course.query.filter_by(id=course_id, user_id=user_id).first()
+    
+    if not course:
+        return jsonify({'error': 'Course not found'}), 404
+        
+    data = request.get_json()
+    
+    if 'title' in data:
+        course.title = data['title']
+    if 'subject' in data:
+        course.subject = data['subject']
+    if 'description' in data:
+        course.description = data['description']
+        
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Course updated successfully',
+        'course': course.to_dict()
+    }), 200
+
+
+@lecture_routes.route('/courses/<int:course_id>', methods=['DELETE'])
+@token_required
+def delete_course(course_id):
+    """Delete a course"""
+    user_id = request.current_user_id
+    course = Course.query.filter_by(id=course_id, user_id=user_id).first()
+    
+    if not course:
+        return jsonify({'error': 'Course not found'}), 404
+    
+    db.session.delete(course)
+    db.session.commit()
+    
+    return jsonify({'message': 'Course deleted successfully'}), 200
+
+
 @lecture_routes.route('/', methods=['GET'])
 @token_required
 def get_lectures():
