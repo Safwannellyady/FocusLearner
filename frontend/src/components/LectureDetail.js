@@ -51,9 +51,9 @@ const LectureDetail = () => {
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizResult, setQuizResult] = useState(null);
 
-  // Gatekeeping State
+  // Gatekeeping State REMOVED (Always Open)
   const [mastery, setMastery] = useState(null);
-  const [isLocked, setIsLocked] = useState(false);
+  // const [isLocked, setIsLocked] = useState(false); // Removed lock
   const [gateActivity, setGateActivity] = useState(null);
   const [gateOpen, setGateOpen] = useState(false);
   const [gateResult, setGateResult] = useState(null);
@@ -87,7 +87,7 @@ const LectureDetail = () => {
             setMastery(mState);
 
             if (mState.proficiency < 30) {
-              setIsLocked(true);
+              // setIsLocked(true); // Always unlocked now
             }
           } catch (e) {
             console.warn("Failed to check mastery", e);
@@ -149,7 +149,7 @@ const LectureDetail = () => {
       setGateResult(res);
 
       if (res.is_correct) {
-        setIsLocked(false);
+        // setIsLocked(false);
         setMastery({ ...mastery, proficiency: res.new_proficiency, state: res.mastery_state });
       }
     } catch (e) {
@@ -174,13 +174,16 @@ const LectureDetail = () => {
           <Box p={2}>
             <Typography variant="h6" gutterBottom>Testing Lab</Typography>
             {!showQuiz ? (
-              <Card sx={{ mb: 2 }}>
+              <Card sx={{ mb: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 3 }}>
                 <CardContent>
-                  <Typography variant="subtitle1">Unit Test: {lecture?.topic}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Test your knowledge on {lecture?.topic} with a quick AI-generated quiz.
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <AssignmentIcon sx={{ color: '#8b5cf6' }} />
+                    <Typography variant="h6" color="white" fontWeight="600">Unit Test: {lecture?.topic}</Typography>
+                  </Box>
+                  <Typography variant="body2" color="rgba(255,255,255,0.7)" mb={2}>
+                    Test your knowledge on {lecture?.topic} with an adaptive AI generated quiz.
                   </Typography>
-                  <Button variant="outlined" sx={{ mt: 1 }} size="small" onClick={handleStartQuiz}>
+                  <Button variant="outlined" fullWidth sx={{ borderColor: '#8b5cf6', color: '#8b5cf6', '&:hover': { bgcolor: 'rgba(139, 92, 246, 0.1)' } }} onClick={handleStartQuiz}>
                     Start AI Quiz
                   </Button>
                 </CardContent>
@@ -228,22 +231,30 @@ const LectureDetail = () => {
       case 1: // Games
         return (
           <Box p={2}>
-            <Typography variant="h6" gutterBottom>Game Lab</Typography>
+            <Typography variant="h6" gutterBottom color="white" fontWeight="bold">Game Lab</Typography>
             <GameLab />
           </Box>
         );
       case 2: // Quiz (formerly Exercises, now combined with quiz functionality)
         return (
-          <Box p={2}>
-            <Typography variant="h6" gutterBottom>Quiz & Exercises</Typography>
+          <Box p={3}>
+            <Typography variant="h6" gutterBottom color="white" fontWeight="bold" mb={3}>Quiz & Exercises</Typography>
             {!showQuiz ? (
-              <Card sx={{ mb: 2 }}>
-                <CardContent>
-                  <Typography variant="subtitle1">Unit Test: {lecture?.topic}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Test your knowledge on {lecture?.topic} with a quick AI-generated quiz.
+              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: 4 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <Box p={1} bgcolor="rgba(139, 92, 246, 0.2)" borderRadius="50%" color="#a78bfa">
+                      <ScienceIcon />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" color="white" fontWeight="700">Unit Test</Typography>
+                      <Typography variant="caption" color="rgba(255,255,255,0.6)">{lecture?.topic}</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="rgba(255,255,255,0.8)" mb={3}>
+                    Assess your understanding with a dynamic AI-generated quiz tailored to this topic.
                   </Typography>
-                  <Button variant="outlined" sx={{ mt: 1 }} size="small" onClick={handleStartQuiz}>
+                  <Button variant="contained" fullWidth sx={{ bgcolor: '#8b5cf6', '&:hover': { bgcolor: '#7c3aed' }, fontWeight: 600, boxShadow: '0 4px 14px 0 rgba(139, 92, 246, 0.39)' }} onClick={handleStartQuiz}>
                     Start AI Quiz
                   </Button>
                 </CardContent>
@@ -286,13 +297,13 @@ const LectureDetail = () => {
                 )}
               </Box>
             )}
-            <Card sx={{ mb: 2, mt: 2 }}>
+            <Card sx={{ mb: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 3 }}>
               <CardContent>
-                <Typography variant="subtitle1">Problem Set 1</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="subtitle1" color="white" fontWeight="600">Problem Set 1</Typography>
+                <Typography variant="body2" color="rgba(255,255,255,0.6)" mb={2}>
                   Solve 5 problems related to {lecture?.subject}.
                 </Typography>
-                <Button variant="outlined" sx={{ mt: 1 }} size="small">
+                <Button variant="outlined" fullWidth color="inherit" size="small" sx={{ borderColor: 'rgba(255,255,255,0.2)' }}>
                   View Problems
                 </Button>
               </CardContent>
@@ -390,29 +401,8 @@ const LectureDetail = () => {
             position: 'relative' // For Overlay
           }}>
 
-            {/* Forbidden Overlay */}
-            {isLocked && (
-              <Box sx={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                backdropFilter: 'blur(10px)',
-                background: 'rgba(10, 10, 20, 0.95)',
-                zIndex: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <ScienceIcon sx={{ fontSize: 60, color: '#ef4444', mb: 2 }} />
-                <Typography variant="h4" color="white" fontWeight="bold">Access Restricted</Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 400, textAlign: 'center', mb: 4 }}>
-                  Complete the prerequisite check to unlock.
-                </Typography>
-                <Button variant="contained" color="error" startIcon={<LockIcon />} onClick={handleGateUnlock}>
-                  Start Prerequisite Gate
-                </Button>
-              </Box>
-            )}
+            {/* Forbidden Overlay REMOVED */}
+            {/* {isLocked && (...)} */}
 
             {/* Video Player Section */}
             <Box sx={{ width: '100%', bgcolor: 'black' }}>
