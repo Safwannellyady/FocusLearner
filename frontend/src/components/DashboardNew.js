@@ -448,168 +448,160 @@ const DashboardNew = () => {
     </Grid>
   );
 
-    </Container >
-  );
 
-// Render Menu and Dialogs (using React Portals or just conditionally inside Component)
-// Since we are inside the component, we can return an array or Fragment, but for cleaner return, I'll append these before the final closing brace,
-// by intercepting the return statement's end.
-// Actually, I am editing the `return (...)` block. I need to add these elements inside the Container or after it?
-// They are Dialogs, they can be anywhere. I will add them at the end of the return block.
-
-return (
-  <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-    {/* Header & Nav */}
-    <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-      <Box>
-        <Breadcrumbs sx={{ color: 'rgba(255,255,255,0.5)', mb: 1 }}>
-          <Link
-            component="button"
-            color="inherit"
-            onClick={() => { setSelectedCourse(null); setViewMode('courses'); }}
-            underline="hover"
+  return (
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Header & Nav */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box>
+          <Breadcrumbs sx={{ color: 'rgba(255,255,255,0.5)', mb: 1 }}>
+            <Link
+              component="button"
+              color="inherit"
+              onClick={() => { setSelectedCourse(null); setViewMode('courses'); }}
+              underline="hover"
+            >
+              My Classes
+            </Link>
+            {selectedCourse && <Typography color="white">{selectedCourse.title}</Typography>}
+          </Breadcrumbs>
+          <Typography variant="h4" fontWeight="800" color="white">
+            {selectedCourse ? selectedCourse.title : 'My Classes'}
+          </Typography>
+        </Box>
+        <Box display="flex" gap={2}>
+          {viewMode === 'lectures' && (
+            <Button startIcon={<ArrowBackIcon />} onClick={() => { setSelectedCourse(null); setViewMode('courses'); }} sx={{ color: 'text.secondary' }}>
+              Back
+            </Button>
+          )}
+          <Button
+            variant={viewMode === 'health' ? "contained" : "text"}
+            onClick={() => setViewMode('health')}
+            startIcon={<InsightsIcon />}
+            sx={{ color: viewMode === 'health' ? 'white' : 'text.secondary' }}
           >
-            My Classes
-          </Link>
-          {selectedCourse && <Typography color="white">{selectedCourse.title}</Typography>}
-        </Breadcrumbs>
-        <Typography variant="h4" fontWeight="800" color="white">
-          {selectedCourse ? selectedCourse.title : 'My Classes'}
-        </Typography>
-      </Box>
-      <Box display="flex" gap={2}>
-        {viewMode === 'lectures' && (
-          <Button startIcon={<ArrowBackIcon />} onClick={() => { setSelectedCourse(null); setViewMode('courses'); }} sx={{ color: 'text.secondary' }}>
-            Back
+            Learning Health
           </Button>
-        )}
-        <Button
-          variant={viewMode === 'health' ? "contained" : "text"}
-          onClick={() => setViewMode('health')}
-          startIcon={<InsightsIcon />}
-          sx={{ color: viewMode === 'health' ? 'white' : 'text.secondary' }}
-        >
-          Learning Health
-        </Button>
-        <IconButton onClick={loadDashboardData} sx={{ color: 'white' }}><SettingsIcon /></IconButton>
-        <IconButton onClick={() => { localStorage.clear(); navigate('/login'); }} sx={{ color: '#ef4444' }}><LogoutIcon /></IconButton>
+          <IconButton onClick={loadDashboardData} sx={{ color: 'white' }}><SettingsIcon /></IconButton>
+          <IconButton onClick={() => { localStorage.clear(); navigate('/login'); }} sx={{ color: '#ef4444' }}><LogoutIcon /></IconButton>
+        </Box>
       </Box>
-    </Box>
 
-    {/* Main Content */}
-    {viewMode === 'health' ? (
-      <LearningHealthDashboard />
-    ) : viewMode === 'courses' ? (
-      renderCourses()
-    ) : (
-      renderLectures()
-    )}
+      {/* Main Content */}
+      {viewMode === 'health' ? (
+        <LearningHealthDashboard />
+      ) : viewMode === 'courses' ? (
+        renderCourses()
+      ) : (
+        renderLectures()
+      )}
 
-    {/* Action Menu */}
-    <Menu
-      anchorEl={anchorEl}
-      open={Boolean(anchorEl)}
-      onClose={handleMenuClose}
-      PaperProps={{ sx: { bgcolor: '#1e1e2d', color: 'white', border: '1px solid rgba(255,255,255,0.1)' } }}
-    >
-      <MenuItem onClick={handleEditClick}>
-        <ListItemIcon><EditIcon sx={{ color: 'white' }} fontSize="small" /></ListItemIcon>
-        <ListItemText>Rename / Edit</ListItemText>
-      </MenuItem>
-      <MenuItem onClick={handleDeleteClick} sx={{ color: '#ef4444' }}>
-        <ListItemIcon><DeleteIcon sx={{ color: '#ef4444' }} fontSize="small" /></ListItemIcon>
-        <ListItemText>Delete</ListItemText>
-      </MenuItem>
-    </Menu>
+      {/* Action Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{ sx: { bgcolor: '#1e1e2d', color: 'white', border: '1px solid rgba(255,255,255,0.1)' } }}
+      >
+        <MenuItem onClick={handleEditClick}>
+          <ListItemIcon><EditIcon sx={{ color: 'white' }} fontSize="small" /></ListItemIcon>
+          <ListItemText>Rename / Edit</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDeleteClick} sx={{ color: '#ef4444' }}>
+          <ListItemIcon><DeleteIcon sx={{ color: '#ef4444' }} fontSize="small" /></ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
 
-    {/* Create Course Dialog */}
-    <Dialog open={createCourseOpen} onClose={() => setCreateCourseOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
-      <DialogTitle sx={{ color: 'white' }}>Create New Class</DialogTitle>
-      <DialogContent>
-        <TextField fullWidth label="Class Name (e.g., Physics 101)" value={newCourse.title} onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        <TextField fullWidth label="Subject (e.g., Physics)" value={newCourse.subject} onChange={(e) => setNewCourse({ ...newCourse, subject: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        <TextField fullWidth label="Description" multiline rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setCreateCourseOpen(false)}>Cancel</Button>
-        <Button onClick={handleCreateCourse} variant="contained">Create Class</Button>
-      </DialogActions>
-    </Dialog>
+      {/* Create Course Dialog */}
+      <Dialog open={createCourseOpen} onClose={() => setCreateCourseOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ color: 'white' }}>Create New Class</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="Class Name (e.g., Physics 101)" value={newCourse.title} onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Subject (e.g., Physics)" value={newCourse.subject} onChange={(e) => setNewCourse({ ...newCourse, subject: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Description" multiline rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateCourseOpen(false)}>Cancel</Button>
+          <Button onClick={handleCreateCourse} variant="contained">Create Class</Button>
+        </DialogActions>
+      </Dialog>
 
-    {/* Edit Course Dialog */}
-    <Dialog open={editCourseOpen} onClose={() => setEditCourseOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
-      <DialogTitle sx={{ color: 'white' }}>Edit Class</DialogTitle>
-      <DialogContent>
-        <TextField fullWidth label="Class Name" value={newCourse.title} onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        <TextField fullWidth label="Subject" value={newCourse.subject} onChange={(e) => setNewCourse({ ...newCourse, subject: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        <TextField fullWidth label="Description" multiline rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setEditCourseOpen(false)}>Cancel</Button>
-        <Button onClick={handleUpdateCourse} variant="contained" color="primary">Update Class</Button>
-      </DialogActions>
-    </Dialog>
+      {/* Edit Course Dialog */}
+      <Dialog open={editCourseOpen} onClose={() => setEditCourseOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ color: 'white' }}>Edit Class</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="Class Name" value={newCourse.title} onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Subject" value={newCourse.subject} onChange={(e) => setNewCourse({ ...newCourse, subject: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Description" multiline rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditCourseOpen(false)}>Cancel</Button>
+          <Button onClick={handleUpdateCourse} variant="contained" color="primary">Update Class</Button>
+        </DialogActions>
+      </Dialog>
 
-    {/* Create Lecture Dialog */}
-    <Dialog open={createLectureOpen} onClose={() => setCreateLectureOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
-      <DialogTitle sx={{ color: 'white' }}>New Session for {selectedCourse?.title}</DialogTitle>
-      <DialogContent>
-        <TextField fullWidth label="Session Title" value={newLecture.title} onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        <TextField fullWidth label="Subject" value={newLecture.subject || selectedCourse?.subject || ''} disabled margin="normal" variant="filled" />
-        <FormControl fullWidth margin="normal" variant="filled">
-          <InputLabel>Topic</InputLabel>
-          <Select
-            value={newLecture.topic}
-            onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })}
-            onOpen={() => { if (!availableTopics.length && selectedCourse?.subject) handleSubjectChange(selectedCourse.subject); }}
-            sx={{ color: 'white' }}
-          >
-            {availableTopics.map(t => <MenuItem key={t.id} value={t.topic}>{t.topic}</MenuItem>)}
-            <MenuItem value="custom"><em>+ Custom Topic</em></MenuItem>
-          </Select>
-        </FormControl>
-        {newLecture.topic === 'custom' && (
-          <TextField fullWidth label="Custom Topic Name" value={newLecture.customTopic} onChange={(e) => setNewLecture({ ...newLecture, topic: 'custom', customTopic: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setCreateLectureOpen(false)}>Cancel</Button>
-        <Button onClick={handleCreateLecture} variant="contained">Create Session</Button>
-      </DialogActions>
-    </Dialog>
+      {/* Create Lecture Dialog */}
+      <Dialog open={createLectureOpen} onClose={() => setCreateLectureOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ color: 'white' }}>New Session for {selectedCourse?.title}</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="Session Title" value={newLecture.title} onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Subject" value={newLecture.subject || selectedCourse?.subject || ''} disabled margin="normal" variant="filled" />
+          <FormControl fullWidth margin="normal" variant="filled">
+            <InputLabel>Topic</InputLabel>
+            <Select
+              value={newLecture.topic}
+              onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })}
+              onOpen={() => { if (!availableTopics.length && selectedCourse?.subject) handleSubjectChange(selectedCourse.subject); }}
+              sx={{ color: 'white' }}
+            >
+              {availableTopics.map(t => <MenuItem key={t.id} value={t.topic}>{t.topic}</MenuItem>)}
+              <MenuItem value="custom"><em>+ Custom Topic</em></MenuItem>
+            </Select>
+          </FormControl>
+          {newLecture.topic === 'custom' && (
+            <TextField fullWidth label="Custom Topic Name" value={newLecture.customTopic} onChange={(e) => setNewLecture({ ...newLecture, topic: 'custom', customTopic: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateLectureOpen(false)}>Cancel</Button>
+          <Button onClick={handleCreateLecture} variant="contained">Create Session</Button>
+        </DialogActions>
+      </Dialog>
 
-    {/* Edit Lecture Dialog */}
-    <Dialog open={editLectureOpen} onClose={() => setEditLectureOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
-      <DialogTitle sx={{ color: 'white' }}>Edit Session</DialogTitle>
-      <DialogContent>
-        <TextField fullWidth label="Session Title" value={newLecture.title} onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        <TextField fullWidth label="Subject" value={newLecture.subject || ''} disabled margin="normal" variant="filled" />
-        <TextField fullWidth label="Topic" value={newLecture.topic || ''} onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-        <TextField fullWidth label="Description" multiline rows={2} value={newLecture.description || ''} onChange={(e) => setNewLecture({ ...newLecture, description: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setEditLectureOpen(false)}>Cancel</Button>
-        <Button onClick={handleUpdateLecture} variant="contained" color="primary">Update Session</Button>
-      </DialogActions>
-    </Dialog>
+      {/* Edit Lecture Dialog */}
+      <Dialog open={editLectureOpen} onClose={() => setEditLectureOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ color: 'white' }}>Edit Session</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth label="Session Title" value={newLecture.title} onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Subject" value={newLecture.subject || ''} disabled margin="normal" variant="filled" />
+          <TextField fullWidth label="Topic" value={newLecture.topic || ''} onChange={(e) => setNewLecture({ ...newLecture, topic: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+          <TextField fullWidth label="Description" multiline rows={2} value={newLecture.description || ''} onChange={(e) => setNewLecture({ ...newLecture, description: e.target.value })} margin="normal" variant="filled" InputProps={{ sx: { color: 'white' } }} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditLectureOpen(false)}>Cancel</Button>
+          <Button onClick={handleUpdateLecture} variant="contained" color="primary">Update Session</Button>
+        </DialogActions>
+      </Dialog>
 
-    {/* Delete Confirmation Dialog */}
-    <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
-      <DialogTitle sx={{ color: 'white' }}>Confirm Delete</DialogTitle>
-      <DialogContent>
-        <Typography color="text.secondary">
-          Are you sure you want to delete this {menuType === 'course' ? 'class' : 'session'}?
-          {menuType === 'course' && " All sessions within this class will also be deleted."}
-          This action cannot be undone.
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-        <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
-      </DialogActions>
-    </Dialog>
-  </Container>
-);
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ sx: { bgcolor: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ color: 'white' }}>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            Are you sure you want to delete this {menuType === 'course' ? 'class' : 'session'}?
+            {menuType === 'course' && " All sessions within this class will also be deleted."}
+            This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
 };
 
 export default DashboardNew;
