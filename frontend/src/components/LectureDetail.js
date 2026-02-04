@@ -94,7 +94,7 @@ const LectureDetail = () => {
           }
 
           const searchQuery = `${lectureData.subject} ${lectureData.topic}`;
-          const videoRes = await contentAPI.search('', lectureData.subject);
+          const videoRes = await contentAPI.search(searchQuery, lectureData.subject);
           const fetchedVideos = videoRes.data.results || [];
           setVideos(fetchedVideos);
 

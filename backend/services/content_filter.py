@@ -47,7 +47,7 @@ class ContentFilter:
     def __init__(self):
         self.stop_words = set(stopwords.words('english'))
     
-    def filter_content(self, title: str, description: str = "", tags: List[str] = None) -> Tuple[bool, str]:
+    def filter_content(self, title: str, description: str = "", tags: List[str] = None, subject_context: str = None, topic_context: str = None) -> Tuple[bool, str]:
         """
         Filter content based on title, description, and tags.
         
@@ -61,6 +61,12 @@ class ContentFilter:
         
         # Combine all text for analysis
         combined_text = f"{title} {description} {' '.join(tags)}".lower()
+
+        # Check for relevance if context provided
+        if subject_context or topic_context:
+            relevance_issue = self._check_relevance(combined_text, subject_context, topic_context)
+            if relevance_issue:
+                return True, relevance_issue
         
         # Check for distraction keywords
         distraction_score = self._calculate_distraction_score(combined_text)
@@ -125,6 +131,33 @@ class ContentFilter:
         
         return False
     
+    def _check_relevance(self, text: str, subject: str, topic: str) -> str:
+        """Check if content is relevant to subject and topic"""
+        # 1. Subject Relevance (Loose check)
+        # We don't filter STRICTLY on subject because a "Calculus" video might not say "Math"
+        # But if subject is present and completely missing from text, it's a weak signal.
+        # For now, we trust the query was refined enough.
+        
+        # 2. Topic Relevance (Stricter check)
+        if topic:
+            # Tokenize topic and remove stop words
+            topic_words = [w.lower() for w in word_tokenize(topic) if w.lower() not in self.stop_words and len(w) > 2]
+            
+            if not topic_words:
+                return None # Topic was too generic or short
+                
+            # Check if at least one meaningful keyword from topic exists
+            match_found = False
+            for word in topic_words:
+                if word in text:
+                    match_found = True
+                    break
+            
+            if not match_found:
+                return f"Content not relevant to topic: {topic}"
+                
+        return None
+    
     def filter_video_list(self, videos: List[Dict]) -> List[Dict]:
         """
         Filter a list of video dictionaries.
@@ -142,7 +175,10 @@ class ContentFilter:
             description = video.get('description', '')
             tags = video.get('tags', [])
             
-            is_filtered, reason = self.filter_content(title, description, tags)
+            subject_context = video.get('subject_focus')
+            topic_context = video.get('topic_context')
+            
+            is_filtered, reason = self.filter_content(title, description, tags, subject_context, topic_context)
             
             video['is_filtered'] = is_filtered
             video['filter_reason'] = reason

@@ -150,7 +150,7 @@ def create_lecture():
         youtube_service = YouTubeService()
         
         # Construct a targeted query
-        query = f"{topic} lecture tutorial"
+        query = topic
         
         # Search for videos
         videos = youtube_service.search_videos(query, subject_focus=subject, max_results=5)

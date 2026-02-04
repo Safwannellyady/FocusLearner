@@ -67,6 +67,7 @@ class YouTubeService:
                     'url': f"https://www.youtube.com/watch?v={item['id']['videoId']}",
                     'source': 'youtube',
                     'subject_focus': subject_focus,
+                    'topic_context': query,
                     'tags': []  # Tags not available in search API
                 }
                 videos.append(video)
