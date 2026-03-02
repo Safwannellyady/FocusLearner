@@ -17,25 +17,28 @@ import AIChallenge from './components/games/AIChallenge';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import ProgressDashboard from './components/ProgressDashboard';
 import LandingPage from './components/LandingPage';
+import Layout from './components/layout/Layout';
+import MyCourses from './components/MyCourses';
+
 
 const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
-      main: '#8b5cf6', // Violet
+      main: '#2563eb', // Blue
     },
     secondary: {
-      main: '#3b82f6', // Blue
+      main: '#475569', // Slate
     },
     background: {
-      default: '#050511',
-      paper: '#0a0a1a',
+      default: '#f8fafc',
+      paper: '#ffffff',
     },
     text: {
-      primary: '#ffffff',
-      secondary: '#94a3b8',
+      primary: '#0f172a',
+      secondary: '#64748b',
     },
   },
   typography: {
@@ -49,15 +52,15 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#050511',
-          scrollbarColor: "#333 #050511",
+          backgroundColor: '#f8fafc',
+          scrollbarColor: "#cbd5e1 #f8fafc",
           "&::-webkit-scrollbar, & *::-webkit-scrollbar": {
-            backgroundColor: "#050511",
+            backgroundColor: "#f8fafc",
             width: '8px',
           },
           "&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
             borderRadius: 8,
-            backgroundColor: "#333",
+            backgroundColor: "#cbd5e1",
             minHeight: 24,
           },
         },
@@ -66,26 +69,27 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 24,
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.36)',
+          borderRadius: 16,
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          padding: '10px 24px',
+          borderRadius: 8,
+          padding: '8px 24px',
+          textTransform: 'none',
+          fontWeight: 600
         },
         containedPrimary: {
-          background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)',
-          boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+          background: '#2563eb',
+          boxShadow: 'none',
           '&:hover': {
-            background: 'linear-gradient(135deg, #7e22ce 0%, #2563eb 100%)',
-            boxShadow: '0 8px 20px rgba(99, 102, 241, 0.5)',
+            background: '#1d4ed8',
+            boxShadow: 'none',
           }
         },
       },
@@ -102,87 +106,96 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardNew />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/lecture/:id"
-              element={
-                <ProtectedRoute>
-                  <LectureDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/preferences"
-              element={
-                <ProtectedRoute>
-                  <Preferences />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/focus"
-              element={
-                <ProtectedRoute>
-                  <FocusLock />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/player"
-              element={
-                <ProtectedRoute>
-                  <VideoPlayer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games"
-              element={
-                <ProtectedRoute>
-                  <GameLab />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games/kcl"
-              element={
-                <ProtectedRoute>
-                  <KCLChallenge />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games/ai-challenge"
-              element={
-                <ProtectedRoute>
-                  <AIChallenge />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
-                <ProtectedRoute>
-                  <AnalyticsDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/progress"
-              element={
-                <ProtectedRoute>
-                  <ProgressDashboard />
-                </ProtectedRoute>
-              }
-            />
             <Route path="/" element={<LandingPage />} />
+
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DashboardNew />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/my-courses" element={
+              <ProtectedRoute>
+                <Layout>
+                  <MyCourses />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/lecture/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LectureDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/preferences" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Preferences />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/focus" element={
+              <ProtectedRoute>
+                <Layout>
+                  <FocusLock />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/player" element={
+              <ProtectedRoute>
+                <Layout>
+                  <VideoPlayer />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/games" element={
+              <ProtectedRoute>
+                <Layout>
+                  <GameLab />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/games/kcl" element={
+              <ProtectedRoute>
+                <Layout>
+                  <KCLChallenge />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/games/ai-challenge" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AIChallenge />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AnalyticsDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/progress" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProgressDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
           </Routes>
         </Router>
       </ThemeProvider>
