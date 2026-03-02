@@ -58,7 +58,7 @@ const MyCourses = () => {
                         <Box sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                 <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', maxWidth: '80%' }}>
-                                    {course.title || "Understanding Incubation and Entrepreneurship Prof. B K Chakravarthy"}
+                                    {course.title || "FocusLearner Demo Course: AI & Adaptive Learning"}
                                 </Typography>
                                 <IconButton size="small" sx={{ color: '#cbd5e1' }}>
                                     <StarBorderIcon />

@@ -32,11 +32,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
+    // Demo Mode: Do not redirect on 401
     return Promise.reject(error);
   }
 );
@@ -114,8 +110,8 @@ export const gameAPI = {
   generateChallenge: (subject, level) =>
     api.post('/game/challenge/generate', { subject, level }),
 
-  generateActivity: (subject, topic, type) =>
-    api.post('/game/activity/generate', { subject, topic, type }),
+  generateActivity: (subject, topic, type, videoContext) =>
+    api.post('/game/activity/generate', { subject, topic, type, video_context: videoContext }),
 
   submitActivity: (challengeId, answer, violationCount = 0) =>
     api.post('/game/activity/submit', { challenge_id: challengeId, answer, violation_count: violationCount }),
@@ -168,8 +164,8 @@ export const lectureAPI = {
   getById: (id) => api.get(`/lectures/${id}`),
   update: (id, lecture) => api.put(`/lectures/${id}`, lecture),
   delete: (id) => api.delete(`/lectures/${id}`),
-  generateQuiz: (subject, topic, count) =>
-    api.post('/lectures/quiz/generate', { subject, topic, count }),
+  generateQuiz: (subject, topic, count, videoContext) =>
+    api.post('/lectures/quiz/generate', { subject, topic, count, video_context: videoContext }),
 };
 
 // Chat API

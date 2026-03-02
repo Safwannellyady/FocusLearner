@@ -19,7 +19,10 @@ import ProgressDashboard from './components/ProgressDashboard';
 import LandingPage from './components/LandingPage';
 import Layout from './components/layout/Layout';
 import MyCourses from './components/MyCourses';
-
+import CreateFocusSession from './components/CreateFocusSession';
+import MyEnrollments from './components/MyEnrollments';
+import ManageFocus from './components/ManageFocus';
+import Badges from './components/Badges';
 
 const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
 
@@ -136,6 +139,38 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Preferences />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/courses" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateFocusSession />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/enrollments" element={
+              <ProtectedRoute>
+                <Layout>
+                  <MyEnrollments />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/manage-focus" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ManageFocus />
+                </Layout>
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/badges" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Badges />
                 </Layout>
               </ProtectedRoute>
             }

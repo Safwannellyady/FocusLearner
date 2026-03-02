@@ -251,12 +251,15 @@ def generate_quiz():
     subject = data.get('subject')
     topic = data.get('topic')
     count = data.get('count', 5)
+    video_context = data.get('video_context')
+    
+    print(f"[DEBUG] generate_quiz called with subject={subject}, topic={topic}, video_context={video_context}")
     
     if not subject or not topic:
         return jsonify({'error': 'Subject and topic are required'}), 400
         
     try:
-        quiz = ai_service.generate_quiz(subject, topic, count)
+        quiz = ai_service.generate_quiz(subject, topic, count, video_context)
         return jsonify({'quiz': quiz}), 200
     except Exception as e:
         print(f"Quiz generation error: {e}")

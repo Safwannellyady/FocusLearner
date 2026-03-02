@@ -12,7 +12,8 @@ class AIService:
     """Service for AI-powered content generation using Gemini REST API"""
     
     def __init__(self):
-        self.api_key = os.getenv('GOOGLE_API_KEY')
+        env_key = os.getenv('GOOGLE_API_KEY')
+        self.api_key = env_key.strip() if env_key else None
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
         
         if not self.api_key:
@@ -43,23 +44,33 @@ class AIService:
             response = requests.post(f"{self.base_url}?key={self.api_key}", headers=headers, json=data)
             response.raise_for_status()
             result = response.json()
-            # Extract text from response
+            if 'candidates' not in result or not result['candidates']:
+                with open("gemini_error.log", "w") as f:
+                    f.write(f"Blocked or Empty Result: {json.dumps(result)}")
+                return None
             return result['candidates'][0]['content']['parts'][0]['text']
         except Exception as e:
+            error_data = f"Exception: {e}\n"
+            if 'response' in locals() and response:
+                error_data += f"Status: {response.status_code}\nText: {response.text}"
+            with open("gemini_error.log", "a") as f:
+                f.write(error_data + "\n")
             print(f"Gemini API Error: {e}")
-            if response.status_code != 200:
-                print(f"Response: {response.text}")
             return None
 
-    def generate_quiz(self, subject: str, topic: str, count: int = 5) -> List[Dict[str, Any]]:
+    def generate_quiz(self, subject: str, topic: str, count: int = 5, video_context: dict = None) -> List[Dict[str, Any]]:
         """
         Generate a quiz for a specific subject and topic.
         """
         if not self.api_key:
             return self._get_mock_quiz(subject, topic, count)
 
+        context_str = ""
+        if video_context:
+            context_str = f"\nFocus intensely on this specific video context:\nTitle: {video_context.get('title', '')}\nDescription: {video_context.get('description', '')}\nThe questions MUST be highly relevant to this video's specific content."
+
         prompt = f"""
-        Generate a {count}-question multiple choice quiz for the subject "{subject}" and topic "{topic}".
+        Generate a {count}-question multiple choice quiz for the subject "{subject}" and topic "{topic}".{context_str}
         Return ONLY a raw JSON array of objects. Do not include markdown formatting like ```json ... ```.
         Each object should have:
         - 'id': integer
@@ -68,11 +79,17 @@ class AIService:
         - 'correctAnswer': string (must exactly match one of the options)
         - 'explanation': string (brief explanation of the answer)
         """
-
-        text_response = self._call_gemini(prompt)
         
-        if not text_response:
-             return self._get_mock_quiz(subject, topic, count)
+        print(f"[DEBUG AI] Generated Prompt:\n{prompt}")
+        
+        try:
+            text_response = self._call_gemini(prompt)
+            print(f"[DEBUG AI] Response text:\n{text_response}")
+            if not text_response:
+                 return self._get_mock_quiz(subject, topic, count)
+        except Exception as e:
+            print(f"[DEBUG AI] Error during Gemini call or response processing: {e}")
+            return self._get_mock_quiz(subject, topic, count)
 
         try:
             # Clean up potential markdown formatting if the model disregards instructions
@@ -82,7 +99,7 @@ class AIService:
             print(f"Error parsing AI quiz: {e}")
             return self._get_mock_quiz(subject, topic, count)
 
-    def generate_result_based_activity(self, subject: str, topic: str, activity_type: str = "auto", intent=None, loop_state=None) -> Dict[str, Any]:
+    def generate_result_based_activity(self, subject: str, topic: str, activity_type: str = "auto", intent=None, loop_state=None, video_context: dict = None) -> Dict[str, Any]:
         """
         Generate a specific type of activity: 'coding', 'lab', 'crossword', 'quiz'.
         If 'auto', decides based on subject.
@@ -96,24 +113,25 @@ class AIService:
                  activity_type = "crossword"
         
         if activity_type == "coding":
-            return self.generate_coding_challenge(subject, topic, intent, loop_state)
+            return self.generate_coding_challenge(subject, topic, intent, loop_state, video_context)
         elif activity_type == "lab":
-            return self.generate_virtual_lab(subject, topic, intent, loop_state)
+            return self.generate_virtual_lab(subject, topic, intent, loop_state, video_context)
         elif activity_type == "crossword":
-            return self.generate_crossword(subject, topic)
+            return self.generate_crossword(subject, topic, video_context)
         
-        return self.generate_game_content(subject, 1) # Fallback
+        return self.generate_game_content(subject, 1, video_context) # Fallback
 
-    def generate_coding_challenge(self, subject: str, topic: str, intent=None, loop_state=None) -> Dict[str, Any]:
+    def generate_coding_challenge(self, subject: str, topic: str, intent=None, loop_state=None, video_context: dict = None) -> Dict[str, Any]:
+        mock_fallback = {
+            "type": "coding",
+            "title": f"Mock Coding: {topic}",
+            "description": "Write a function to sum two numbers.",
+            "starter_code": "def solve(a, b):\n    pass",
+            "test_cases": [{"input": "1, 2", "output": "3"}],
+            "points": 100
+        }
         if not self.api_key:
-             return {
-                 "type": "coding",
-                 "title": f"Mock Coding: {topic}",
-                 "description": "Write a function to sum two numbers.",
-                 "starter_code": "def solve(a, b):\n    pass",
-                 "test_cases": [{"input": "1, 2", "output": "3"}],
-                 "points": 100
-             }
+             return mock_fallback
              
         # Extract intent metadata
         outcomes = ""
@@ -133,9 +151,13 @@ class AIService:
             adaptation_prompt = f"\nUser is retrying ({loop_state.attempts} fails). GENERATE A SIMPLER PROBLEM. Include a specific HINT in the description."
             difficulty = "Beginner" # Downgrade difficulty
 
+        context_str = ""
+        if video_context:
+            context_str = f"\nCritically align the challenge to this video context:\nTitle: {video_context.get('title', '')}\nDescription: {video_context.get('description', '')}\nThe coding problem MUST directly relate to the concepts taught in this video."
+
         prompt = f"""
         Generate a coding challenge for {subject} - {topic}.
-        Difficulty Level: {difficulty}{outcomes}{adaptation_prompt}
+        Difficulty Level: {difficulty}{outcomes}{adaptation_prompt}{context_str}
         
         Return JSON:
         - title: string
@@ -145,19 +167,23 @@ class AIService:
         - solution: string (complete solution code)
         - points: 100
         """
-        return self._parse_json_response(self._call_gemini(prompt), "coding")
+        parsed = self._parse_json_response(self._call_gemini(prompt), "coding")
+        if "error" in parsed:
+            return mock_fallback
+        return parsed
 
-    def generate_virtual_lab(self, subject: str, topic: str, intent=None, loop_state=None) -> Dict[str, Any]:
+    def generate_virtual_lab(self, subject: str, topic: str, intent=None, loop_state=None, video_context: dict = None) -> Dict[str, Any]:
+        mock_fallback = {
+            "type": "lab",
+            "title": f"Virtual Lab: {topic}",
+            "scenario": "You are investigating a core computer science concept. Determine the outcome of the following system state.",
+            "steps": ["Initialize System", "Run Subroutine", "Observe Output"],
+            "question": "What is the expected behavior of this algorithm under peak load?",
+            "options": ["System Crash", "Graceful Degradation", "Memory Leak", "Infinite Loop"],
+            "correct_answer": "Graceful Degradation"
+        }
         if not self.api_key:
-            return {
-                "type": "lab",
-                "title": f"Virtual Lab: {topic}",
-                "scenario": "You are mixing Acid A with Base B.",
-                "steps": ["Mix", "Observer", "Record"],
-                "question": "What happens?",
-                "options": ["Explosion", "Neutralization", "Nothing"],
-                "correct_answer": "Neutralization"
-            }
+            return mock_fallback
         
         # Extract intent metadata
         outcomes = ""
@@ -171,9 +197,13 @@ class AIService:
                  pass
              difficulty = intent.difficulty
             
+        context_str = ""
+        if video_context:
+            context_str = f"\nFrame the Virtual Lab scenario entirely around this video context:\nTitle: {video_context.get('title', '')}\nDescription: {video_context.get('description', '')}\nThe scenario MUST be a direct application of the video's content."
+
         prompt = f"""
         Generate a Virtual Lab scenario for {subject} - {topic}.
-        Difficulty Level: {difficulty}{outcomes}
+        Difficulty Level: {difficulty}{outcomes}{context_str}
         
         Return JSON:
         - type: "lab"
@@ -185,41 +215,70 @@ class AIService:
         - correct_answer: string
         - explanation: string
         """
-        return self._parse_json_response(self._call_gemini(prompt), "lab")
+        parsed = self._parse_json_response(self._call_gemini(prompt), "lab")
+        if "error" in parsed:
+            return mock_fallback
+        return parsed
 
-    def generate_crossword(self, subject: str, topic: str) -> Dict[str, Any]:
+    def generate_crossword(self, subject: str, topic: str, video_context: dict = None) -> Dict[str, Any]:
+         mock_fallback = {
+             "type": "crossword",
+             "title": f"Crossword: {topic}",
+             "words": [
+                 {"word": "PYTHON", "clue": "Snake-like language"},
+                 {"word": "JAVA", "clue": "Coffee-like language"}
+             ]
+         }
          if not self.api_key:
-             return {
-                 "type": "crossword",
-                 "title": f"Crossword: {topic}",
-                 "words": [
-                     {"word": "PYTHON", "clue": "Snake-like language"},
-                     {"word": "JAVA", "clue": "Coffee-like language"}
-                 ]
-             }
+             return mock_fallback
+
+         context_str = ""
+         if video_context:
+             context_str = f"\nThe words in the crossword MUST be specific vocabulary or key terms found in or highly relevant to this video:\nTitle: {video_context.get('title', '')}\nDescription: {video_context.get('description', '')}\n"
+
          prompt = f"""
-         Generate a Crossword puzzle for {subject} - {topic}.
+         Generate a Crossword puzzle for {subject} - {topic}.{context_str}
          Return JSON:
          - type: "crossword"
          - title: string
          - words: array of objects {{ "word": string (uppercase), "clue": string }}
          Generate at least 5 words.
          """
-         return self._parse_json_response(self._call_gemini(prompt), "crossword")
+         parsed = self._parse_json_response(self._call_gemini(prompt), "crossword")
+         if "error" in parsed:
+             return mock_fallback
+         return parsed
 
     def _parse_json_response(self, text_response, fallback_type):
         if not text_response:
              return {"type": fallback_type, "error": "AI unavailable"}
         try:
-             text = text_response.replace('```json', '').replace('```', '').strip()
-             return json.loads(text)
-        except:
+             import json, re
+             # First try to find a code block
+             match = re.search(r'```(?:json)?\s*(.*?)\s*```', text_response, re.DOTALL)
+             if match:
+                 text = match.group(1).strip()
+             else:
+                 # Fallback: extract substring from first { to last }
+                 start = text_response.find('{')
+                 end = text_response.rfind('}')
+                 if start != -1 and end != -1 and end > start:
+                     text = text_response[start:end+1]
+                 else:
+                     text = text_response.strip()
+                     
+             data = json.loads(text)
+             data["type"] = fallback_type
+             return data
+        except Exception as e:
+             print(f"[DEBUG] Parse error in _parse_json_response: {e}\nRaw Response: {text_response}")
              return {"type": fallback_type, "error": "Parse error"}
 
-    def generate_game_content(self, subject: str, level: int) -> Dict[str, Any]:
+    def generate_game_content(self, subject: str, level: int, video_context: dict = None) -> Dict[str, Any]:
         """
         Generate generic game content/problems based on subject and level.
         """
+        # For simplicity, fallback will not use video context, but ideally it should.
         return self._get_mock_game_problem(subject, level)
 
     def refine_search_query(self, subject: str, user_query: str) -> str:

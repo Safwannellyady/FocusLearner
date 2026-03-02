@@ -32,12 +32,12 @@ class GameService:
 
     # --- New Evaluation Engine Methods ---
 
-    def create_activity(self, ai_service, user_id, subject, topic, activity_type="auto", intent=None, loop_state=None):
+    def create_activity(self, ai_service, user_id, subject, topic, activity_type="auto", intent=None, loop_state=None, video_context=None):
         """
         Generates an activity via AI, persists it securely, and returns it to the user.
         """
         # 1. Generate Content
-        generated_data = ai_service.generate_result_based_activity(subject, topic, activity_type, intent, loop_state)
+        generated_data = ai_service.generate_result_based_activity(subject, topic, activity_type, intent, loop_state, video_context)
         
         # 2. Extract Solution (Critical for grading)
         # The AI service should ideally return separate 'content' and 'solution' fields, 

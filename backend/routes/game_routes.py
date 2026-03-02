@@ -119,12 +119,13 @@ def generate_challenge():
     data = request.get_json()
     subject = data.get('subject')
     level = data.get('level', 1)
+    video_context = data.get('video_context')
     
     if not subject:
         return jsonify({'error': 'Subject is required'}), 400
         
     try:
-        challenge = ai_service.generate_game_content(subject, level)
+        challenge = ai_service.generate_game_content(subject, level, video_context)
         return jsonify({'challenge': challenge}), 200
     except Exception as e:
         print(f"Challenge generation error: {e}")
@@ -140,6 +141,7 @@ def generate_activity():
     subject = data.get('subject')
     topic = data.get('topic')
     activity_type = data.get('type', 'auto') 
+    video_context = data.get('video_context')
     
     if not subject or not topic:
         return jsonify({'error': 'Subject and topic are required'}), 400
@@ -152,7 +154,7 @@ def generate_activity():
     
     try:
         # Pass ai_service explicitly, and intent
-        activity = game_service.create_activity(ai_service, user_id, subject, topic, activity_type, intent, loop_state)
+        activity = game_service.create_activity(ai_service, user_id, subject, topic, activity_type, intent, loop_state, video_context)
         return jsonify({'activity': activity}), 200
     except Exception as e:
         print(f"Activity generation error: {e}")

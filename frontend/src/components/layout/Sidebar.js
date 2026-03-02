@@ -13,11 +13,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 const navItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Browse Courses', icon: <MenuBookIcon />, path: '/courses' },
-    { text: 'My Courses', icon: <SchoolIcon />, path: '/my-courses' },
+    { text: 'Create a Focus Session', icon: <MenuBookIcon />, path: '/courses' },
+    { text: 'My Focus Sessions', icon: <SchoolIcon />, path: '/my-courses' },
     { text: 'My Enrollments', icon: <ViewListIcon />, path: '/enrollments' },
-    { text: 'My Applications', icon: <AssignmentIcon />, path: '/applications' },
-    { text: 'Certificates', icon: <WorkspacePremiumIcon />, path: '/certificates' },
+    { text: 'Manage Focus Period', icon: <AssignmentIcon />, path: '/manage-focus' },
+    { text: 'Badges', icon: <WorkspacePremiumIcon />, path: '/badges' },
 ];
 
 const Sidebar = ({ open, setOpen }) => {
@@ -44,15 +44,15 @@ const Sidebar = ({ open, setOpen }) => {
             {/* Logo Area */}
             <Box sx={{ p: 2, display: 'flex', alignItems: 'center', height: 72, borderBottom: '1px solid #e2e8f0', gap: open ? 2 : 0, justifyContent: open ? 'flex-start' : 'center' }}>
                 <Box sx={{ width: 40, height: 40, bgcolor: '#f1f5f9', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
-                    <img src="https://upload.wikimedia.org/wikipedia/en/e/e0/Visvesvaraya_Technological_University_logo.png" alt="VTU Logo" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: '50%' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    <Typography variant="h6" sx={{ color: '#2563eb', fontWeight: 900, fontSize: '1.2rem', fontFamily: 'Inter' }}>FL</Typography>
                 </Box>
                 {open && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
-                            Centre for Online Education
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                            FocusLearner
                         </Typography>
                         <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.65rem' }}>
-                            VTU - Belagavi <br /><span style={{ fontSize: '0.55rem' }}>Govt. of Karnataka</span>
+                            AI-Powered Learning <br /><span style={{ fontSize: '0.55rem' }}>Adaptive Pathways</span>
                         </Typography>
                     </Box>
                 )}
