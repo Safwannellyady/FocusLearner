@@ -15,7 +15,8 @@ class YouTubeService:
     """Service for interacting with YouTube content"""
     
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv('YOUTUBE_API_KEY', '')
+        # Try specific key, then shared key
+        self.api_key = api_key or os.getenv('YOUTUBE_API_KEY') or os.getenv('GOOGLE_API_KEY')
         self.base_url = 'https://www.googleapis.com/youtube/v3'
         self.content_filter = ContentFilter()
         self.ai_service = AIService()
@@ -153,19 +154,23 @@ class YouTubeService:
         }
 
         # Determine category for better suggestions
+        # Determine category for better suggestions
         category = "default"
+        subject_lower = subject_focus.lower()
+        
         # Check specific subjects first
-        if "CS" in subject_focus or "Algorithm" in subject_focus or "Computer" in subject_focus:
+        # Fix: "cs" matches "mathematics", so matches on "cs" usually need word boundaries or explicit list
+        if any(x in subject_lower for x in ["computer science", "algorithm", "computer", "web", "coding"]) or subject_lower == "cs" or " cs " in subject_lower:
             category = "CS"
-        elif "Math" in subject_focus or "Algebra" in subject_focus or "Calculus" in subject_focus:
+        elif any(x in subject_lower for x in ["math", "algebra", "calculus", "geometry"]):
             category = "Math"
-        elif "ECE" in subject_focus or "Circuit" in subject_focus or "Electronics" in subject_focus:
+        elif any(x in subject_lower for x in ["ece", "circuit", "electronics", "electrical"]):
             category = "ECE"
-        elif "Eng" in subject_focus or "Lang" in subject_focus or "Grammar" in subject_focus: # English/Language
+        elif any(x in subject_lower for x in ["eng", "lang", "grammar"]): # English/Language
             category = "English"
-        elif "Phys" in subject_focus:
+        elif "phys" in subject_lower:
             category = "Physics"
-        elif "Chem" in subject_focus:
+        elif "chem" in subject_lower:
             category = "Chemistry"
             
         selected_videos = fallback_videos.get(category, fallback_videos["default"])
