@@ -13,19 +13,19 @@ def test_gamification_flow():
     """Test the full gamification flow"""
     with app.test_client() as client:
         with app.app_context():
-            db.create_all()  # Ensure tables exist
-            # Clean up old test user
-            existing = User.query.filter_by(username='test_gamer').first()
-            if existing:
-                db.session.delete(existing)
-                db.session.commit()
+            # Fresh database for test: drop existing tables then recreate for isolation
+            db.drop_all()
+            db.create_all()
+        
+        # no leftover users or progress remain now
 
         # 1. Register
         print("1. Registering test user...")
         res = client.post('/api/auth/register', json={
             'username': 'test_gamer',
             'email': 'gamer@test.com',
-            'password': 'password123',
+            # use a strong password with uppercase, lowercase, digit, and symbol
+            'password': 'Password123!A',
             'full_name': 'Test Gamer'
         })
         assert res.status_code == 201
@@ -34,14 +34,15 @@ def test_gamification_flow():
         print("2. Logging in...")
         res = client.post('/api/auth/login', json={
             'username': 'test_gamer', 
-            'password': 'password123'
+            'password': 'Password123!A'
         })
         assert res.status_code == 200
-        token = res.json['token']
+        token = res.json.get('access_token')
         headers = {'Authorization': f'Bearer {token}'}
 
         # 3. Submit Game Result (Video Completion)
         print("3. Submitting Video Completion (50 XP)...")
+        # post game result and verify XP
         res = client.post('/api/game/submit', headers=headers, json={
             'module_id': 'video_completion',
             'score': 1,
@@ -49,9 +50,9 @@ def test_gamification_flow():
             'subject_focus': 'Math'
         })
         assert res.status_code == 200
-        data = res.json
-        assert data['progress']['mastery_points'] == 50
-        print(f"   XP Gained: {data['progress']['mastery_points']} (Expected 50)")
+        data = res.json or {}
+        assert data.get('progress', {}).get('mastery_points') == 50
+        print(f"   XP Gained: {data.get('progress', {}).get('mastery_points')} (Expected 50)")
 
         # 4. Check Progress
         print("4. Checking Progress...")
@@ -63,7 +64,8 @@ def test_gamification_flow():
         print("5. Checking Leaderboard...")
         res = client.get('/api/game/leaderboard/video_completion')
         assert res.status_code == 200
-        assert len(res.json['leaderboard']) > 0
+        leaderboard_list = res.json.get('leaderboard', [])
+        assert len(leaderboard_list) > 0, "leaderboard unexpectedly empty"
         print("   Leaderboard populated.")
 
         # 6. AI Chat (Mock or Real)

@@ -291,8 +291,39 @@ class GameService:
 
     # --- Legacy Methods (Kept for compatibility) ---
     def submit_game_result(self, user_id, module_id, score, level, subject_focus):
-        """Deprecated: Frontend controlled scoring. Use submit_activity instead."""
-        pass 
+        """Legacy progress update for simple modules.
+        This method is still used by frontend video_completion and other basic
+        modules where scoring is not evaluated by backend AI. It calculates XP
+        based on the module's xp_per_unit, updates or creates a GameProgress
+        record, and returns the current progress as a dict.
+        """
+        # determine xp earned per unit (score represents number of units)
+        xp_per_unit = self.GAME_MODULES.get(module_id, {}).get('xp_per_unit', 0)
+        earned = xp_per_unit * score if score is not None else 0
+
+        progress = GameProgress.query.filter_by(
+            user_id=user_id,
+            game_module=module_id,
+            subject_focus=subject_focus
+        ).first()
+        if not progress:
+            progress = GameProgress(
+                user_id=user_id,
+                game_module=module_id,
+                subject_focus=subject_focus,
+                score=0,
+                level=1,
+                mastery_points=0
+            )
+            db.session.add(progress)
+
+        progress.mastery_points += earned
+        progress.score += earned
+        # recalc level (simple rule: 100 xp per level)
+        progress.level = int(progress.mastery_points / 100) + 1
+        db.session.commit()
+
+        return progress.to_dict()
 
     def get_user_progress(self, user_id, module_id=None):
         query = GameProgress.query.filter_by(user_id=user_id)
@@ -326,16 +357,18 @@ class GameService:
         else:
             # Global XP Leaderboard (Legacy GameProgress)
             query = db.session.query(GameProgress, User.username)\
-                .join(User)\
-                .filter(GameProgress.game_module == 'all_activities')
-                
+                .join(User)
+            # filter by requested module; default to 'all_activities' if none specified
+            module_filter = module_id if module_id else 'all_activities'
+            query = query.filter(GameProgress.game_module == module_filter)
+
             if subject:
-                 query = query.filter(GameProgress.subject_focus == subject)
-                 
+                query = query.filter(GameProgress.subject_focus == subject)
+
             results = query.order_by(GameProgress.mastery_points.desc())\
                 .limit(limit)\
                 .all()
-                
+
             return [{
                 'username': r[1],
                 'level': r[0].level,
