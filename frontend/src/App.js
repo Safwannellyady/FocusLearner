@@ -23,6 +23,7 @@ import CreateFocusSession from './components/CreateFocusSession';
 import MyEnrollments from './components/MyEnrollments';
 import ManageFocus from './components/ManageFocus';
 import Badges from './components/Badges';
+import { FocusProvider } from './context/FocusContext';
 
 const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
 
@@ -105,134 +106,136 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/" element={<LandingPage />} />
+        <FocusProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/" element={<LandingPage />} />
 
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Layout>
-                  <DashboardNew />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/my-courses" element={
-              <ProtectedRoute>
-                <Layout>
-                  <MyCourses />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/lecture/:id" element={
-              <ProtectedRoute>
-                <Layout>
-                  <LectureDetail />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/preferences" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Preferences />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/courses" element={
-              <ProtectedRoute>
-                <Layout>
-                  <CreateFocusSession />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/enrollments" element={
-              <ProtectedRoute>
-                <Layout>
-                  <MyEnrollments />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/manage-focus" element={
-              <ProtectedRoute>
-                <Layout>
-                  <ManageFocus />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/badges" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Badges />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/focus" element={
-              <ProtectedRoute>
-                <Layout>
-                  <FocusLock />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/player" element={
-              <ProtectedRoute>
-                <Layout>
-                  <VideoPlayer />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/games" element={
-              <ProtectedRoute>
-                <Layout>
-                  <GameLab />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/games/kcl" element={
-              <ProtectedRoute>
-                <Layout>
-                  <KCLChallenge />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/games/ai-challenge" element={
-              <ProtectedRoute>
-                <Layout>
-                  <AIChallenge />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/analytics" element={
-              <ProtectedRoute>
-                <Layout>
-                  <AnalyticsDashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-            <Route path="/progress" element={
-              <ProtectedRoute>
-                <Layout>
-                  <ProgressDashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-            />
-          </Routes>
-        </Router>
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <DashboardNew />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/my-courses" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <MyCourses />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/lecture/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <LectureDetail />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/preferences" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Preferences />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/courses" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CreateFocusSession />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/enrollments" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <MyEnrollments />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/manage-focus" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ManageFocus />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/badges" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Badges />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/focus" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <FocusLock />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/player" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <VideoPlayer />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/games" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <GameLab />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/games/kcl" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <KCLChallenge />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/games/ai-challenge" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <AIChallenge />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/analytics" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <AnalyticsDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/progress" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ProgressDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+            </Routes>
+          </Router>
+        </FocusProvider>
       </ThemeProvider>
     </GoogleOAuthProvider>
   );

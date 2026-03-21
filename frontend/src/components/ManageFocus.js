@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Container, Paper } from '@mui/material';
+import { Box, Typography, Container } from '@mui/material';
+import FocusTimer from './FocusTimer';
 
 const ManageFocus = () => {
     return (
@@ -9,12 +10,10 @@ const ManageFocus = () => {
                     Manage Focus Period
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    Configure your study and break timers.
+                    Configure your study and break timers. Stay productive!
                 </Typography>
             </Box>
-            <Paper sx={{ p: 4, borderRadius: 3, border: '1px solid #e2e8f0', boxShadow: 'none', minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography variant="h6" color="#94a3b8">Focus Timer UI Under Construction</Typography>
-            </Paper>
+            <FocusTimer />
         </Container>
     );
 };

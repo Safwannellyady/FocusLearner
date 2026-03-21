@@ -63,6 +63,7 @@ from routes.lecture_routes import lecture_routes
 from routes.chat_routes import chat_routes
 from routes.taxonomy_routes import taxonomy_bp
 from routes.analytics_routes import analytics_bp
+from routes.badges_routes import badges_routes
 
 app.register_blueprint(focus_routes)
 app.register_blueprint(content_routes)
@@ -73,6 +74,7 @@ app.register_blueprint(lecture_routes)
 app.register_blueprint(chat_routes)
 app.register_blueprint(taxonomy_bp, url_prefix='/api/taxonomy')
 app.register_blueprint(analytics_bp)
+app.register_blueprint(badges_routes)
 
 # Error handlers
 @app.errorhandler(404)

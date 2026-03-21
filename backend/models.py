@@ -484,3 +484,45 @@ class UserTopicMastery(db.Model):
             'proficiency': self.proficiency_score,
             'success_rate': self.success_rate
         }
+
+
+class Badge(db.Model):
+    """Badge model representing available achievements"""
+    __tablename__ = 'badges'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.String(255), nullable=False)
+    icon = db.Column(db.String(100), nullable=True)
+    category = db.Column(db.String(50), nullable=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'icon': self.icon,
+            'category': self.category
+        }
+
+class UserBadge(db.Model):
+    """Link between Users and Badges"""
+    __tablename__ = 'user_badges'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    badge_id = db.Column(db.Integer, db.ForeignKey('badges.id', ondelete='CASCADE'), nullable=False, index=True)
+    earned_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    badge = db.relationship('Badge', lazy='joined')
+    
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'badge_id', name='uq_user_badge'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'badge_id': self.badge_id,
+            'earned_at': self.earned_at.isoformat(),
+            'badge': self.badge.to_dict() if self.badge else None
+        }
