@@ -109,12 +109,12 @@ def test_gamification_flow():
         else:
              print(f"   Distraction Log returned status {res.status_code}")
 
-    print("\n✅ Verification Complete: All implemented features functional.")
+    print("\n[SUCCESS] Verification Complete: All implemented features functional.")
 
 if __name__ == "__main__":
     try:
         test_gamification_flow()
     except AssertionError as e:
-        print(f"\n❌ Verification Failed: {e}")
+        print(f"\n[FAIL] Verification Failed: {e}")
     except Exception as e:
-        print(f"\n❌ Error during verification: {e}")
+        print(f"\n[ERROR] Error during verification: {e}")
