@@ -16,6 +16,8 @@ import VideoPlayer from './VideoPlayer';
 import GameLab from './GameLab';
 import ActivityView from './ActivityView';
 import AIChatWidget from './AIChatWidget';
+import FocusVault from './FocusVault';
+import FolderIcon from '@mui/icons-material/Folder';
 
 const LectureDetail = () => {
   const { id } = useParams();
@@ -182,6 +184,7 @@ const LectureDetail = () => {
                 <Tab icon={<ScienceIcon fontSize="small" />} iconPosition="start" label="Lab" />
                 <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Games" />
                 <Tab icon={<AssignmentIcon fontSize="small" />} iconPosition="start" label="Quiz" />
+                <Tab icon={<FolderIcon fontSize="small" />} iconPosition="start" label="Workspace Vault" />
               </Tabs>
             </Box>
 
@@ -293,6 +296,15 @@ const LectureDetail = () => {
                       )}
                     </Box>
                   )}
+                </Box>
+              )}
+              {activeTab === 3 && (
+                <Box p={2}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>Workspace Vault</Typography>
+                  <Typography variant="body2" sx={{ color: '#475569', mb: 3 }}>
+                    Store and search all your essential study materials here without leaving the focus zone.
+                  </Typography>
+                  <FocusVault subjectFocus={lecture?.subject} />
                 </Box>
               )}
             </Box>

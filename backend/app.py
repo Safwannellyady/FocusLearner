@@ -64,6 +64,7 @@ from routes.chat_routes import chat_routes
 from routes.taxonomy_routes import taxonomy_bp
 from routes.analytics_routes import analytics_bp
 from routes.badges_routes import badges_routes
+from routes.material_routes import material_routes
 
 app.register_blueprint(focus_routes)
 app.register_blueprint(content_routes)
@@ -75,6 +76,7 @@ app.register_blueprint(chat_routes)
 app.register_blueprint(taxonomy_bp, url_prefix='/api/taxonomy')
 app.register_blueprint(analytics_bp)
 app.register_blueprint(badges_routes)
+app.register_blueprint(material_routes)
 
 # Error handlers
 @app.errorhandler(404)
@@ -182,6 +184,14 @@ def after_request(response):
     
     return response
 
+from flask import send_from_directory
+
+@app.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    """Serve uploaded static files"""
+    upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+    return send_from_directory(os.path.abspath(upload_folder), filename)
+
 if __name__ == '__main__':
     with app.app_context():
         # Create all database tables
@@ -191,6 +201,12 @@ if __name__ == '__main__':
         except Exception as e:
             app.logger.error(f'Error creating database tables: {e}')
             raise
+        
+        # Ensure upload folder exists
+        upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder, exist_ok=True)
+            app.logger.info(f"Created upload directory: {upload_folder}")
         
         # Note: Users should register through /api/auth/register endpoint
         # No default test user is created automatically

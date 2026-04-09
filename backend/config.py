@@ -36,6 +36,7 @@ class Config:
     # JWT Configuration
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', SECRET_KEY)
     JWT_ALGORITHM = 'HS256'
+    JWT_TOKEN_LOCATION = ['headers']
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     
@@ -59,8 +60,9 @@ class Config:
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_FILE = os.getenv('LOG_FILE', 'app.log')
     
-    # AI Service Configuration
+    # AI/Search Service Configuration
     GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+    GOOGLE_SEARCH_CX = os.getenv('GOOGLE_SEARCH_CX')
     GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
     GEMINI_MAX_TOKENS = int(os.getenv('GEMINI_MAX_TOKENS', '1024'))
     GEMINI_TEMPERATURE = float(os.getenv('GEMINI_TEMPERATURE', '0.7'))

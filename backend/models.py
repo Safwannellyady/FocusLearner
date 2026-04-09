@@ -526,3 +526,32 @@ class UserBadge(db.Model):
             'earned_at': self.earned_at.isoformat(),
             'badge': self.badge.to_dict() if self.badge else None
         }
+
+class SessionMaterial(db.Model):
+    """Stores uploaded files, links, and images for usage inside a learning session."""
+    __tablename__ = 'session_materials'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    title = db.Column(db.String(255), nullable=False)
+    material_type = db.Column(db.String(50), nullable=False) # 'document', 'image', 'link'
+    file_path = db.Column(db.String(1000), nullable=True) # Relative path to uploads/
+    url = db.Column(db.String(2000), nullable=True)
+    subject_focus = db.Column(db.String(100), nullable=True, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    __table_args__ = (
+        db.Index('idx_material_user_subject', 'user_id', 'subject_focus'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'material_type': self.material_type,
+            'file_path': f"/uploads/{self.file_path}" if self.file_path else None,
+            'url': self.url,
+            'subject_focus': self.subject_focus,
+            'created_at': self.created_at.isoformat()
+        }
+

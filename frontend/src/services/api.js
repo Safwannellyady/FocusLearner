@@ -189,4 +189,18 @@ export const taxonomyAPI = {
   getLoopStatus: (intentId) => api.get('/taxonomy/loop/status', { params: { intent_id: intentId } }),
 };
 
+// Material API
+export const materialAPI = {
+  getMaterials: (subjectFocus, search) => 
+    api.get('/materials', { params: { subject_focus: subjectFocus, search } }),
+  addMaterial: (formData) => 
+    api.post('/materials', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }),
+  deleteMaterial: (id) => api.delete(`/materials/${id}`),
+  searchWeb: (search) => api.get('/materials/search_web', { params: { search } }),
+};
+
 export default api;
