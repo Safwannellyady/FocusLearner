@@ -16,7 +16,7 @@ class YouTubeService:
     
     def __init__(self, api_key: Optional[str] = None):
         # Try specific key, then shared key
-        self.api_key = api_key or os.getenv('YOUTUBE_API_KEY') or os.getenv('GOOGLE_API_KEY')
+        self.api_key = api_key or os.getenv('YOUTUBE_API_KEY') or os.getenv('GOOGLE_SEARCH_API_KEY')
         self.base_url = 'https://www.googleapis.com/youtube/v3'
         self.content_filter = ContentFilter()
         self.ai_service = AIService()

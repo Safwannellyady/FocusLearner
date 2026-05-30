@@ -56,7 +56,7 @@ const DashboardNew = () => {
       {/* Welcome Section */}
       <Box mb={4}>
         <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5 }}>
-          Hello, {user.name}!
+          Hello, {user.username || user.name || 'Student'}!
         </Typography>
         <Typography variant="body2" sx={{ color: '#64748b' }}>
           Here's your learning progress for this week.

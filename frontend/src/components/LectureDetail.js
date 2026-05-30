@@ -191,18 +191,21 @@ const LectureDetail = () => {
             {/* Tab Content */}
             <Box>
               {activeTab === 0 && (
-                <Box p={2}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>Testing Lab</Typography>
-                  <Box sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 3, bgcolor: '#f8fafc', mb: 2 }}>
-                    <Typography variant="body2" sx={{ color: '#475569', mb: 2 }}>Mandatory conceptual checkpoint before advancing.</Typography>
-                    <Button variant="outlined" onClick={handleGateUnlock} sx={{ color: '#2563eb', borderColor: '#2563eb' }}>Initialize Lab Environment</Button>
-                  </Box>
+                <Box p={4} sx={{ border: '1px dashed #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center', mt: 2 }}>
+                  <ScienceIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 2 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#475569', mb: 1 }}>Interactive Lab Booting Up...</Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b' }}>
+                    The containerized practice environment for this session is currently being compiled. Check back soon!
+                  </Typography>
                 </Box>
               )}
               {activeTab === 1 && (
-                <Box p={2}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>Game Lab</Typography>
-                  <GameLab />
+                <Box p={4} sx={{ border: '1px dashed #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center', mt: 2 }}>
+                  <SportsEsportsIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 2 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#475569', mb: 1 }}>Gamified Reinforcement Scaling...</Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b' }}>
+                    The game lab modules for this topic are currently syncing telemetry. Check back soon!
+                  </Typography>
                 </Box>
               )}
               {activeTab === 2 && (
@@ -310,60 +313,37 @@ const LectureDetail = () => {
             </Box>
           </Grid>
 
-          {/* Right Column (Progress + Accordion) */}
+          {/* Right Column (Progress + Active Session) */}
           <Grid item xs={12} md={4}>
             <Box sx={{ p: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 3 }}>Course Progress</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 3 }}>Session Progress</Typography>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ color: '#475569', fontWeight: 600 }}>0% Complete</Typography>
-                <Typography variant="body2" sx={{ color: '#64748b' }}>0/0 Lessons</Typography>
+                <Typography variant="body2" sx={{ color: '#475569', fontWeight: 600 }}>{loopStatus?.stage === 'completed' ? '100%' : '50%'} Complete</Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>{loopStatus?.stage === 'completed' ? '1/1' : '0/1'} Lessons</Typography>
               </Box>
-              <LinearProgress variant="determinate" value={0} sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e7ff', '& .MuiLinearProgress-bar': { bgcolor: '#2563eb' } }} />
+              <LinearProgress variant="determinate" value={loopStatus?.stage === 'completed' ? 100 : 50} sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e7ff', '& .MuiLinearProgress-bar': { bgcolor: '#2563eb' } }} />
 
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#0f172a', mt: 4, mb: 2 }}>Course Content</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#0f172a', mt: 4, mb: 2 }}>Curriculum Track</Typography>
 
-              {/* Accordion List */}
-              <Accordion sx={{ boxShadow: 'none', border: '1px solid #e2e8f0', borderRadius: '8px !important', '&:before': { display: 'none' } }} defaultExpanded>
+              {/* Dynamic Single-Session List */}
+              <Accordion sx={{ boxShadow: 'none', border: '1px solid #2563eb', borderRadius: '8px !important', '&:before': { display: 'none' } }} defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>week-01</Typography>
-                  <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto', alignSelf: 'center' }}>1 lecture</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>{lecture?.subject || 'Active Focus Module'}</Typography>
+                  <Typography variant="caption" sx={{ color: '#2563eb', ml: 'auto', alignSelf: 'center', fontWeight: 'bold' }}>Current</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center', bgcolor: '#eff6ff', borderRadius: 2, color: '#2563eb', border: '1px solid #bfdbfe' }}>
                     <PlayCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                    <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: 500 }}>Lecture 1: Introduction to Enter...</Typography>
-                    <Chip label="Playing" size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'transparent', color: '#2563eb', border: 'none' }} />
+                    <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {lecture?.topic || 'Session Core'}
+                    </Typography>
+                    <Chip label={loopStatus?.stage === 'completed' ? 'Done' : 'Playing'} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'transparent', color: loopStatus?.stage === 'completed' ? 'green' : '#2563eb', border: 'none' }} />
                   </Box>
                 </AccordionDetails>
               </Accordion>
 
-              <Accordion sx={{ boxShadow: 'none', border: '1px solid #e2e8f0', borderRadius: '8px !important', mt: 1, '&:before': { display: 'none' } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>week-02</Typography>
-                  <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto', alignSelf: 'center' }}>1 lecture</Typography>
-                </AccordionSummary>
-              </Accordion>
 
-              <Accordion sx={{ boxShadow: 'none', border: '1px solid #e2e8f0', borderRadius: '8px !important', mt: 1, '&:before': { display: 'none' } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>week-03</Typography>
-                  <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto', alignSelf: 'center' }}>3 lectures</Typography>
-                </AccordionSummary>
-              </Accordion>
 
-              <Accordion sx={{ boxShadow: 'none', border: '1px solid #e2e8f0', borderRadius: '8px !important', mt: 1, '&:before': { display: 'none' } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>week-04</Typography>
-                  <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto', alignSelf: 'center' }}>2 lectures</Typography>
-                </AccordionSummary>
-              </Accordion>
-
-              <Accordion sx={{ boxShadow: 'none', border: '1px solid #e2e8f0', borderRadius: '8px !important', mt: 1, '&:before': { display: 'none' } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>week-05</Typography>
-                  <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto', alignSelf: 'center' }}>3 lectures</Typography>
-                </AccordionSummary>
-              </Accordion>
 
             </Box>
           </Grid>
@@ -373,6 +353,7 @@ const LectureDetail = () => {
       {/* Persistent AI Chat Widget (Floating) */}
       <AIChatWidget
         context={`Viewing Lecture: ${lecture.title}. Topic: ${lecture.topic}. Video: ${activeVideo?.title || 'None'} @ ${Math.floor(currentTime)}s. Active Loop Stage: ${loopStatus?.stage || 'Unknown'}`}
+        videoId={activeVideo?.video_id}
       />
 
       {/* Gate Activity Dialog */}

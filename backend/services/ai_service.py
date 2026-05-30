@@ -12,12 +12,12 @@ class AIService:
     """Service for AI-powered content generation using Gemini REST API"""
     
     def __init__(self):
-        env_key = os.getenv('GOOGLE_API_KEY')
+        env_key = os.getenv('GEMINI_API_KEY')
         self.api_key = env_key.strip() if env_key else None
-        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+        self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
         
         if not self.api_key:
-            print("Warning: GOOGLE_API_KEY not found. AI features will use fallback mock data.")
+            print("Warning: GEMINI_API_KEY not found. AI features will use fallback mock data.")
 
     def _call_gemini(self, prompt: str) -> Optional[str]:
         """Helper to call Gemini REST API"""
@@ -326,22 +326,53 @@ class AIService:
         
         return self._parse_json_response(self._call_gemini(prompt), "misconception")
 
-    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, str]] = []) -> str:
+    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, str]] = [], video_id: Optional[str] = None) -> str:
         """
         Chat with the AI Tutor.
         Args:
             message: User's message.
             context: Context about the current video/subject.
             history: List of previous messages [{'role': 'user'/'model', 'parts': ['text']}]
+            video_id: The ID of the currently playing video for RAG lookup.
         """
         if not self.api_key:
-            return "I'm your AI Tutor. Since I'm running in mock mode, I can't really see the video, but I'm here to help! (Please configure GOOGLE_API_KEY)"
+            return "I'm your AI Tutor. Since I'm running in mock mode, I can't really see the video, but I'm here to help! (Please configure GEMINI_API_KEY)"
 
         # Construct prompt with context
         system_instruction = "You are a helpful, encouraging AI Tutor called 'FocusBot'. available in FocusLearner Pro app. You help students understand the educational video they are watching. keep answers concise and encouraging."
         
         if context:
             system_instruction += f"\nContext: {context}"
+            
+        # RAG Context Addition
+        if video_id:
+            try:
+                from .vector_store import VectorStore
+                vs = VectorStore()
+                
+                # If transcript not processed, fetch and embed
+                if not vs.is_video_processed(video_id):
+                    from .youtube_service import YouTubeService
+                    yt = YouTubeService()
+                    transcript = yt.get_video_transcript(video_id)
+                    if transcript:
+                        chunks = []
+                        current_chunk = ""
+                        for item in transcript:
+                            current_chunk += item.get('text', '') + " "
+                            if len(current_chunk) > 400:
+                                chunks.append(current_chunk.strip())
+                                current_chunk = ""
+                        if current_chunk:
+                            chunks.append(current_chunk.strip())
+                        vs.add_transcript(video_id, chunks)
+                
+                # Fetch relative context
+                relevant_chunks = vs.query_context(video_id, message)
+                if relevant_chunks:
+                    system_instruction += f"\n\nTranscript Excerpts related to query:\n{ ' ... '.join(relevant_chunks) }\n"
+            except Exception as e:
+                print(f"RAG Error: {e}")
             
         # Format history for Gemini API (if using the chat endpoint, but here we use generateContent with history)
         # Actually, for simple REST stateless usage, we'll just append context to the latest prompt or use a simple history builder.
@@ -388,8 +419,8 @@ class AIService:
         
         # Match subject to key
         key = "English" if "Eng" in subject or "Lang" in subject else \
-              "Math" if "Math" in subject or "Alg" in subject else \
-              "CS" if "CS" in subject or "Comp" in subject else \
+              "Math" if "Math" in subject or "Algebra" in subject or "Calc" in subject else \
+              "CS" if "CS" in subject or "Comp" in subject or "Alg" in subject else \
               "English" # Default to English/General if unknown
               
         selected_quiz = quizzes.get(key, quizzes["English"])

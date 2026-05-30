@@ -21,7 +21,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { motion, AnimatePresence } from 'framer-motion';
 import { chatAPI } from '../services/api';
 
-const AIChatWidget = ({ context }) => {
+const AIChatWidget = ({ context, videoId }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [history, setHistory] = useState([]);
@@ -62,7 +62,7 @@ const AIChatWidget = ({ context }) => {
         setLoading(true);
 
         try {
-            const response = await chatAPI.send(userMsg, context);
+            const response = await chatAPI.send(userMsg, context, videoId);
             // Replace history with backend version to ensure sync
             setHistory(response.data.history);
         } catch (error) {

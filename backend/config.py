@@ -61,7 +61,8 @@ class Config:
     LOG_FILE = os.getenv('LOG_FILE', 'app.log')
     
     # AI/Search Service Configuration
-    GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+    GOOGLE_SEARCH_API_KEY = os.getenv('GOOGLE_SEARCH_API_KEY')
+    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     GOOGLE_SEARCH_CX = os.getenv('GOOGLE_SEARCH_CX')
     GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
     GEMINI_MAX_TOKENS = int(os.getenv('GEMINI_MAX_TOKENS', '1024'))

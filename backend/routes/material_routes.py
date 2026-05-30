@@ -134,33 +134,36 @@ import requests
 @material_routes.route('/search_web', methods=['GET'])
 @token_required
 def search_web_results():
-    """Retrieve search results from Google Custom Search API"""
+    """Retrieve search results from Wikipedia API (Zero-dependency & no API keys)"""
     query = request.args.get('search', '')
     if not query:
         return jsonify({'results': []}), 200
         
-    api_key = current_app.config.get('GOOGLE_API_KEY')
-    cx = current_app.config.get('GOOGLE_SEARCH_CX')
-    
-    if not api_key or not cx:
-        return jsonify({'error': 'Google Search APIs are not properly configured.'}), 500
-        
     try:
-        url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx={cx}&q={query}&num=5"
+        import urllib.parse
+        encoded_query = urllib.parse.quote(query)
+        url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={encoded_query}&utf8=&format=json&srlimit=5"
         response = requests.get(url)
         data = response.json()
         
         results = []
-        if 'items' in data:
-            for item in data['items']:
+        if 'query' in data and 'search' in data['query']:
+            import re
+            for item in data['query']['search']:
+                # Clean up the HTML span tags that Wikipedia injects around matched text in snippets
+                snippet = re.sub(r'<[^>]+>', '', item.get('snippet', ''))
+                
+                # Build canonical wikipedia link
+                title_url = urllib.parse.quote(item.get('title', '').replace(' ', '_'))
+                
                 results.append({
-                    'title': item.get('title'),
-                    'link': item.get('link'),
-                    'snippet': item.get('snippet')
+                    'title': item.get('title') + ' (Wikipedia)',
+                    'link': f"https://en.wikipedia.org/wiki/{title_url}",
+                    'snippet': snippet + '...'
                 })
                 
         return jsonify({'results': results}), 200
     except Exception as e:
-        current_app.logger.error(f'Error performing web search: {e}')
-        return jsonify({'error': 'Internal server error during web search'}), 500
+        current_app.logger.error(f'Error performing wikipedia search: {e}')
+        return jsonify({'error': 'Internal server error during knowledge search'}), 500
 

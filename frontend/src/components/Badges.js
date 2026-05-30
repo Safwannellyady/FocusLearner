@@ -5,6 +5,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import NightlightIcon from '@mui/icons-material/Nightlight';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
+import { badgesAPI } from '../services/api';
 
 const getIcon = (iconName, earned) => {
     const props = { sx: { fontSize: 40, color: earned ? '#2563eb' : '#cbd5e1' } };
@@ -23,11 +24,9 @@ const Badges = () => {
     useEffect(() => {
         const fetchBadges = async () => {
             try {
-                // Fetch user badges. Using user_id=1 for now.
-                const response = await fetch('http://localhost:5000/api/badges?user_id=1');
-                const data = await response.json();
-                if (data.badges) {
-                    setBadges(data.badges);
+                const response = await badgesAPI.getBadges();
+                if (response.data && response.data.badges) {
+                    setBadges(response.data.badges);
                 }
             } catch (err) {
                 console.error("Failed to fetch badges", err);

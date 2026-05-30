@@ -22,6 +22,7 @@ def send_message():
     user_id = request.current_user_id
     message = data.get('message')
     context = data.get('context') # Video title/subject
+    video_id = data.get('videoId')
     
     if not message:
         return jsonify({'error': 'Message is required'}), 400
@@ -31,7 +32,7 @@ def send_message():
     
     try:
         # Call AI
-        response_text = ai_service.chat(message, context, history)
+        response_text = ai_service.chat(message, context, history, video_id)
         
         if not response_text:
              response_text = "I'm having trouble connecting to my brain right now. Please try again."

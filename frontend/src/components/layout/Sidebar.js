@@ -15,7 +15,6 @@ const navItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Create a Focus Session', icon: <MenuBookIcon />, path: '/courses' },
     { text: 'My Focus Sessions', icon: <SchoolIcon />, path: '/my-courses' },
-    { text: 'My Enrollments', icon: <ViewListIcon />, path: '/enrollments' },
     { text: 'Manage Focus Period', icon: <AssignmentIcon />, path: '/manage-focus' },
     { text: 'Badges', icon: <WorkspacePremiumIcon />, path: '/badges' },
 ];
@@ -101,7 +100,7 @@ const Sidebar = ({ open, setOpen }) => {
                         <ListItemIcon sx={{ minWidth: open ? 40 : 'auto', color: 'inherit', justifyContent: 'center' }}><LogoutIcon fontSize="small" /></ListItemIcon>
                         {open && <ListItemText primary="Logout" primaryTypographyProps={{ fontSize: '0.875rem' }} />}
                     </ListItem>
-                    <ListItem button sx={{ borderRadius: 2, color: '#64748b', px: open ? 2 : 1, justifyContent: open ? 'flex-start' : 'center' }}>
+                    <ListItem button onClick={() => navigate('/preferences')} sx={{ borderRadius: 2, color: '#64748b', px: open ? 2 : 1, justifyContent: open ? 'flex-start' : 'center' }}>
                         <ListItemIcon sx={{ minWidth: open ? 40 : 'auto', color: 'inherit', justifyContent: 'center' }}><SettingsIcon fontSize="small" /></ListItemIcon>
                         {open && <ListItemText primary="Profile Settings" primaryTypographyProps={{ fontSize: '0.875rem' }} />}
                     </ListItem>

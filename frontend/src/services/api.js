@@ -170,7 +170,7 @@ export const lectureAPI = {
 
 // Chat API
 export const chatAPI = {
-  send: (message, context) => api.post('/chat/send', { message, context }),
+  send: (message, context, videoId) => api.post('/chat/send', { message, context, videoId }),
   getHistory: () => api.get('/chat/history'),
   clearHistory: () => api.post('/chat/clear'),
 };
@@ -201,6 +201,10 @@ export const materialAPI = {
     }),
   deleteMaterial: (id) => api.delete(`/materials/${id}`),
   searchWeb: (search) => api.get('/materials/search_web', { params: { search } }),
+};
+
+export const badgesAPI = {
+  getBadges: () => api.get('/badges'),
 };
 
 export default api;
