@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
-import { courseAPI } from '../services/api';
+import { lectureAPI } from '../services/api';
 
 const MyCourses = () => {
     const navigate = useNavigate();
@@ -17,10 +17,10 @@ const MyCourses = () => {
 
     const loadCourses = async () => {
         try {
-            const res = await courseAPI.getAll();
-            setCourses(res.data.courses || []);
+            const res = await lectureAPI.getAll();
+            setCourses(res.data.lectures || []);
         } catch (err) {
-            console.error('Error loading courses:', err);
+            console.error('Error loading sessions:', err);
         }
     };
 
@@ -29,7 +29,7 @@ const MyCourses = () => {
             {/* Header */}
             <Box mb={4}>
                 <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5 }}>
-                    My Courses
+                    My Focus Sessions
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#64748b' }}>
                     Track your progress and continue learning
@@ -77,7 +77,7 @@ const MyCourses = () => {
                                     View Details
                                 </Button>
                                 <Button variant="contained" onClick={() => navigate(course.id ? `/lecture/${course.id}` : '/lecture/1')} sx={{ borderRadius: 2, bgcolor: '#2563eb', color: '#ffffff', textTransform: 'none', px: 3, '&:hover': { bgcolor: '#1d4ed8' } }}>
-                                    Start Course
+                                    Start Session
                                 </Button>
                             </Box>
                         </Box>

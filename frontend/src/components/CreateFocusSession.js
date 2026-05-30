@@ -42,14 +42,14 @@ const CreateFocusSession = () => {
 
         setLoading(true);
         try {
-            const playload = {
+            const payload = {
                 title,
                 subject,
                 topic,
                 description,
                 video_ids: videoIds
             };
-            const response = await lectureAPI.create(playload);
+            const response = await lectureAPI.create(payload);
             
             if (response.data && response.data.lecture) {
                  navigate(`/lecture/${response.data.lecture.id}`);
