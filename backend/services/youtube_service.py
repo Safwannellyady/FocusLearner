@@ -147,9 +147,14 @@ class YouTubeService:
             ],
             # Better default than music
             "default": [
-                ("How to Learn Anything Fast", "EtW2rrLHs08", "Feynman Technique"),
+                ("Climate Change 101 with Bill Nye", "EtW2rrLHs08", "National Geographic"),
                 ("The Power of Habit", "W1eYn4vY9Og", "TED-Ed"),
                 ("Study Less Study Smart", "p60rN9JEapg", "Marty Lobdell"),
+            ],
+            "Cyber": [
+                ("Cyber Security Full Course", "inWWhN5EWM4", "Simplilearn"),
+                ("Ethical Hacking 101", "fNzpcB7iRx8", "freeCodeCamp"),
+                ("What is Cyber Security?", "bPVaOlJ6ln0", "IBM Technology"),
             ],
         }
 
@@ -172,6 +177,8 @@ class YouTubeService:
             category = "Physics"
         elif "chem" in subject_lower:
             category = "Chemistry"
+        elif any(x in subject_lower for x in ["cyber", "security", "hacking", "ethical"]):
+            category = "Cyber"
             
         selected_videos = fallback_videos.get(category, fallback_videos["default"])
         
