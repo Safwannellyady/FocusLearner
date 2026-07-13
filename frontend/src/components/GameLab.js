@@ -39,7 +39,7 @@ const GameLab = ({ embedded = false }) => {
     setLoading(true);
     setResult(null);
     try {
-      const response = await gameAPI.generateChallenge(type, subject, topic);
+      const response = await gameAPI.generateChallenge(subject, 1, topic, null);
       if (response.data.challenge) {
         setActiveActivity(response.data.challenge);
         setActivityOpen(true);
