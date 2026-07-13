@@ -118,6 +118,7 @@ def generate_challenge():
     """Generate a standard challenge"""
     data = request.get_json()
     subject = data.get('subject')
+    topic = data.get('topic', 'General Practice')
     level = data.get('level', 1)
     video_context = data.get('video_context')
     
@@ -125,7 +126,7 @@ def generate_challenge():
         return jsonify({'error': 'Subject is required'}), 400
         
     try:
-        challenge = ai_service.generate_game_content(subject, level, video_context)
+        challenge = ai_service.generate_game_content(subject, level, video_context, topic)
         return jsonify({'challenge': challenge}), 200
     except Exception as e:
         print(f"Challenge generation error: {e}")
