@@ -42,24 +42,61 @@ const FocusTimer = () => {
                 {formatTime(timeLeft)}
             </Typography>
 
-            {/* Visual Countdown Breakdown for F=00.00 and B=00.00 */}
-            <Stack direction="row" spacing={3} justifyContent="center" alignItems="center" sx={{ mb: 4, p: 1.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: isStudying && timerActive ? '#2563eb' : '#94a3b8' }} />
-                    <Typography variant="body1" sx={{ fontWeight: 700, color: isStudying ? '#2563eb' : '#64748b' }}>
-                        F={formatCountdown(isStudying ? timeLeft : studyDuration)}
+            {/* Single Animated Countdown Status: F=00.00 or B=00.00 */}
+            <Box 
+                sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    mb: 4 
+                }}
+            >
+                <Box 
+                    sx={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: 1.5, 
+                        px: 3, 
+                        py: 1, 
+                        borderRadius: 30, 
+                        bgcolor: isStudying ? '#eff6ff' : '#ecfdf5', 
+                        border: '2px solid',
+                        borderColor: isStudying ? '#3b82f6' : '#10b981',
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        animation: timerActive ? (isStudying ? 'pulse-focus-card 2s infinite' : 'pulse-break-card 2s infinite') : 'none',
+                        '@keyframes pulse-focus-card': {
+                            '0%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0.4)' },
+                            '70%': { boxShadow: '0 0 0 12px rgba(59, 130, 246, 0)' },
+                            '100%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0)' }
+                        },
+                        '@keyframes pulse-break-card': {
+                            '0%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.4)' },
+                            '70%': { boxShadow: '0 0 0 12px rgba(16, 185, 129, 0)' },
+                            '100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' }
+                        }
+                    }}
+                >
+                    <Box 
+                        sx={{ 
+                            width: 12, 
+                            height: 12, 
+                            borderRadius: '50%', 
+                            bgcolor: timerActive ? (isStudying ? '#2563eb' : '#10b981') : '#94a3b8',
+                            animation: timerActive ? 'blink-dot 1.2s infinite ease-in-out' : 'none',
+                            '@keyframes blink-dot': {
+                                '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                                '50%': { opacity: 0.3, transform: 'scale(0.75)' }
+                            }
+                        }} 
+                    />
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: isStudying ? '#1e40af' : '#065f46', letterSpacing: '0.03em' }}>
+                        {isStudying ? `F=${formatCountdown(timeLeft)}` : `B=${formatCountdown(timeLeft)}`}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>(Focus)</Typography>
-                </Box>
-                <Typography variant="body1" sx={{ color: '#cbd5e1' }}>|</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: !isStudying && timerActive ? '#10b981' : '#94a3b8' }} />
-                    <Typography variant="body1" sx={{ fontWeight: 700, color: !isStudying ? '#10b981' : '#64748b' }}>
-                        B={formatCountdown(!isStudying ? timeLeft : breakDuration)}
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: isStudying ? '#3b82f6' : '#10b981' }}>
+                        {isStudying ? '(Active Focus Session)' : '(Active Break Session)'}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>(Break)</Typography>
                 </Box>
-            </Stack>
+            </Box>
 
             <Stack direction="row" spacing={2} justifyContent="center" mb={4}>
                 {!timerActive ? (

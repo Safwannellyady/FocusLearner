@@ -6,7 +6,7 @@ import { useFocusTimer } from '../../context/FocusContext';
 
 const Navbar = () => {
     const navigate = useNavigate();
-    const { studyDuration, breakDuration, timeLeft, timerActive, isStudying } = useFocusTimer();
+    const { timeLeft, timerActive, isStudying } = useFocusTimer();
 
     const userStr = localStorage.getItem('user');
     let user = { name: "Focus Learner" }; // Fallback name
@@ -44,32 +44,50 @@ const Navbar = () => {
 
             {/* Right Actions */}
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <Tooltip title="Visual Countdown: Remaining Focus Time (F) & Break Time (B). Click to manage timers.">
+                <Tooltip title={`Current Active Session: ${isStudying ? 'Focus Time' : 'Break Time'}. Click to manage timers.`}>
                     <Box 
                         onClick={() => navigate('/manage-focus')}
                         sx={{ 
                             display: 'flex', 
                             alignItems: 'center', 
-                            gap: 1.5, 
-                            px: 2, 
+                            gap: 1.2, 
+                            px: 2.2, 
                             py: 0.6, 
                             borderRadius: 20, 
-                            bgcolor: timerActive ? (isStudying ? '#eff6ff' : '#ecfdf5') : '#f8fafc', 
-                            border: '1px solid',
-                            borderColor: timerActive ? (isStudying ? '#60a5fa' : '#34d399') : '#cbd5e1',
+                            bgcolor: isStudying ? '#eff6ff' : '#ecfdf5', 
+                            border: '1.5px solid',
+                            borderColor: isStudying ? '#3b82f6' : '#10b981',
                             cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            '&:hover': { borderColor: '#94a3b8', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            animation: timerActive ? (isStudying ? 'pulse-focus 2s infinite' : 'pulse-break 2s infinite') : 'none',
+                            '@keyframes pulse-focus': {
+                                '0%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0.4)' },
+                                '70%': { boxShadow: '0 0 0 8px rgba(59, 130, 246, 0)' },
+                                '100%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0)' }
+                            },
+                            '@keyframes pulse-break': {
+                                '0%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.4)' },
+                                '70%': { boxShadow: '0 0 0 8px rgba(16, 185, 129, 0)' },
+                                '100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' }
+                            },
+                            '&:hover': { transform: 'scale(1.03)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
                         }}
                     >
-                        <Typography variant="caption" sx={{ fontWeight: 800, fontSize: '0.82rem', color: isStudying ? '#2563eb' : '#64748b', display: 'flex', alignItems: 'center' }}>
-                            {timerActive && isStudying && <span style={{ marginRight: 5, color: '#2563eb' }}>●</span>}
-                            F={formatCountdown(isStudying ? timeLeft : studyDuration)}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: '#cbd5e1', fontWeight: 'bold' }}>|</Typography>
-                        <Typography variant="caption" sx={{ fontWeight: 800, fontSize: '0.82rem', color: !isStudying ? '#10b981' : '#64748b', display: 'flex', alignItems: 'center' }}>
-                            {timerActive && !isStudying && <span style={{ marginRight: 5, color: '#10b981' }}>●</span>}
-                            B={formatCountdown(!isStudying ? timeLeft : breakDuration)}
+                        <Box 
+                            sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                bgcolor: timerActive ? (isStudying ? '#2563eb' : '#10b981') : '#94a3b8',
+                                animation: timerActive ? 'blink 1.2s infinite ease-in-out' : 'none',
+                                '@keyframes blink': {
+                                    '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                                    '50%': { opacity: 0.4, transform: 'scale(0.8)' }
+                                }
+                            }}
+                        />
+                        <Typography variant="caption" sx={{ fontWeight: 800, fontSize: '0.85rem', color: isStudying ? '#1e40af' : '#065f46', letterSpacing: '0.02em' }}>
+                            {isStudying ? `F=${formatCountdown(timeLeft)}` : `B=${formatCountdown(timeLeft)}`}
                         </Typography>
                     </Box>
                 </Tooltip>

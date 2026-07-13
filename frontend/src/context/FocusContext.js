@@ -27,6 +27,12 @@ export const FocusProvider = ({ children }) => {
         setToastOpen(false);
     };
 
+    const formatCountdownHelper = (seconds) => {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}.${s}`;
+    };
+
     useEffect(() => {
         let interval = null;
         if (timerActive && timeLeft > 0) {
@@ -39,12 +45,12 @@ export const FocusProvider = ({ children }) => {
                 // Time for a break!
                 setIsStudying(false);
                 setTimeLeft(breakDuration);
-                showToast("Study session complete! Time for a break.", "success");
+                showToast(`🎯 Focus session complete! It's Break Time — status immediately turned to B=${formatCountdownHelper(breakDuration)} ☕`, "success");
             } else {
                 // Break is over, back to study
                 setIsStudying(true);
                 setTimeLeft(studyDuration);
-                showToast("Break is over! Let's get back to focus.", "info");
+                showToast(`⚡ Break is over! Starting Focus Session — status turned to F=${formatCountdownHelper(studyDuration)} 🚀`, "info");
             }
         }
         return () => {

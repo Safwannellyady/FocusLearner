@@ -107,8 +107,8 @@ export const gameAPI = {
       }
     }),
 
-  generateChallenge: (subject, level) =>
-    api.post('/game/challenge/generate', { subject, level }),
+  generateChallenge: (subject, level, topic, videoContext) =>
+    api.post('/game/challenge/generate', { subject, level, topic, video_context: videoContext }),
 
   generateActivity: (subject, topic, type, videoContext) =>
     api.post('/game/activity/generate', { subject, topic, type, video_context: videoContext }),
