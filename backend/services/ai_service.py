@@ -6,6 +6,8 @@ Service for interacting with Google Gemini AI for content generation
 import os
 import json
 import requests
+import re
+import uuid
 from typing import List, Dict, Any, Optional
 
 class AIService:
@@ -50,13 +52,13 @@ class AIService:
                 return None
             return result['candidates'][0]['content']['parts'][0]['text']
         except Exception as e:
-            error_data = f"Exception: {e}\n"
-            if 'response' in locals() and response:
-                error_data += f"Status: {response.status_code}\nText: {response.text}"
-            with open("gemini_error.log", "a") as f:
-                f.write(error_data + "\n")
-            print(f"Gemini API Error: {e}")
-            return None
+             error_data = f"Exception: {e}\n"
+             if 'response' in locals() and response:
+                 error_data += f"Status: {response.status_code}\nText: {response.text}"
+             with open("gemini_error.log", "a") as f:
+                 f.write(error_data + "\n")
+             print(f"Gemini API Error: {e}")
+             return None
 
     def generate_quiz(self, subject: str, topic: str, count: int = 5, video_context: dict = None) -> List[Dict[str, Any]]:
         """
@@ -139,7 +141,6 @@ class AIService:
         outcomes = ""
         difficulty = "Intermediate"
         if intent:
-             import json
              try:
                  outcome_list = json.loads(intent.required_outcomes)
                  outcomes = f"\nRequired Outcomes: {', '.join(outcome_list)}"
@@ -218,8 +219,205 @@ class AIService:
             }
         if not self.api_key:
             return mock_fallback
+
+        context_str = ""
+        if video_context:
+            context_str = f"\nFrame the Virtual Lab scenario entirely around this video context:\nTitle: {video_context.get('title', '')}\nDescription: {video_context.get('description', '')}\nThe scenario MUST be a direct application of the video's content."
+
+        # Setup basic adaptive variables
+        outcomes = ""
+        difficulty = "Intermediate"
+        if intent:
+             difficulty = intent.difficulty
+
+        prompt = f"""
+        Generate a Virtual Lab scenario for {subject} - {topic}.
+        Difficulty Level: {difficulty}{outcomes}{context_str}
         
-        # Extract intent metadata
+        Return JSON:
+        - type: "lab"
+        - title: string
+        - scenario: string (detailed setup)
+        - steps: array of strings (what user does)
+        - question: string (what they must observe/conclude)
+        - options: array of 4 strings
+        - correct_answer: string
+        - explanation: string
+        """
+        parsed = self._parse_json_response(self._call_gemini(prompt), "lab")
+        if "error" in parsed:
+            return mock_fallback
+        return parsed
+
+    def generate_crossword(self, subject: str, topic: str, video_context: dict = None) -> Dict[str, Any]:
+        mock_fallback = {
+            "type": "crossword",
+            "title": f"Vocabulary Drill: {topic}",
+            "words": [
+                {"clue": f"Core concept term in {topic}", "word": "CONCEPT"},
+                {"clue": f"Primary operation method in {subject}", "word": "METHOD"},
+                {"clue": f"Key verification metric for {topic}", "word": "METRIC"}
+            ]
+        }
+        if not self.api_key:
+            return mock_fallback
+
+        context_str = ""
+        if video_context:
+             context_str = f"\nExtract keywords directly from this video context:\nTitle: {video_context.get('title', '')}"
+
+        prompt = f"""
+        Generate a Crossword/Vocabulary drill for {subject} - {topic}.{context_str}
+        Return exactly 5 key terms and clues.
+        
+        Return JSON:
+        - type: "crossword"
+        - title: string
+        - words: array of objects {{ "clue": string, "word": uppercase_string }}
+        """
+        parsed = self._parse_json_response(self._call_gemini(prompt), "crossword")
+        if "error" in parsed:
+             return mock_fallback
+        return parsed
+
+    def _parse_json_response(self, text_response: str, fallback_type: str) -> Dict[str, Any]:
+        """
+        Safely parse JSON from Gemini response, handling markdown blocks.
+        """
+        if not text_response:
+             return {"type": fallback_type, "error": "Empty response"}
+             
+        try:
+             # Clean markdown json blocks if present
+             text = text_response.strip()
+             if text.startswith("```json"):
+                  text = text[7:]
+             elif text.startswith("```"):
+                  text = text[3:]
+             if text.endswith("```"):
+                  text = text[:-3]
+             text = text.strip()
+             
+             data = json.loads(text)
+             data["type"] = fallback_type
+             return data
+        except Exception as e:
+             print(f"[DEBUG] Parse error in _parse_json_response: {e}\nRaw Response: {text_response}")
+             return {"type": fallback_type, "error": "Parse error"}
+
+    def generate_game_content(self, subject: str, level: int, video_context: dict = None, topic: str = "General Practice") -> Dict[str, Any]:
+        """
+        Generate generic game content/problems based on subject, level, and topic.
+        """
+        return self._get_mock_game_problem(subject, level, topic)
+
+    def refine_search_query(self, subject: str, user_query: str) -> str:
+        """
+        Refine a search query to be more specific and educational.
+        """
+        if not self.api_key:
+            return f"{subject} {user_query} tutorial"
+
+        prompt = f"""
+        Refine the following search query to find the best educational YouTube videos.
+        Subject: "{subject}"
+        User Query: "{user_query}"
+        
+        Return ONLY the refined query string. It should differ from the original to maximize educational relevance and minimize distractions.
+        Video should be a tutorial or lecture.
+        """
+        
+        text_response = self._call_gemini(prompt)
+        if text_response:
+            return text_response.strip()
+        return f"{subject} {user_query} lecture"
+
+    def analyze_misconception(self, question: str, user_answer: str, correct_answer: str, subject: str) -> Dict[str, str]:
+        """
+        Analyze why a user got a question wrong.
+        """
+        if not self.api_key:
+            return {
+                "analysis": "Incorrect answer. Review the basic concepts.",
+                "remediation_focus": subject
+            }
+
+        prompt = f"""
+        The student is learning {subject}.
+        Question: "{question}"
+        Student Answer: "{user_answer}"
+        Correct Answer: "{correct_answer}"
+
+        Identify the exact conceptual misconception causing this error.
+        Provide a 1-sentence analysis and recommend a specific sub-topic to review.
+        
+        Return JSON:
+        - analysis: string
+        - remediation_focus: string
+        """
+        
+        parsed = self._parse_json_response(self._call_gemini(prompt), "misconception")
+        if "error" in parsed:
+             return {"analysis": "Incorrect answer. Review the basic concepts.", "remediation_focus": subject}
+        return parsed
+
+    def answer_question(self, video_id: str, message: str, history: List[Dict[str, str]] = None) -> str:
+        """
+        Answer a student's question using video RAG context and chat history.
+        """
+        if not self.api_key:
+            return f"That's a great question about the lecture! Based on the key concepts covered, make sure to review the core formulas and examples shown in the video timeline. (AI Tutor offline fallback)"
+            
+        if history is None:
+            history = []
+            
+        system_instruction = (
+            "You are FocusLearner AI, an expert AI tutor helping a student understand a video lecture. "
+            "Use the provided transcript excerpts and context to answer clearly and concisely. "
+            "If the answer is not in the transcript, use your general domain knowledge but mention it is supplementary."
+        )
+        
+        # Try to get RAG context if video_id provided
+        if video_id:
+            try:
+                from services.video_service import VideoService
+                vs = VideoService()
+                relevant_chunks = vs.query_context(video_id, message)
+                if relevant_chunks:
+                    system_instruction += f"\n\nTranscript Excerpts related to query:\n{ ' ... '.join(relevant_chunks) }\n"
+            except Exception as e:
+                print(f"RAG Error: {e}")
+            
+        full_prompt = f"System: {system_instruction}\n"
+        
+        for msg in history[-5:]: # Keep last 5 turns for context window
+            role = "User" if msg.get("role") == "user" else "Tutor"
+            content = msg.get("parts", [""])[0] 
+            full_prompt += f"{role}: {content}\n"
+            
+        full_prompt += f"User: {message}\nTutor:"
+        
+        return self._call_gemini(full_prompt)
+
+    def _get_mock_quiz(self, subject, topic, count):
+        """Fallback to high-quality topic-synchronized static quizzes if AI fails"""
+        sub_top = f"{subject} {topic}".lower()
+        if any(w in sub_top for w in ["cyber", "security", "hack"]):
+            selected_quiz = [
+                {"id": 1, "question": f"In {topic} ({subject}), what is the primary goal of reconnaissance before vulnerability assessment?", "options": ["Mapping target network topology and services", "Immediately executing Denial of Service", "Deleting local server access logs", "Installing physical network taps"], "correctAnswer": "Mapping target network topology and services", "explanation": "Reconnaissance gathers intelligence on the target architecture to identify potential entry points before active testing."},
+                {"id": 2, "question": "Which cryptographic approach uses a public key for encryption and a private key for decryption?", "options": ["Asymmetric Cryptography (PKI)", "Symmetric AES-256", "MD5 Hashing", "Caesar Cipher"], "correctAnswer": "Asymmetric Cryptography (PKI)", "explanation": "Asymmetric cryptography utilizes a paired public and private key system."},
+                {"id": 3, "question": f"When mitigating SQL Injection vulnerabilities during {topic} audits, which technique is most effective?", "options": ["Prepared Statements & Parameterized Queries", "Disabling HTTPS protocols", "Increasing database connection timeout", "Hiding error messages without validation"], "correctAnswer": "Prepared Statements & Parameterized Queries", "explanation": "Parameterized queries separate SQL command structure from user input data completely."},
+                {"id": 4, "question": "What is the primary function of a Web Application Firewall (WAF)?", "options": ["Inspecting and filtering HTTP/HTTPS traffic between users and web applications", "Routing internal local area network packets", "Assigning DHCP IP addresses to client workstations", "Overclocking server CPU performance"], "correctAnswer": "Inspecting and filtering HTTP/HTTPS traffic between users and web applications", "explanation": "A WAF protects web applications by monitoring, filtering, and blocking malicious HTTP traffic such as XSS or SQLi."},
+                {"id": 5, "question": f"In ethical {topic}, what distinguishes white-hat testing from unauthorized intrusion?", "options": ["Prior written consent and clearly defined Rules of Engagement (RoE)", "The use of automated scanning tools", "The operating system used by the analyst", "The time of day testing takes place"], "correctAnswer": "Prior written consent and clearly defined Rules of Engagement (RoE)", "explanation": "Ethical testing requires explicit authorization and adherence to agreed-upon scope and rules of engagement."}
+            ]
+        elif any(w in sub_top for w in ["sort", "algorithm", "dsa", "cs", "computer"]):
+            selected_quiz = [
+                {"id": 1, "question": f"What is the average and worst-case time complexity of Quick Sort in {topic}?", "options": ["Average: O(n log n), Worst: O(n^2)", "Average: O(n^2), Worst: O(n^3)", "Average: O(n), Worst: O(n log n)", "Always O(1) constant time"], "correctAnswer": "Average: O(n log n), Worst: O(n^2)", "explanation": "Quick Sort averages O(n log n) comparisons, but degrades to O(n^2) when poor pivot choices occur."},
+                {"id": 2, "question": "Which sorting algorithm is inherently stable and guarantees O(n log n) time complexity across all cases?", "options": ["Merge Sort", "Selection Sort", "Quick Sort", "Heap Sort"], "correctAnswer": "Merge Sort", "explanation": "Merge Sort divides the array and merges subarrays in stable order, guaranteeing O(n log n)."},
+                {"id": 3, "question": f"Why is Bubble Sort considered inefficient for large datasets in {topic}?", "options": ["It requires O(n^2) nested loop comparisons and adjacent swaps", "It requires O(n) auxiliary space overhead", "It cannot sort integer data types", "It only works on linked lists"], "correctAnswer": "It requires O(n^2) nested loop comparisons and adjacent swaps", "explanation": "Bubble Sort compares and swaps adjacent elements repeatedly, resulting in quadratic time complexity."},
+                {"id": 4, "question": "In space complexity analysis, which sorting algorithm operates in-place with O(1) auxiliary space?", "options": ["Heap Sort & Selection Sort", "Merge Sort", "Radix Sort", "Bucket Sort"], "correctAnswer": "Heap Sort & Selection Sort", "explanation": "Heap Sort and Selection Sort sort elements within the existing array without requiring extra allocation."},
+                {"id": 5, "question": f"When selecting an algorithm for {topic} on a nearly sorted array, which algorithm performs best?", "options": ["Insertion Sort (O(n) best case)", "Merge Sort", "Selection Sort (always O(n^2))", "Quick Sort with first-element pivot"], "correctAnswer": "Insertion Sort (O(n) best case)", "explanation": "Insertion Sort requires only O(n) comparisons when elements are already nearly sorted."}
+            ]
         else:
             selected_quiz = [
                 {"id": 1, "question": f"What is the foundational principle when studying {topic} in {subject}?", "options": [f"Understanding core {topic} methodology and rules", "Skipping fundamental definitions", "Ignoring practical verification", "Memorizing unrelated formulas"], "correctAnswer": f"Understanding core {topic} methodology and rules", "explanation": f"Mastering {topic} requires clear conceptual comprehension of its foundational rules and methodology."},

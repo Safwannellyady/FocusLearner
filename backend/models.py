@@ -190,11 +190,18 @@ class UserPreferences(db.Model):
     preferred_topics = db.Column(db.Text, nullable=True)  # JSON array of topics
     difficulty_level = db.Column(db.String(20), default='intermediate')  # beginner, intermediate, advanced
     learning_style = db.Column(db.String(50), nullable=True)  # visual, auditory, kinesthetic
+    advanced_options = db.Column(db.Text, nullable=True, default='{}')  # JSON object for advanced settings
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def to_dict(self):
         import json
+        adv = {}
+        if self.advanced_options:
+            try:
+                adv = json.loads(self.advanced_options)
+            except:
+                adv = {}
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -202,6 +209,7 @@ class UserPreferences(db.Model):
             'preferred_topics': json.loads(self.preferred_topics) if self.preferred_topics else [],
             'difficulty_level': self.difficulty_level,
             'learning_style': self.learning_style,
+            'advanced_options': adv,
             'updated_at': self.updated_at.isoformat()
         }
 

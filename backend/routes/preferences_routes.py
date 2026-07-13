@@ -64,6 +64,9 @@ def update_preferences():
     
     if 'learning_style' in data:
         preferences.learning_style = data['learning_style']
+        
+    if 'advanced_options' in data:
+        preferences.advanced_options = json.dumps(data['advanced_options']) if isinstance(data['advanced_options'], dict) else data['advanced_options']
     
     db.session.commit()
     

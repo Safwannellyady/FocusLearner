@@ -14,6 +14,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Switch,
+  FormControlLabel,
+  Grid,
+  Divider,
 } from '@mui/material';
 import { preferencesAPI, taxonomyAPI } from '../services/api';
 
@@ -24,6 +28,14 @@ const Preferences = () => {
     preferred_topics: [],
     difficulty_level: 'intermediate',
     learning_style: 'visual',
+    advanced_options: {
+      auto_start_break: true,
+      distraction_sensitivity: 'balanced',
+      daily_focus_target: 240,
+      ai_rag_depth: 'deep',
+      enable_sound_effects: true,
+      strict_focus_lock: false,
+    }
   });
   const [topics, setTopics] = useState('');
   const [subjectOptions, setSubjectOptions] = useState([]);
@@ -45,6 +57,14 @@ const Preferences = () => {
           preferred_topics: prefs.preferred_topics || [],
           difficulty_level: prefs.difficulty_level || 'intermediate',
           learning_style: prefs.learning_style || 'visual',
+          advanced_options: prefs.advanced_options || {
+            auto_start_break: true,
+            distraction_sensitivity: 'balanced',
+            daily_focus_target: 240,
+            ai_rag_depth: 'deep',
+            enable_sound_effects: true,
+            strict_focus_lock: false,
+          }
         });
         setTopics((prefs.preferred_topics || []).join(', '));
 
@@ -53,7 +73,6 @@ const Preferences = () => {
         }
       } catch (err) {
         console.error("Failed to load data", err);
-        // Fallback or explicit handling
       }
     };
     initData();
@@ -203,6 +222,143 @@ const Preferences = () => {
               <MenuItem value="kinesthetic">Kinesthetic (Labs & Challenges)</MenuItem>
             </Select>
           </FormControl>
+
+          <Divider sx={{ my: 4, borderColor: 'rgba(255,255,255,0.15)' }} />
+
+          {/* Advanced Profile Settings */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1, color: '#a78bfa' }}>
+              Advanced Profile & Focus Settings
+            </Typography>
+            <Typography variant="body2" color="grey.400" sx={{ mb: 3 }}>
+              Fine-tune focus monitoring, AI depth, and automated session transitions.
+            </Typography>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={preferences.advanced_options?.auto_start_break ?? true}
+                        onChange={(e) => setPreferences({
+                          ...preferences,
+                          advanced_options: { ...preferences.advanced_options, auto_start_break: e.target.checked }
+                        })}
+                        color="secondary"
+                      />
+                    }
+                    label={<Typography variant="body1" fontWeight="600">Auto-Start Break Timer</Typography>}
+                  />
+                  <Typography variant="caption" color="grey.500" display="block" sx={{ mt: 0.5 }}>
+                    Automatically transition to break (B=00.00) when focus session (F=00.00) completes.
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={preferences.advanced_options?.strict_focus_lock ?? false}
+                        onChange={(e) => setPreferences({
+                          ...preferences,
+                          advanced_options: { ...preferences.advanced_options, strict_focus_lock: e.target.checked }
+                        })}
+                        color="secondary"
+                      />
+                    }
+                    label={<Typography variant="body1" fontWeight="600">Strict Focus Lock Mode</Typography>}
+                  />
+                  <Typography variant="caption" color="grey.500" display="block" sx={{ mt: 0.5 }}>
+                    Prevent navigating away from locked subject until session target is reached.
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={preferences.advanced_options?.enable_sound_effects ?? true}
+                        onChange={(e) => setPreferences({
+                          ...preferences,
+                          advanced_options: { ...preferences.advanced_options, enable_sound_effects: e.target.checked }
+                        })}
+                        color="secondary"
+                      />
+                    }
+                    label={<Typography variant="body1" fontWeight="600">Audio Transitions & Chimes</Typography>}
+                  />
+                  <Typography variant="caption" color="grey.500" display="block" sx={{ mt: 0.5 }}>
+                    Play subtle haptic/audio alerts on focus and break completion milestones.
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <TextField
+                    fullWidth
+                    label="Daily Focus Target (Minutes)"
+                    type="number"
+                    variant="outlined"
+                    size="small"
+                    value={preferences.advanced_options?.daily_focus_target ?? 240}
+                    onChange={(e) => setPreferences({
+                      ...preferences,
+                      advanced_options: { ...preferences.advanced_options, daily_focus_target: Number(e.target.value) }
+                    })}
+                    sx={{ ...inputSx, mb: 0.5 }}
+                  />
+                  <Typography variant="caption" color="grey.500" display="block">
+                    Recommended goal: 240 minutes (4 hours) of deep learning per day.
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small" sx={{ ...inputSx }}>
+                  <InputLabel>Distraction Sensitivity</InputLabel>
+                  <Select
+                    value={preferences.advanced_options?.distraction_sensitivity ?? 'balanced'}
+                    label="Distraction Sensitivity"
+                    onChange={(e) => setPreferences({
+                      ...preferences,
+                      advanced_options: { ...preferences.advanced_options, distraction_sensitivity: e.target.value }
+                    })}
+                    sx={{ color: 'white' }}
+                    MenuProps={{ PaperProps: { sx: { bgcolor: '#1a1a2e', color: 'white' } } }}
+                  >
+                    <MenuItem value="strict">Strict (Immediate 1s tab switch trigger)</MenuItem>
+                    <MenuItem value="balanced">Balanced (2s threshold)</MenuItem>
+                    <MenuItem value="relaxed">Relaxed (5s threshold before alert)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small" sx={{ ...inputSx }}>
+                  <InputLabel>AI Tutoring RAG Depth</InputLabel>
+                  <Select
+                    value={preferences.advanced_options?.ai_rag_depth ?? 'deep'}
+                    label="AI Tutoring RAG Depth"
+                    onChange={(e) => setPreferences({
+                      ...preferences,
+                      advanced_options: { ...preferences.advanced_options, ai_rag_depth: e.target.value }
+                    })}
+                    sx={{ color: 'white' }}
+                    MenuProps={{ PaperProps: { sx: { bgcolor: '#1a1a2e', color: 'white' } } }}
+                  >
+                    <MenuItem value="fast">Fast (Concise bullet points & summaries)</MenuItem>
+                    <MenuItem value="deep">Deep (Comprehensive explanations & timeline citations)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Box>
 
           {/* Actions */}
           <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>

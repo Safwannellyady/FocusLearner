@@ -27,14 +27,39 @@ const FocusTimer = () => {
         return `${m}:${s}`;
     };
 
+    const formatCountdown = (seconds) => {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}.${s}`;
+    };
+
     return (
         <Paper sx={{ p: 4, borderRadius: 3, border: '1px solid #e2e8f0', boxShadow: 'none' }}>
-            <Typography variant="h4" sx={{ fontWeight: 800, textAlign: 'center', mb: 2, color: isStudying ? '#2563eb' : '#10b981' }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, textAlign: 'center', mb: 1, color: isStudying ? '#2563eb' : '#10b981' }}>
                 {isStudying ? "Focus Time" : "Break Time"}
             </Typography>
-            <Typography variant="h1" sx={{ textAlign: 'center', mb: 4, fontWeight: 'bold' }}>
+            <Typography variant="h1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}>
                 {formatTime(timeLeft)}
             </Typography>
+
+            {/* Visual Countdown Breakdown for F=00.00 and B=00.00 */}
+            <Stack direction="row" spacing={3} justifyContent="center" alignItems="center" sx={{ mb: 4, p: 1.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: isStudying && timerActive ? '#2563eb' : '#94a3b8' }} />
+                    <Typography variant="body1" sx={{ fontWeight: 700, color: isStudying ? '#2563eb' : '#64748b' }}>
+                        F={formatCountdown(isStudying ? timeLeft : studyDuration)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>(Focus)</Typography>
+                </Box>
+                <Typography variant="body1" sx={{ color: '#cbd5e1' }}>|</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: !isStudying && timerActive ? '#10b981' : '#94a3b8' }} />
+                    <Typography variant="body1" sx={{ fontWeight: 700, color: !isStudying ? '#10b981' : '#64748b' }}>
+                        B={formatCountdown(!isStudying ? timeLeft : breakDuration)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>(Break)</Typography>
+                </Box>
+            </Stack>
 
             <Stack direction="row" spacing={2} justifyContent="center" mb={4}>
                 {!timerActive ? (
