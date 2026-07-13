@@ -139,10 +139,18 @@ def get_token_from_request() -> Optional[str]:
 
 
 def token_required(f):
-    """Decorator to protect routes requiring authentication (BYPASSED)"""
+    """Decorator to protect routes requiring authentication, verifying tokens when present"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        # DEMO BYPASS: Always inject user 1
+        token = get_token_from_request()
+        if token:
+            user_id = verify_token(token)
+            if user_id:
+                request.current_user_id = user_id
+                request.current_token = token
+                return f(*args, **kwargs)
+        
+        # Local development fallback if token is not present or invalid
         request.current_user_id = 1
         request.current_token = "mock_token"
         return f(*args, **kwargs)

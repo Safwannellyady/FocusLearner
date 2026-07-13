@@ -4,6 +4,8 @@ Business logic for gamification system and real evaluation engine
 """
 import uuid
 import json
+import ast
+import re
 from models import db, GameProgress, User, GameChallenge, ActivityResult, UserTopicMastery, TopicMasteryState
 from datetime import datetime
 
@@ -174,16 +176,43 @@ class GameService:
             return (str(expected).lower() == str(actual).lower(), 1.0 if str(expected).lower() == str(actual).lower() else 0.0, "Lab result verified.")
         
         elif type == 'coding':
-            # Mock grading: In real app, run actual tests.
-            # Here: we assume if they submit non-empty code they tried. 
-            # Ideally we check against test outputs. 
-            # For this prototype: Pass if length > 10.
-            isValid = len(str(actual)) > 10
-            return (isValid, 1.0 if isValid else 0.0, "Code compiled successfully." if isValid else "Code too short.")
+            actual_str = str(actual).strip()
+            if not actual_str:
+                return (False, 0.0, "Submission cannot be empty.")
             
-        elif type == 'crossword' or type == 'problem_solving':
-            is_match = str(expected).lower().strip() == str(actual).lower().strip()
-            return (is_match, 1.0 if is_match else 0.0, "Correct!" if is_match else f"Incorrect. expected {expected}")
+            # 1. Check Python syntax validity via AST
+            try:
+                ast.parse(actual_str)
+            except SyntaxError as se:
+                return (False, 0.0, f"Python Syntax Error at line {se.lineno}: {se.msg}")
+            
+            # 2. Check structure/function definitions if expected solution requires specific definitions
+            expected_str = str(expected).strip() if expected else ""
+            if expected_str:
+                req_funcs = re.findall(r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', expected_str)
+                for fn in req_funcs:
+                    if not re.search(rf'def\s+{fn}\s*\(', actual_str):
+                        return (False, 0.5, f"Syntax valid, but missing required function definition: '{fn}'")
+            
+            return (True, 1.0, "Code syntax verified and structure checks passed successfully!")
+            
+        elif type in ('crossword', 'problem_solving'):
+            exp_str = str(expected).lower().strip()
+            act_str = str(actual).lower().strip()
+            if exp_str == act_str:
+                return (True, 1.0, "Correct!")
+            
+            # Try item-wise comparison if comma-separated
+            if ',' in exp_str and ',' in act_str:
+                exp_items = [x.strip() for x in exp_str.split(',') if x.strip()]
+                act_items = [x.strip() for x in act_str.split(',') if x.strip()]
+                if len(exp_items) > 0 and len(act_items) > 0:
+                    matches = sum(1 for a, e in zip(act_items, exp_items) if a == e)
+                    score = matches / len(exp_items)
+                    is_pass = score >= 0.8
+                    return (is_pass, round(score, 2), f"Score: {matches}/{len(exp_items)} matches correct.")
+            
+            return (False, 0.0, f"Incorrect. Answer format or value mismatch.")
             
         return (False, 0.0, "Unknown activity type")
 

@@ -248,7 +248,7 @@ const FocusVault = ({ subjectFocus }) => {
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 } }}>
           <Tab icon={<FolderIcon />} iconPosition="start" label="My Vault" />
           <Tab icon={<FormatQuoteIcon />} iconPosition="start" label="Wikipedia" />
-          <Tab icon={<LanguageIcon />} iconPosition="start" label="Google Search" />
+          <Tab icon={<LanguageIcon />} iconPosition="start" label="Web & Academic Search" />
         </Tabs>
       </Box>
 
@@ -333,7 +333,7 @@ const FocusVault = ({ subjectFocus }) => {
           </Box>
         )}
 
-        {/* GOOGLE WEB TAB */}
+        {/* WEB & ACADEMIC SEARCH TAB */}
         {activeTab === 2 && (
           <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
             {!loading && webResults.length === 0 && searchQuery && !error ? (
@@ -342,16 +342,25 @@ const FocusVault = ({ subjectFocus }) => {
               webResults.map((item, idx) => (
                 <Card key={idx} sx={{ mb: 2, borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                   <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                      <Typography variant="h6" fontWeight={700} color="#1a0dab" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }} onClick={() => window.open(item.link, '_blank')}>
-                        {item.title}
-                      </Typography>
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={2}>
+                      <Box>
+                        <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                          {item.source && (
+                            <Typography variant="caption" sx={{ px: 1.5, py: 0.3, borderRadius: 4, bgcolor: item.source.includes('Academic') ? '#eff6ff' : item.source === 'Wikipedia' ? '#f1f5f9' : '#f0fdf4', color: item.source.includes('Academic') ? '#1e40af' : item.source === 'Wikipedia' ? '#475569' : '#166534', fontWeight: 700 }}>
+                              {item.source}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Typography variant="h6" fontWeight={700} color="#1a0dab" sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }} onClick={() => window.open(item.link, '_blank')}>
+                          {item.title}
+                        </Typography>
+                      </Box>
                       <Button 
                         size="small" 
                         variant="outlined" 
                         startIcon={<BookmarkAddIcon />} 
                         onClick={() => handleQuickSaveLink(item.title, item.link)}
-                        sx={{ textTransform: 'none', borderRadius: 8 }}
+                        sx={{ textTransform: 'none', borderRadius: 8, flexShrink: 0 }}
                       >
                         Save
                       </Button>

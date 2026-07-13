@@ -9,36 +9,43 @@ import { focusAPI, gameAPI } from '../services/api';
 
 const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate }) => {
   const [xpEarned, setXpEarned] = useState(null);
-  const [playerRef, setPlayerRef] = useState(null);
+  const [videoError, setVideoError] = useState(null);
 
   useEffect(() => {
-    setXpEarned(null); // Reset when video changes
-  }, [video?.video_id]);
+    setXpEarned(null);
+    setVideoError(null);
+  }, [video?.video_id, video?.url]);
 
   const handleVideoStateChange = (event) => {
-    // Track video progress
     if (event.data === YouTube.PlayerState.PLAYING) {
       const player = event.target;
       const currentTime = player.getCurrentTime();
       if (onTimeUpdate) onTimeUpdate(currentTime);
 
-      // Update backend periodically? Or let parent do it via onTimeUpdate?
-      // Keeping simple backend ping here for specific video tracking if needed:
       if (video?.video_id) {
         focusAPI.updateVideo(video.video_id, Math.floor(currentTime)).catch(console.error);
       }
     }
-    // Track completion (State 0 is ENDED)
     if (event.data === 0) {
       handleVideoCompletion();
       if (onVideoEnd) onVideoEnd();
     }
   };
 
+  const handleVideoError = (event) => {
+    console.error("YouTube embed error code:", event.data);
+    let errorMsg = "An error occurred while loading this video.";
+    if (event.data === 101 || event.data === 150) {
+      errorMsg = "The owner of this YouTube video does not allow embedded playback outside of YouTube.";
+    } else if (event.data === 2) {
+      errorMsg = "Invalid YouTube video ID or corrupted URL.";
+    }
+    setVideoError(errorMsg);
+  };
+
   const handleVideoCompletion = async () => {
     if (!video) return;
     try {
-      // Module ID 'video_completion', 1 point per video (backend multiplies by 50)
       const response = await gameAPI.submitResult(
         'video_completion',
         1,
@@ -53,13 +60,8 @@ const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate }) => {
     }
   };
 
-  const onPlayerReady = (event) => {
-    setPlayerRef(event.target);
-  };
-
   const extractVideoId = (url) => {
     if (!url) return null;
-    // Handle both youtube.com and youtu.be, and raw IDs if passed
     if (url.length === 11) return url;
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
     return match ? match[1] : null;
@@ -86,12 +88,13 @@ const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate }) => {
         background: 'rgba(0,0,0,0.5)',
         borderRadius: 4
       }}>
-        <Typography color="text.secondary">Select a video to start watching</Typography>
+        <Typography color="text.secondary">Select a video from the playlist below to start watching</Typography>
       </Box>
     );
   }
 
   const videoId = video.video_id || extractVideoId(video.url);
+  const directUrl = video.url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : null);
 
   return (
     <Box sx={{
@@ -101,24 +104,38 @@ const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate }) => {
       background: '#000'
     }}>
       <Box>
-        {videoId ? (
+        {videoId && !videoError ? (
           <YouTube
             videoId={videoId}
             opts={opts}
-            onReady={onPlayerReady}
+            onError={handleVideoError}
             onStateChange={handleVideoStateChange}
             style={{ width: '100%' }}
           />
         ) : (
-          <Alert severity="error">Invalid Video URL</Alert>
+          <Box sx={{ p: 4, textAlign: 'center', bgcolor: '#1e293b', minHeight: '360px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <Alert severity="warning" sx={{ mb: 3, maxWidth: 600 }}>
+              {videoError || "Invalid Video ID or URL"}
+            </Alert>
+            <Typography variant="body1" color="white" mb={2}>
+              Don't worry! You can watch this video directly on YouTube or select another recommended video below.
+            </Typography>
+            {directUrl && (
+              <a href={directUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                <Box component="span" sx={{ px: 3, py: 1.5, bgcolor: '#ef4444', color: 'white', borderRadius: 2, fontWeight: 700, display: 'inline-block' }}>
+                  Open Direct YouTube Link
+                </Box>
+              </a>
+            )}
+          </Box>
         )}
 
         <Box sx={{ p: 3, background: 'rgba(20, 20, 35, 0.9)' }}>
           <Typography variant="h5" sx={{ color: 'white', fontWeight: 700, mb: 1 }}>
-            {video.title}
+            {video.title || 'Educational Lecture Video'}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {video.description}
+            {video.description || 'Watch the lecture carefully to prepare for the lab challenge and exercises.'}
           </Typography>
           {xpEarned && (
             <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>

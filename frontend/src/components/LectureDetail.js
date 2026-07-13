@@ -42,6 +42,11 @@ const LectureDetail = () => {
   const [gateResult, setGateResult] = useState(null);
   const [loopStatus, setLoopStatus] = useState(null);
 
+  // Interactive Virtual Lab State
+  const [labActivity, setLabActivity] = useState(null);
+  const [labLoading, setLabLoading] = useState(false);
+  const [labResult, setLabResult] = useState(null);
+
   useEffect(() => {
     const fetchLectureData = async () => {
       try {
@@ -62,13 +67,41 @@ const LectureDetail = () => {
             setMastery(masteryRes.data.mastery);
           } catch (e) { }
 
-          const searchQuery = `${lectureData.subject} ${lectureData.topic}`;
-          const videoRes = await contentAPI.search(searchQuery, lectureData.subject);
-          const fetchedVideos = videoRes.data.results || [];
-          setVideos(fetchedVideos);
+          let lectureVideos = [];
+          if (lectureData.video_ids && Array.isArray(lectureData.video_ids) && lectureData.video_ids.length > 0) {
+            lectureVideos = lectureData.video_ids.map((vid, idx) => ({
+              video_id: vid,
+              title: `${lectureData.title} (Part ${idx + 1})`,
+              description: lectureData.description || `Session video for ${lectureData.topic}`,
+              url: `https://www.youtube.com/watch?v=${vid}`,
+              source: 'lecture_saved',
+              subject_focus: lectureData.subject
+            }));
+          }
 
-          if (fetchedVideos.length > 0) {
-            setActiveVideo(fetchedVideos[0]);
+          let fetchedVideos = [];
+          try {
+            const searchQuery = `${lectureData.subject} ${lectureData.topic}`;
+            const videoRes = await contentAPI.search(searchQuery, lectureData.subject);
+            fetchedVideos = videoRes.data.results || [];
+          } catch (err) {
+            console.error("Error searching extra videos:", err);
+          }
+
+          // Combine saved lecture videos with search recommendations, deduplicating by video_id
+          const seenIds = new Set();
+          const allVideos = [];
+          for (const v of [...lectureVideos, ...fetchedVideos]) {
+            const vid = v.video_id || v.url;
+            if (vid && !seenIds.has(vid)) {
+              seenIds.add(vid);
+              allVideos.push(v);
+            }
+          }
+
+          setVideos(allVideos);
+          if (allVideos.length > 0) {
+            setActiveVideo(allVideos[0]);
           }
         }
       } catch (error) {
@@ -123,6 +156,33 @@ const LectureDetail = () => {
   };
   const handleGateNext = () => { setGateOpen(false); setGateResult(null); };
 
+  const handleLaunchLab = async () => {
+    setLabLoading(true);
+    setLabResult(null);
+    try {
+      const type = lecture?.subject?.includes("CS") ? 'coding' : 'lab';
+      const videoContext = lecture ? { title: lecture.title, description: lecture.description } : null;
+      const res = await gameAPI.generateActivity(lecture?.subject, lecture?.topic, type, videoContext);
+      setLabActivity(res.data.activity);
+    } catch (err) {
+      console.error("Failed to generate lab activity:", err);
+    } finally {
+      setLabLoading(false);
+    }
+  };
+
+  const handleLabSubmit = async (answer) => {
+    try {
+      const res = await gameAPI.submitActivity(labActivity.challenge_id, answer, 0);
+      setLabResult(res.data.result);
+      if (res.data.result?.is_correct && mastery) {
+        setMastery({ ...mastery, proficiency: res.data.result.new_proficiency, state: res.data.result.mastery_state });
+      }
+    } catch (err) {
+      console.error("Error submitting lab answer:", err);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -157,26 +217,76 @@ const LectureDetail = () => {
               borderBottom: 'none',
               display: 'flex',
               alignItems: 'center',
-              gap: 1
+              gap: 1,
+              bgcolor: '#f8fafc'
             }}>
               <PlayCircleOutlineIcon fontSize="small" sx={{ color: '#2563eb' }} />
-              <Typography variant="body2" sx={{ color: '#2563eb', fontWeight: 600 }}>Lecture 1: Introduction to Enterpreneurship</Typography>
-              <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto' }}>• week-01</Typography>
+              <Typography variant="body2" sx={{ color: '#2563eb', fontWeight: 600 }}>
+                {lecture?.title || 'Interactive Lecture Session'} — {lecture?.topic || ''}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto' }}>• {lecture?.subject || 'FocusLearner'}</Typography>
             </Box>
 
             {/* Video Player */}
             <Box sx={{
               borderRadius: 0,
-              borderBottomLeftRadius: 12,
-              borderBottomRightRadius: 12,
+              borderBottomLeftRadius: videos.length > 1 ? 0 : 12,
+              borderBottomRightRadius: videos.length > 1 ? 0 : 12,
               overflow: 'hidden',
               border: '1px solid #e2e8f0',
               bgcolor: '#000',
               position: 'relative',
-              mb: 4
+              mb: videos.length > 1 ? 0 : 4
             }}>
               <VideoPlayer video={activeVideo} onTimeUpdate={setCurrentTime} />
             </Box>
+
+            {/* Interactive Video Playlist Bar */}
+            {videos.length > 1 && (
+              <Box sx={{
+                p: 2,
+                border: '1px solid #e2e8f0',
+                borderTop: 'none',
+                borderBottomLeftRadius: 12,
+                borderBottomRightRadius: 12,
+                bgcolor: '#f8fafc',
+                mb: 4
+              }}>
+                <Typography variant="caption" fontWeight={700} color="#475569" display="block" mb={1.5}>
+                  PLAYLIST & RECOMMENDED LECTURES ({videos.length})
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 0.5 }}>
+                  {videos.map((v, idx) => {
+                    const isSelected = activeVideo?.video_id === v.video_id || activeVideo?.url === v.url;
+                    return (
+                      <Card
+                        key={idx}
+                        onClick={() => setActiveVideo(v)}
+                        sx={{
+                          minWidth: 200,
+                          maxWidth: 240,
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          border: isSelected ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                          bgcolor: isSelected ? '#eff6ff' : '#ffffff',
+                          transition: 'all 0.2s',
+                          '&:hover': { borderColor: '#3b82f6', transform: 'translateY(-2px)' }
+                        }}
+                      >
+                        <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                          <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ color: isSelected ? '#1e40af' : '#0f172a' }}>
+                            {idx + 1}. {v.title}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" noWrap display="block">
+                            {v.channel || v.source || 'YouTube'}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </Box>
+              </Box>
+            )}
 
             {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: '#e2e8f0', mb: 3 }}>
@@ -191,21 +301,55 @@ const LectureDetail = () => {
             {/* Tab Content */}
             <Box>
               {activeTab === 0 && (
-                <Box p={4} sx={{ border: '1px dashed #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center', mt: 2 }}>
-                  <ScienceIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 2 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#475569', mb: 1 }}>Interactive Lab Booting Up...</Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    The containerized practice environment for this session is currently being compiled. Check back soon!
-                  </Typography>
+                <Box sx={{ mt: 2 }}>
+                  {!labActivity ? (
+                    <Box p={4} sx={{ border: '1px solid #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center' }}>
+                      <ScienceIcon sx={{ fontSize: 48, color: '#3b82f6', mb: 2 }} />
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>
+                        Interactive AI Virtual Lab: {lecture?.topic}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#64748b', mb: 3, maxWidth: 600, mx: 'auto' }}>
+                        Launch a dynamic, problem-driven practice challenge tailored specifically to your current session topic and video context.
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        onClick={handleLaunchLab}
+                        disabled={labLoading}
+                        startIcon={labLoading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
+                        sx={{ bgcolor: '#2563eb', px: 4, py: 1.5, borderRadius: 3, fontWeight: 700 }}
+                      >
+                        {labLoading ? 'Generating Virtual Lab...' : 'Launch Lab Challenge'}
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" fontWeight="700" color="#0f172a">
+                          Active Lab: {labActivity.title || lecture?.topic}
+                        </Typography>
+                        <Button variant="outlined" size="small" onClick={() => { setLabActivity(null); setLabResult(null); }}>
+                          Reset Lab
+                        </Button>
+                      </Box>
+                      {labResult && (
+                        <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 2, borderRadius: 2 }}>
+                          <Typography fontWeight="700">{labResult.is_correct ? "Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
+                          <Typography variant="body2">{labResult.feedback}</Typography>
+                        </Alert>
+                      )}
+                      <ActivityView activity={labActivity} onSubmit={handleLabSubmit} />
+                    </Box>
+                  )}
                 </Box>
               )}
               {activeTab === 1 && (
-                <Box p={4} sx={{ border: '1px dashed #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center', mt: 2 }}>
-                  <SportsEsportsIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 2 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#475569', mb: 1 }}>Gamified Reinforcement Scaling...</Typography>
-                  <Typography variant="body2" sx={{ color: '#64748b' }}>
-                    The game lab modules for this topic are currently syncing telemetry. Check back soon!
+                <Box sx={{ mt: 2, border: '1px solid #e2e8f0', borderRadius: 3, p: 2, bgcolor: '#ffffff' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SportsEsportsIcon color="primary" /> Gamified Learning Arena: {lecture?.subject || 'General'}
                   </Typography>
+                  <Box sx={{ minHeight: '500px' }}>
+                    <GameLab embedded={true} />
+                  </Box>
                 </Box>
               )}
               {activeTab === 2 && (

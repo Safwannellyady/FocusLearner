@@ -130,40 +130,77 @@ def delete_material(material_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 import requests
+import urllib.parse
+import re
 
 @material_routes.route('/search_web', methods=['GET'])
 @token_required
 def search_web_results():
-    """Retrieve search results from Wikipedia API (Zero-dependency & no API keys)"""
+    """Retrieve multi-source educational search results (Wikipedia, OpenAlex Academic, and DuckDuckGo)"""
     query = request.args.get('search', '')
     if not query:
         return jsonify({'results': []}), 200
         
+    results = []
+    encoded_query = urllib.parse.quote(query)
+    
+    # 1. Wikipedia Encyclopedia Query
     try:
-        import urllib.parse
-        encoded_query = urllib.parse.quote(query)
-        url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={encoded_query}&utf8=&format=json&srlimit=5"
-        response = requests.get(url)
-        data = response.json()
-        
-        results = []
-        if 'query' in data and 'search' in data['query']:
-            import re
-            for item in data['query']['search']:
-                # Clean up the HTML span tags that Wikipedia injects around matched text in snippets
+        wiki_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={encoded_query}&utf8=&format=json&srlimit=4"
+        wiki_res = requests.get(wiki_url, timeout=4).json()
+        if 'query' in wiki_res and 'search' in wiki_res['query']:
+            for item in wiki_res['query']['search']:
                 snippet = re.sub(r'<[^>]+>', '', item.get('snippet', ''))
-                
-                # Build canonical wikipedia link
                 title_url = urllib.parse.quote(item.get('title', '').replace(' ', '_'))
-                
                 results.append({
-                    'title': item.get('title') + ' (Wikipedia)',
+                    'title': item.get('title'),
+                    'source': 'Wikipedia',
                     'link': f"https://en.wikipedia.org/wiki/{title_url}",
-                    'snippet': snippet + '...'
+                    'snippet': snippet.strip() + '...'
                 })
-                
-        return jsonify({'results': results}), 200
     except Exception as e:
-        current_app.logger.error(f'Error performing wikipedia search: {e}')
-        return jsonify({'error': 'Internal server error during knowledge search'}), 500
+        current_app.logger.error(f'Error searching Wikipedia: {e}')
+        
+    # 2. OpenAlex Academic Research Query
+    try:
+        alex_url = f"https://api.openalex.org/works?search={encoded_query}&per_page=3"
+        alex_res = requests.get(alex_url, timeout=4).json()
+        if 'results' in alex_res:
+            for work in alex_res['results']:
+                title = work.get('title')
+                link = work.get('doi') or work.get('landing_page_url')
+                year = work.get('publication_year', '')
+                if title and link:
+                    results.append({
+                        'title': f"{title} ({year})" if year else title,
+                        'source': 'OpenAlex Academic',
+                        'link': link,
+                        'snippet': f"Academic research paper / publication (Citations: {work.get('cited_by_count', 0)})"
+                    })
+    except Exception as e:
+        current_app.logger.error(f'Error searching OpenAlex: {e}')
+
+    # 3. DuckDuckGo Instant Answers Query
+    try:
+        ddg_url = f"https://api.duckduckgo.com/?q={encoded_query}&format=json&no_html=1&skip_disambig=1"
+        ddg_res = requests.get(ddg_url, timeout=4).json()
+        if ddg_res.get('AbstractText') and ddg_res.get('AbstractURL'):
+            results.append({
+                'title': ddg_res.get('Heading', query),
+                'source': 'DuckDuckGo Web',
+                'link': ddg_res.get('AbstractURL'),
+                'snippet': ddg_res.get('AbstractText')
+            })
+        for topic in ddg_res.get('RelatedTopics', [])[:2]:
+            if isinstance(topic, dict) and topic.get('Text') and topic.get('FirstURL'):
+                results.append({
+                    'title': topic.get('Text', '').split(' - ')[0][:80],
+                    'source': 'DuckDuckGo Web',
+                    'link': topic.get('FirstURL'),
+                    'snippet': topic.get('Text', '')[:200] + '...'
+                })
+    except Exception as e:
+        current_app.logger.error(f'Error searching DuckDuckGo: {e}')
+        
+    return jsonify({'results': results}), 200
 

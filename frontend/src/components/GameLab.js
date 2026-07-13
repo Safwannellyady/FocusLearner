@@ -25,7 +25,7 @@ import { gameAPI } from '../services/api';
 import ActivityView from './ActivityView';
 import Leaderboard from './Leaderboard';
 
-const GameLab = () => {
+const GameLab = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -35,18 +35,16 @@ const GameLab = () => {
   const [activityOpen, setActivityOpen] = useState(false);
   const [result, setResult] = useState(null);
 
-  useEffect(() => {
-    // Initial load logic if needed
-  }, []);
-
-  const handleStartChallenge = async (subject, type = 'auto') => {
+  const handleStartChallenge = async (subject, type = 'auto', topic = 'General Practice') => {
     setLoading(true);
+    setResult(null);
     try {
-      // 1. Generate Activity via AI
-      const response = await gameAPI.generateActivity(subject, "General Practice", type);
-      if (response.data.activity) {
-        setActiveActivity({ ...response.data.activity, subject });
+      const response = await gameAPI.generateChallenge(type, subject, topic);
+      if (response.data.challenge) {
+        setActiveActivity(response.data.challenge);
         setActivityOpen(true);
+      } else {
+        alert("Could not load challenge.");
       }
     } catch (error) {
       console.error("Failed to generate activity", error);
@@ -73,19 +71,21 @@ const GameLab = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box display="flex" alignItems="center" mb={4}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/')}
-          sx={{ mr: 2, color: 'text.secondary' }}
-        >
-          Dashboard
-        </Button>
-        <Typography variant="h4" fontWeight="bold" sx={{ color: 'white' }}>
-          Gamified <span style={{ color: '#a78bfa' }}>Learning Lab</span>
-        </Typography>
-      </Box>
+    <Container maxWidth={embedded ? false : "xl"} disableGutters={embedded} sx={{ mt: embedded ? 1 : 4, mb: embedded ? 1 : 4 }}>
+      {!embedded && (
+        <Box display="flex" alignItems="center" mb={4}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/')}
+            sx={{ mr: 2, color: 'text.secondary' }}
+          >
+            Dashboard
+          </Button>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: 'white' }}>
+            Gamified <span style={{ color: '#a78bfa' }}>Learning Lab</span>
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ borderBottom: 1, borderColor: 'rgba(255,255,255,0.1)', mb: 4 }}>
         <Tabs
