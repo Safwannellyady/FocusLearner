@@ -122,7 +122,8 @@ const LectureDetail = () => {
   };
   const handleQuizOptionClick = (q, opt) => {
     if (quizAnswers[q.id]) return; // Already answered
-    const isCorrect = opt === q.correct_answer;
+    const correctAns = q.correctAnswer || q.correct_answer;
+    const isCorrect = opt === correctAns;
     setQuizAnswers({ ...quizAnswers, [q.id]: { selected: opt, isCorrect } });
   };
 
@@ -170,6 +171,15 @@ const LectureDetail = () => {
       setLabLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (lecture && activeTab === 0 && !labActivity && !labLoading) {
+      handleLaunchLab();
+    }
+    if (lecture && activeTab === 2 && !quiz && !showQuiz) {
+      handleStartQuiz();
+    }
+  }, [activeTab, lecture]);
 
   const handleLabSubmit = async (answer) => {
     try {
@@ -383,12 +393,13 @@ const LectureDetail = () => {
                                   <Typography variant="subtitle1" fontWeight={600}>{index + 1}. {q.question}</Typography>
                                   <Grid container spacing={1} sx={{ mt: 1 }}>
                                     {q.options.map(opt => {
+                                      const correctAns = q.correctAnswer || q.correct_answer;
                                       let btnColor = '#0f172a';
                                       let btnBgcolor = 'transparent';
                                       let borderColor = 'rgba(0, 0, 0, 0.23)';
 
                                       if (answered) {
-                                        if (opt === q.correct_answer) {
+                                        if (opt === correctAns) {
                                           btnBgcolor = '#22c55e'; // Green
                                           btnColor = '#fff';
                                           borderColor = '#22c55e';
@@ -405,7 +416,7 @@ const LectureDetail = () => {
                                             variant={answered ? "contained" : "outlined"}
                                             fullWidth
                                             size="small"
-                                            disabled={!!answered && opt !== q.correct_answer && answered.selected !== opt}
+                                            disabled={!!answered && opt !== correctAns && answered.selected !== opt}
                                             onClick={() => handleQuizOptionClick(q, opt)}
                                             sx={{
                                               justifyContent: "flex-start",

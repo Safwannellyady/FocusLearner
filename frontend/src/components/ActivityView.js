@@ -187,55 +187,110 @@ const CodingChallenge = ({ activity, onSubmit }) => {
 
 // 2. Virtual Lab Component
 const VirtualLab = ({ activity, onSubmit }) => {
-    const [step, setStep] = useState(0);
     const [selectedOption, setSelectedOption] = useState('');
+    const [completedSteps, setCompletedSteps] = useState([]);
 
-    const handleNext = () => {
-        if (step < (activity.steps?.length || 0) - 1) {
-            setStep(step + 1);
+    const toggleStep = (index) => {
+        if (completedSteps.includes(index)) {
+            setCompletedSteps(completedSteps.filter(i => i !== index));
         } else {
-            // Show quiz
-            setStep(99);
+            setCompletedSteps([...completedSteps, index]);
         }
     };
 
     return (
-        <Paper sx={{ p: 3, bgcolor: '#0e1116', color: 'white' }}>
+        <Paper sx={{ p: 3, bgcolor: '#0f172a', color: 'white', borderRadius: 3, border: '1px solid #334155' }}>
             <Box display="flex" alignItems="center" mb={2}>
-                <ScienceIcon sx={{ color: '#2196f3', mr: 1 }} />
-                <Typography variant="h5">{activity.title}</Typography>
+                <ScienceIcon sx={{ color: '#38bdf8', mr: 1, fontSize: 28 }} />
+                <Typography variant="h6" fontWeight={700} color="#fff">{activity.title || 'AI Interactive Lab'}</Typography>
             </Box>
 
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-                {activity.scenario}
-            </Typography>
-
-            {step !== 99 ? (
-                <Box textAlign="center" py={5} sx={{ bgcolor: 'rgba(33, 150, 243, 0.1)', borderRadius: 2 }}>
-                    <Typography variant="h4" gutterBottom>{activity.steps?.[step]}</Typography>
-                    <Typography variant="caption" display="block">Step {step + 1} of {activity.steps?.length}</Typography>
-                    <Button variant="contained" sx={{ mt: 3 }} onClick={handleNext}>Perform Action</Button>
-                </Box>
-            ) : (
-                <Box>
-                    <Typography variant="h6" gutterBottom>{activity.question}</Typography>
-                    <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
-                        {activity.options?.map((opt) => (
-                            <FormControlLabel key={opt} value={opt} control={<Radio sx={{ color: 'white' }} />} label={opt} />
-                        ))}
-                    </RadioGroup>
-
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ mt: 2 }}
-                        onClick={() => onSubmit(selectedOption)}
-                        disabled={!selectedOption}
-                    >
-                        Submit Observation
-                    </Button>
+            {activity.scenario && (
+                <Box sx={{ p: 2, mb: 3, bgcolor: '#1e293b', borderRadius: 2, borderLeft: '4px solid #38bdf8' }}>
+                    <Typography variant="caption" fontWeight={700} color="#38bdf8" display="block" mb={0.5}>LAB SCENARIO</Typography>
+                    <Typography variant="body2" sx={{ color: '#e2e8f0', lineHeight: 1.6 }}>
+                        {activity.scenario}
+                    </Typography>
                 </Box>
             )}
+
+            {activity.steps && activity.steps.length > 0 && (
+                <Box mb={3}>
+                    <Typography variant="caption" fontWeight={700} color="#94a3b8" display="block" mb={1}>
+                        LABORATORY PROTOCOL & STEPS ({completedSteps.length}/{activity.steps.length} COMPLETED)
+                    </Typography>
+                    <Grid container spacing={1}>
+                        {activity.steps.map((stepText, idx) => {
+                            const isDone = completedSteps.includes(idx);
+                            return (
+                                <Grid item xs={12} key={idx}>
+                                    <Box
+                                        onClick={() => toggleStep(idx)}
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: 2,
+                                            cursor: 'pointer',
+                                            bgcolor: isDone ? 'rgba(16, 185, 129, 0.15)' : '#1e293b',
+                                            border: isDone ? '1px solid #10b981' : '1px solid #334155',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            transition: 'all 0.2s',
+                                            '&:hover': { borderColor: '#38bdf8' }
+                                        }}
+                                    >
+                                        <Box sx={{
+                                            width: 24,
+                                            height: 24,
+                                            borderRadius: '50%',
+                                            bgcolor: isDone ? '#10b981' : '#334155',
+                                            color: '#fff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            mr: 1.5,
+                                            flexShrink: 0
+                                        }}>
+                                            {isDone ? '✓' : idx + 1}
+                                        </Box>
+                                        <Typography variant="body2" sx={{ color: isDone ? '#10b981' : '#e2e8f0', fontWeight: isDone ? 600 : 400 }}>
+                                            {stepText}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                            );
+                        })}
+                    </Grid>
+                </Box>
+            )}
+
+            <Box sx={{ p: 2.5, bgcolor: '#1e293b', borderRadius: 2, border: '1px solid #334155' }}>
+                <Typography variant="subtitle2" fontWeight={700} color="#f8fafc" gutterBottom>
+                    LAB OBSERVATION ASSESSMENT: {activity.question || 'Select the correct conclusion:'}
+                </Typography>
+                <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)} sx={{ mt: 1 }}>
+                    {activity.options?.map((opt) => (
+                        <FormControlLabel
+                            key={opt}
+                            value={opt}
+                            control={<Radio sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#38bdf8' } }} />}
+                            label={<Typography variant="body2" sx={{ color: selectedOption === opt ? '#fff' : '#cbd5e1', fontWeight: selectedOption === opt ? 600 : 400 }}>{opt}</Typography>}
+                            sx={{ mb: 1, p: 1, borderRadius: 1.5, bgcolor: selectedOption === opt ? 'rgba(56, 189, 248, 0.1)' : 'transparent', border: selectedOption === opt ? '1px solid #38bdf8' : '1px solid transparent' }}
+                        />
+                    ))}
+                </RadioGroup>
+
+                <Button
+                    variant="contained"
+                    fullWidth
+                    sx={{ mt: 2, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 700, py: 1.2 }}
+                    onClick={() => onSubmit(selectedOption)}
+                    disabled={!selectedOption}
+                >
+                    Submit Lab Observation & Verify
+                </Button>
+            </Box>
         </Paper>
     );
 };
