@@ -9,21 +9,21 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import nltk
 
-# Download required NLTK data
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt', quiet=True)
+# Download required NLTK data safely without raising OSError or LookupError
+for nltk_pkg in ['punkt', 'punkt_tab', 'stopwords']:
+    try:
+        nltk.data.find(f'tokenizers/{nltk_pkg}' if 'punkt' in nltk_pkg else f'corpora/{nltk_pkg}')
+    except (LookupError, OSError, Exception):
+        try:
+            nltk.download(nltk_pkg, quiet=True)
+        except Exception as e:
+            print(f"Warning: Could not download NLTK package {nltk_pkg}: {e}")
 
-try:
-    nltk.data.find('tokenizers/punkt_tab')
-except LookupError:
-    nltk.download('punkt_tab', quiet=True)
-
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords', quiet=True)
+def safe_word_tokenize(text: str) -> List[str]:
+    try:
+        return word_tokenize(text)
+    except Exception:
+        return re.findall(r'\b\w+\b', text)
 
 
 class ContentFilter:
@@ -50,7 +50,10 @@ class ContentFilter:
     ]
     
     def __init__(self):
-        self.stop_words = set(stopwords.words('english'))
+        try:
+            self.stop_words = set(stopwords.words('english'))
+        except Exception:
+            self.stop_words = {'the', 'a', 'an', 'in', 'on', 'of', 'and', 'or', 'for', 'to', 'with', 'by', 'is', 'are', 'was', 'were'}
     
     def filter_content(self, title: str, description: str = "", tags: List[str] = None, subject_context: str = None, topic_context: str = None) -> Tuple[bool, str]:
         """
@@ -117,6 +120,23 @@ class ContentFilter:
         
         return score
     
+    def _is_exception(self, keyword: str, text: str, subject: str = None) -> bool:
+        """Check if keyword is an exception in educational context"""
+        # Game theory is educational
+        if keyword in ['game', 'gaming'] and 'game theory' in text:
+            return True
+        
+        # Computer science/game development
+        if keyword in ['game', 'gaming'] and any(term in text for term in ['development', 'programming', 'coding', 'engine', 'unity', 'unreal']):
+            return True
+            
+        # Music in ECE/Physics (acoustics, signal processing)
+        if keyword in ['music video', 'song'] and subject and any(s in subject.lower() for s in ['physics', 'engineering', 'ece', 'signal']):
+             if any(term in text for term in ['frequency', 'fourier', 'wave', 'acoustic', 'signal']):
+                 return True
+                 
+        return False
+
     def _has_distraction_pattern(self, title: str) -> bool:
         """Check for specific distraction patterns in title"""
         title_lower = title.lower()
@@ -146,7 +166,7 @@ class ContentFilter:
         # 2. Topic Relevance (Stricter check)
         if topic:
             # Tokenize topic and remove stop words
-            topic_words = [w.lower() for w in word_tokenize(topic) if w.lower() not in self.stop_words and len(w) > 2]
+            topic_words = [w.lower() for w in safe_word_tokenize(topic) if w.lower() not in self.stop_words and len(w) > 2]
             
             if not topic_words:
                 return None # Topic was too generic or short
