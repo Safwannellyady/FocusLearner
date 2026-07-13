@@ -358,7 +358,7 @@ const LectureDetail = () => {
                     <SportsEsportsIcon color="primary" /> Gamified Learning Arena: {lecture?.subject || 'General'}
                   </Typography>
                   <Box sx={{ minHeight: '500px' }}>
-                    <GameLab embedded={true} />
+                    <GameLab embedded={true} subject={lecture?.subject} topic={lecture?.topic} />
                   </Box>
                 </Box>
               )}

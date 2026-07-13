@@ -25,7 +25,7 @@ import { gameAPI } from '../services/api';
 import ActivityView from './ActivityView';
 import Leaderboard from './Leaderboard';
 
-const GameLab = ({ embedded = false }) => {
+const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const GameLab = ({ embedded = false }) => {
   const [activityOpen, setActivityOpen] = useState(false);
   const [result, setResult] = useState(null);
 
-  const handleStartChallenge = async (subject, type = 'auto', topic = 'General Practice') => {
+  const handleStartChallenge = async (subject, type = 'auto', topic = propTopic || 'General Practice') => {
     setLoading(true);
     setResult(null);
     try {
@@ -106,12 +106,12 @@ const GameLab = ({ embedded = false }) => {
           <Grid item xs={12} md={8}>
             <Typography variant="h5" color="white" gutterBottom mb={3}>choose Your Path</Typography>
             <Grid container spacing={3}>
-              {['CS/Algorithms', 'Science/Physics', 'Language/English'].map((subject, idx) => (
+              {[propSubject ? `${propSubject}/${propTopic || 'Session Core'}` : null, 'CS/Algorithms', 'Science/Physics', 'Language/English'].filter(Boolean).map((subject, idx) => (
                 <Grid item xs={12} sm={6} key={subject}>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Card sx={{
-                      background: 'linear-gradient(135deg, rgba(30,30,50,0.9) 0%, rgba(20,20,30,0.9) 100%)',
-                      border: '1px solid rgba(255,255,255,0.1)',
+                      background: idx === 0 && propSubject ? 'linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(30,58,138,0.4) 100%)' : 'linear-gradient(135deg, rgba(30,30,50,0.9) 0%, rgba(20,20,30,0.9) 100%)',
+                      border: idx === 0 && propSubject ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
                       borderRadius: 3,
                       position: 'relative',
                       overflow: 'visible'
@@ -120,7 +120,7 @@ const GameLab = ({ embedded = false }) => {
                         position: 'absolute',
                         top: -10,
                         right: 20,
-                        background: '#a78bfa',
+                        background: idx === 0 && propSubject ? '#38bdf8' : '#a78bfa',
                         color: '#000',
                         fontWeight: 'bold',
                         px: 1.5,
@@ -128,24 +128,25 @@ const GameLab = ({ embedded = false }) => {
                         borderRadius: 1,
                         fontSize: '0.75rem'
                       }}>
-                        AI GENERATED
+                        {idx === 0 && propSubject ? 'ACTIVE SESSION' : 'AI GENERATED'}
                       </Box>
                       <CardContent sx={{ p: 4 }}>
                         <Typography variant="h6" color="white" gutterBottom>
-                          {subject.split('/')[1]} Challenge
+                          {subject.includes('/') ? subject.split('/')[1] : subject} Challenge
                         </Typography>
                         <Typography variant="body2" color="text.secondary" mb={3}>
-                          {subject.includes('CS') ? 'Solve coding problems with real-time testing.' :
+                          {idx === 0 && propSubject ? `Personalized AI challenge synced with your active lesson: ${propTopic || propSubject}.` :
+                            subject.includes('CS') ? 'Solve coding problems with real-time testing.' :
                             subject.includes('Science') ? 'Perform virtual experiments in a simulated lab.' :
                               'Master vocabulary with interactive puzzles.'}
                         </Typography>
                         <Button
                           variant="contained"
                           fullWidth
-                          onClick={() => handleStartChallenge(subject)}
+                          onClick={() => handleStartChallenge(idx === 0 && propSubject ? propSubject : subject, 'auto', idx === 0 && propSubject ? propTopic : 'General Practice')}
                           disabled={loading}
                           sx={{
-                            background: 'linear-gradient(90deg, #7c3aed 0%, #6366f1 100%)',
+                            background: idx === 0 && propSubject ? 'linear-gradient(90deg, #0284c7 0%, #2563eb 100%)' : 'linear-gradient(90deg, #7c3aed 0%, #6366f1 100%)',
                             textTransform: 'none',
                             py: 1.5
                           }}
