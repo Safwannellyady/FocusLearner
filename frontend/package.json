@@ -10,6 +10,8 @@
     "@mui/material": "^5.18.0",
     "@react-oauth/google": "^0.11.1",
     "axios": "^1.6.2",
+    "baseline-browser-mapping": "^2.10.43",
+    "caniuse-lite": "^1.0.30001805",
     "framer-motion": "^12.23.26",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

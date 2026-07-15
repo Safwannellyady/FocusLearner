@@ -17,18 +17,33 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import GamesIcon from '@mui/icons-material/Games';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import PaletteIcon from '@mui/icons-material/Palette';
-import { motion } from 'framer-motion';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import ShieldIcon from '@mui/icons-material/Shield';
+import BoltIcon from '@mui/icons-material/Bolt';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { focusAPI } from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [currentSession, setCurrentSession] = useState(null);
-  const [userId] = useState(1); // In production, get from auth context
+  const [userId] = useState(1);
   
-  // Theme aesthetic option: 'clean' (Modern Clean), 'glass' (Glassmorphism), 'cyber' (Cyber Neon)
+  // Theme aesthetic option: 'cyber' (Cyber Neon Obsidian), 'glass' (Glass Aurora), 'clean' (Modern Light)
   const [designTheme, setDesignTheme] = useState(() => {
-    return localStorage.getItem('fl_design_theme') || 'clean';
+    return localStorage.getItem('fl_design_theme') || 'cyber';
   });
+
+  // Scroll Progress Bar Telemetry
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  // Magnetic Cursor Spotlight state across cards
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     loadCurrentSession();
@@ -50,302 +65,426 @@ const Dashboard = () => {
     localStorage.setItem('fl_design_theme', theme);
   };
 
-  const getThemeCardClass = () => {
-    if (designTheme === 'glass') return 'theme-card-glass interactive-card';
-    if (designTheme === 'cyber') return 'theme-card-cyber interactive-card';
-    return 'theme-card-clean interactive-card';
+  const getCardStyleClass = () => {
+    if (designTheme === 'cyber') return 'epic-card epic-card-cyber';
+    if (designTheme === 'glass') return 'epic-card';
+    return 'epic-card';
+  };
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5, mb: 6, transition: 'all 0.4s ease' }}>
-      {/* Top Header & Design Theme Switcher */}
-      <motion.div 
-        initial={{ opacity: 0, y: -15 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        transition={{ duration: 0.5 }}
-      >
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', mb: 4, pb: 3, borderBottom: '1px solid #e2e8f0', gap: 2 }}>
-          <Box>
-            <Typography variant="h3" component="h1" sx={{ fontWeight: 800, background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 0.5 }}>
-              FocusLearner Pro
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
-              Unified, Contextual, and Gamified Learning Ecosystem
-            </Typography>
-          </Box>
+    <Box className="epic-content-layer">
+      {/* Top Telemetry Scroll Progress Bar */}
+      <motion.div
+        style={{
+          scaleX,
+          position: 'fixed',
+          top: 76,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #f72585 100%)',
+          transformOrigin: '0%',
+          zIndex: 1200,
+          boxShadow: '0 0 15px rgba(0, 242, 254, 0.8)'
+        }}
+      />
 
-          {/* Multiple Designs Theme Bar */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.8, bgcolor: designTheme === 'clean' ? '#f1f5f9' : 'rgba(30,41,59,0.7)', borderRadius: 20, border: '1px solid rgba(148,163,184,0.2)' }}>
-            <PaletteIcon fontSize="small" sx={{ color: '#6366f1', ml: 1 }} />
-            <Typography variant="caption" sx={{ fontWeight: 700, mr: 0.5, color: designTheme === 'clean' ? '#334155' : '#cbd5e1' }}>DESIGN STYLE:</Typography>
-            {[
-              { id: 'clean', label: 'Modern Clean', color: '#2563eb' },
-              { id: 'glass', label: 'Glass Aurora', color: '#8b5cf6' },
-              { id: 'cyber', label: 'Cyber Neon', color: '#06b6d4' }
-            ].map((t) => (
-              <Chip
-                key={t.id}
-                label={t.label}
-                size="small"
-                onClick={() => handleThemeChange(t.id)}
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  bgcolor: designTheme === t.id ? t.color : 'transparent',
-                  color: designTheme === t.id ? '#ffffff' : (designTheme === 'clean' ? '#64748b' : '#94a3b8'),
-                  boxShadow: designTheme === t.id ? `0 4px 12px ${t.color}40` : 'none',
-                  '&:hover': {
-                    bgcolor: designTheme === t.id ? t.color : 'rgba(148,163,184,0.15)',
-                    transform: 'scale(1.04)'
-                  }
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-      </motion.div>
+      {/* Background Matrix Grid */}
+      <Box className="epic-matrix-grid" />
 
-      {/* Active Focus Session Banner */}
-      {currentSession && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+      <Container maxWidth="xl" sx={{ pt: 6, pb: 12, px: { xs: 2, md: 5 } }}>
+        {/* Top Neural Telemetry HUD Bar */}
+        <motion.div 
+          initial={{ opacity: 0, y: -25 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Paper sx={{
-            p: 3.5,
-            mb: 4,
-            borderRadius: 4,
-            background: designTheme === 'cyber' 
-              ? 'linear-gradient(135deg, #0f172a 0%, #06b6d4 100%)'
-              : designTheme === 'glass'
-              ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.85) 0%, rgba(37, 99, 235, 0.85) 100%)'
-              : 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
-            color: 'white',
-            boxShadow: '0 12px 28px -6px rgba(37, 99, 235, 0.35)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { sm: 'center' },
-            justifyContent: 'space-between',
-            gap: 2
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' }, 
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'flex-start', md: 'center' }, 
+            gap: 3,
+            mb: 6, 
+            p: 3.5, 
+            borderRadius: var(--epic-radius-xl),
+            bgcolor: 'rgba(14, 18, 38, 0.65)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 20px 45px rgba(0, 0, 0, 0.6)'
           }}>
             <Box>
-              <Box display="flex" alignItems="center" gap={1.2} mb={1}>
-                <AutoAwesomeIcon sx={{ color: '#93c5fd', animation: 'pulse 2s infinite' }} />
-                <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: '0.08em', color: '#dbeafe' }}>
-                  ACTIVE FOCUS SESSION IN PROGRESS
-                </Typography>
+              <Box display="flex" alignItems="center" gap={1.5} mb={1.2}>
+                <span className="epic-badge-glow">
+                  <span className="pulse-dot-cyan" /> AI NEURAL CORE V3.4 ONLINE
+                </span>
+                <span className="epic-badge-purple">
+                  <ShieldIcon sx={{ fontSize: 14 }} /> DISTRACTION SHIELD ACTIVE
+                </span>
+                <span className="epic-badge-emerald">
+                  <EmojiEventsIcon sx={{ fontSize: 14 }} /> XP BOOST 2.5x
+                </span>
               </Box>
-              <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
-                Subject Focus: {currentSession.subject_focus}
+              <Typography variant="h2" component="h1" sx={{ 
+                fontWeight: 900, 
+                fontFamily: 'Outfit, sans-serif', 
+                fontSize: { xs: '2.2rem', md: '3.4rem' },
+                letterSpacing: '-0.04em',
+                lineHeight: 1.1,
+                mb: 1.2
+              }}>
+                FocusLearner <span className={designTheme === 'cyber' ? "epic-text-gradient-cyber" : "epic-text-gradient-cyan"}>Command Hub</span>
               </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>
-                Distraction-free environment actively locked on your current curriculum path.
+              <Typography variant="h6" sx={{ color: '#94a3b8', fontWeight: 500, fontFamily: 'Plus Jakarta Sans, sans-serif', maxWidth: 750, fontSize: '1.08rem', lineHeight: 1.6 }}>
+                High-performance, contextualized neural learning ecosystem engineered for total distraction-free mastery, interactive physics, and gamified evaluation.
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              onClick={() => navigate('/player')}
-              sx={{
-                bgcolor: '#ffffff',
-                color: '#1e40af',
-                fontWeight: 700,
-                px: 3,
-                py: 1.2,
-                borderRadius: 3,
-                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  bgcolor: '#f8fafc',
-                  transform: 'translateY(-2px) scale(1.02)',
-                  boxShadow: '0 6px 20px rgba(0,0,0,0.25)'
-                }
-              }}
-            >
-              Continue Learning →
-            </Button>
-          </Paper>
-        </motion.div>
-      )}
 
-      {/* Main Core Features Grid */}
-      <Grid container spacing={4} sx={{ mt: 1 }}>
-        {/* Card 1: Focus Lock */}
-        <Grid item xs={12} md={4}>
+            {/* Design Atmosphere Selector */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: { xs: 'flex-start', md: 'flex-end' },
+              gap: 1.2,
+              p: 2,
+              borderRadius: '20px',
+              bgcolor: 'rgba(3, 4, 11, 0.7)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.8)'
+            }}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <PaletteIcon sx={{ color: '#00f2fe', fontSize: 18 }} />
+                <Typography variant="caption" sx={{ fontWeight: 800, fontFamily: 'JetBrains Mono, monospace', color: '#cbd5e1', letterSpacing: '0.05em' }}>
+                  AESTHETIC PROTOCOL:
+                </Typography>
+              </Box>
+              <Box display="flex" gap={1}>
+                {[
+                  { id: 'cyber', label: '⚡ Cyber Obsidian', color: '#00f2fe' },
+                  { id: 'glass', label: '🌌 Aurora Glass', color: '#9d4edd' },
+                  { id: 'clean', label: '💎 Hyper Modern', color: '#4facfe' }
+                ].map((t) => (
+                  <Chip
+                    key={t.id}
+                    label={t.label}
+                    onClick={() => handleThemeChange(t.id)}
+                    sx={{
+                      fontWeight: 800,
+                      fontFamily: 'Outfit, sans-serif',
+                      fontSize: '0.82rem',
+                      px: 1,
+                      py: 2.2,
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      bgcolor: designTheme === t.id ? 'rgba(0, 242, 254, 0.2)' : 'transparent',
+                      color: designTheme === t.id ? '#ffffff' : '#64748b',
+                      border: designTheme === t.id ? `1.5px solid ${t.color}` : '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: designTheme === t.id ? `0 0 20px ${t.color}60` : 'none',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        color: '#ffffff',
+                        transform: 'scale(1.05)'
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        </motion.div>
+
+        {/* Live Holographic Active Session Cockpit Banner with Scroll Entrance */}
+        {currentSession && (
           <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.15 }}
-            whileHover={{ y: -6 }}
-            style={{ height: '100%' }}
+            initial={{ opacity: 0, scale: 0.94 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Card className={getThemeCardClass()} sx={{ borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 1 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 3,
-                  bgcolor: designTheme === 'cyber' ? 'rgba(6,182,212,0.15)' : 'rgba(37,99,235,0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2.5
-                }}>
-                  <LockIcon sx={{ fontSize: 32, color: designTheme === 'cyber' ? '#06b6d4' : '#2563eb' }} />
+            <Box sx={{
+              p: { xs: 3.5, md: 5 },
+              mb: 7,
+              borderRadius: var(--epic-radius-xl),
+              background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.18) 0%, rgba(157, 78, 221, 0.22) 100%)',
+              backdropFilter: 'blur(32px)',
+              border: '1.5px solid rgba(0, 242, 254, 0.5)',
+              boxShadow: '0 25px 60px -15px rgba(0, 242, 254, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              alignItems: { md: 'center' },
+              justifyContent: 'space-between',
+              gap: 4
+            }}>
+              {/* Animated Light Sweep Background */}
+              <Box sx={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '400px',
+                height: '400px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(0, 242, 254, 0.35) 0%, transparent 70%)',
+                filter: 'blur(50px)',
+                pointer-events: 'none'
+              }} />
+
+              <Box sx={{ zIndex: 2 }}>
+                <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                  <Box className="pulse-dot-cyan" />
+                  <Typography variant="overline" sx={{ fontWeight: 900, fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem', letterSpacing: '0.12em', color: '#00f2fe' }}>
+                    HOLOGRAPHIC FOCUS SESSION ACTIVE
+                  </Typography>
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>
-                  Focus Lock
+                <Typography variant="h3" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', fontSize: { xs: '2rem', md: '2.6rem' }, mb: 1.5, color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                  Locked Subject: <span style={{ color: '#00f2fe' }}>{currentSession.subject_focus}</span>
                 </Typography>
-                <Typography variant="body2" sx={{ color: designTheme === 'clean' ? '#64748b' : 'rgba(255,255,255,0.7)', lineHeight: 1.6, mb: 3 }}>
-                  Lock your focus on a specific subject to enable distraction-free learning. The system will filter out all non-educational distractions automatically.
+                <Typography variant="h6" sx={{ color: '#e2e8f0', fontWeight: 500, maxWidth: 680, lineHeight: 1.6 }}>
+                  Distraction filtering protocols are operating at peak efficiency. Jump directly back into your synchronized curriculum stream and virtual challenges.
                 </Typography>
-              </CardContent>
-              <Box sx={{ px: 3, pb: 3 }}>
+              </Box>
+
+              <Box sx={{ zIndex: 2, display: 'flex', gap: 2 }}>
                 <Button
-                  variant={designTheme === 'clean' ? 'contained' : 'outlined'}
-                  fullWidth
-                  onClick={() => navigate('/focus')}
-                  sx={{
-                    py: 1.2,
-                    borderRadius: 2.5,
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    bgcolor: designTheme === 'clean' ? '#2563eb' : 'transparent',
-                    borderColor: designTheme === 'cyber' ? '#06b6d4' : '#8b5cf6',
-                    color: designTheme === 'clean' ? '#fff' : (designTheme === 'cyber' ? '#06b6d4' : '#c4b5fd'),
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: designTheme === 'clean' ? '#1d4ed8' : (designTheme === 'cyber' ? 'rgba(6,182,212,0.15)' : 'rgba(139,92,246,0.15)'),
-                      transform: 'scale(1.02)'
-                    }
-                  }}
+                  onClick={() => navigate('/player')}
+                  className="epic-btn-primary"
+                  sx={{ fontSize: '1.08rem !important', py: '16px !important', px: '38px !important' }}
                 >
-                  Configure Focus Lock
+                  ⚡ Engage Learning Stream →
                 </Button>
               </Box>
-            </Card>
+            </Box>
           </motion.div>
-        </Grid>
+        )}
 
-        {/* Card 2: Video Player & AI Tutor */}
-        <Grid item xs={12} md={4}>
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.25 }}
-            whileHover={{ y: -6 }}
-            style={{ height: '100%' }}
-          >
-            <Card className={getThemeCardClass()} sx={{ borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 1 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 3,
-                  bgcolor: designTheme === 'cyber' ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2.5
-                }}>
-                  <PlayArrowIcon sx={{ fontSize: 34, color: designTheme === 'cyber' ? '#10b981' : '#7c3aed' }} />
+        {/* Section Heading with Scroll Entrance */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Box mb={4} display="flex" alignItems="center" justifyContent="space-between">
+            <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <BoltIcon sx={{ color: '#00f2fe', fontSize: 32 }} /> Core High-Tech Learning Modules
+            </Typography>
+            <Typography variant="caption" sx={{ fontFamily: 'JetBrains Mono, monospace', color: '#64748b', fontSize: '0.85rem' }}>
+              [ SYSTEM STATUS: ALL NODES OPERATIONAL ]
+            </Typography>
+          </Box>
+        </motion.div>
+
+        {/* Main 3 Core High-Tech Modules Grid with Staggered Scroll Animations & Magnetic Hover Spotlights */}
+        <Grid container spacing={4}>
+          {/* Module 1: Focus Lock Shield */}
+          <Grid item xs={12} md={4}>
+            <motion.div
+              initial={{ opacity: 0, y: 45 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              style={{ height: '100%' }}
+            >
+              <Box 
+                className={getCardStyleClass()} 
+                onMouseMove={handleMouseMove}
+                sx={{ 
+                  p: 4.5, 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between', 
+                  borderRadius: var(--epic-radius-xl),
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(0, 242, 254, 0.12), transparent 80%), var(--epic-bg-card)`
+                }}
+              >
+                <Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={3.5}>
+                    <Box sx={{
+                      width: 68,
+                      height: 68,
+                      borderRadius: '20px',
+                      background: 'radial-gradient(circle, rgba(0, 242, 254, 0.25) 0%, rgba(14, 18, 38, 0.8) 100%)',
+                      border: '1px solid rgba(0, 242, 254, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 0 25px rgba(0, 242, 254, 0.3)'
+                    }}>
+                      <LockIcon sx={{ fontSize: 36, color: '#00f2fe' }} />
+                    </Box>
+                    <span className="epic-badge-glow">🔒 PRO SHIELD</span>
+                  </Box>
+
+                  <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', mb: 2, color: '#ffffff' }}>
+                    Focus Lock Protocol
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: '#94a3b8', lineHeight: 1.7, mb: 4, fontSize: '1.03rem' }}>
+                    Lock your cognitive focus onto a specific subject vector. The neural engine automatically intercepts and filters out all non-educational web and notification distractions.
+                  </Typography>
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>
-                  Interactive Lectures
-                </Typography>
-                <Typography variant="body2" sx={{ color: designTheme === 'clean' ? '#64748b' : 'rgba(255,255,255,0.7)', lineHeight: 1.6, mb: 3 }}>
-                  Watch educational videos with distraction-free controls, contextual AI tutor assistance, and synchronized practice activities right beside your stream.
-                </Typography>
-              </CardContent>
-              <Box sx={{ px: 3, pb: 3 }}>
+
                 <Button
-                  variant={designTheme === 'clean' ? 'contained' : 'outlined'}
+                  fullWidth
+                  onClick={() => navigate('/focus')}
+                  className="epic-btn-outline"
+                  sx={{ py: '15px !important', fontSize: '1.03rem !important', fontWeight: '800 !important' }}
+                >
+                  ⚡ Configure Shield Parameters →
+                </Button>
+              </Box>
+            </motion.div>
+          </Grid>
+
+          {/* Module 2: Interactive Lectures & AI Tutor */}
+          <Grid item xs={12} md={4}>
+            <motion.div
+              initial={{ opacity: 0, y: 45 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              style={{ height: '100%' }}
+            >
+              <Box 
+                className={getCardStyleClass()} 
+                onMouseMove={handleMouseMove}
+                sx={{ 
+                  p: 4.5, 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between', 
+                  borderRadius: var(--epic-radius-xl),
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(157, 78, 221, 0.14), transparent 80%), var(--epic-bg-card)`
+                }}
+              >
+                <Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={3.5}>
+                    <Box sx={{
+                      width: 68,
+                      height: 68,
+                      borderRadius: '20px',
+                      background: 'radial-gradient(circle, rgba(157, 78, 221, 0.3) 0%, rgba(14, 18, 38, 0.8) 100%)',
+                      border: '1px solid rgba(157, 78, 221, 0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 0 25px rgba(157, 78, 221, 0.4)'
+                    }}>
+                      <PlayArrowIcon sx={{ fontSize: 40, color: '#d8b4fe' }} />
+                    </Box>
+                    <span className="epic-badge-purple">⚡ AI RAG TUTOR</span>
+                  </Box>
+
+                  <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', mb: 2, color: '#ffffff' }}>
+                    Interactive Lectures
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: '#94a3b8', lineHeight: 1.7, mb: 4, fontSize: '1.03rem' }}>
+                    Immerse yourself in distraction-free video streams synchronized precisely with real-time AI context checking, interactive notes, and contextual knowledge queries.
+                  </Typography>
+                </Box>
+
+                <Button
                   fullWidth
                   onClick={() => navigate('/player')}
                   disabled={!currentSession}
-                  sx={{
-                    py: 1.2,
-                    borderRadius: 2.5,
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    bgcolor: designTheme === 'clean' ? '#7c3aed' : 'transparent',
-                    borderColor: designTheme === 'cyber' ? '#10b981' : '#7c3aed',
-                    color: designTheme === 'clean' ? '#fff' : (designTheme === 'cyber' ? '#10b981' : '#d8b4fe'),
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: designTheme === 'clean' ? '#6d28d9' : (designTheme === 'cyber' ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.15)'),
-                      transform: 'scale(1.02)'
-                    }
-                  }}
+                  className="epic-btn-purple"
+                  sx={{ py: '15px !important', fontSize: '1.03rem !important', fontWeight: '800 !important' }}
                 >
-                  Launch Video Player
+                  🚀 Launch Neural Stream →
                 </Button>
               </Box>
-            </Card>
-          </motion.div>
-        </Grid>
+            </motion.div>
+          </Grid>
 
-        {/* Card 3: Game Lab */}
-        <Grid item xs={12} md={4}>
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.35 }}
-            whileHover={{ y: -6 }}
-            style={{ height: '100%' }}
-          >
-            <Card className={getThemeCardClass()} sx={{ borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 1 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 3,
-                  bgcolor: designTheme === 'cyber' ? 'rgba(249,115,22,0.15)' : 'rgba(236,72,153,0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2.5
-                }}>
-                  <GamesIcon sx={{ fontSize: 32, color: designTheme === 'cyber' ? '#f97316' : '#ec4899' }} />
+          {/* Module 3: Gamified AI Lab & Quizzes */}
+          <Grid item xs={12} md={4}>
+            <motion.div
+              initial={{ opacity: 0, y: 45 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              style={{ height: '100%' }}
+            >
+              <Box 
+                className={getCardStyleClass()} 
+                onMouseMove={handleMouseMove}
+                sx={{ 
+                  p: 4.5, 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between', 
+                  borderRadius: var(--epic-radius-xl),
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, rgba(16, 185, 129, 0.14), transparent 80%), var(--epic-bg-card)`
+                }}
+              >
+                <Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={3.5}>
+                    <Box sx={{
+                      width: 68,
+                      height: 68,
+                      borderRadius: '20px',
+                      background: 'radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, rgba(14, 18, 38, 0.8) 100%)',
+                      border: '1px solid rgba(16, 185, 129, 0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 0 25px rgba(16, 185, 129, 0.4)'
+                    }}>
+                      <GamesIcon sx={{ fontSize: 36, color: '#34d399' }} />
+                    </Box>
+                    <span className="epic-badge-emerald">🎮 ARENA LIVE</span>
+                  </Box>
+
+                  <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', mb: 2, color: '#ffffff' }}>
+                    Gamified AI Arena
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: '#94a3b8', lineHeight: 1.7, mb: 4, fontSize: '1.03rem' }}>
+                    Test and solidify your understanding through AI-generated virtual labs, real-time code evaluation challenges, and topic-locked comprehension battles.
+                  </Typography>
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>
-                  Gamified AI Lab
-                </Typography>
-                <Typography variant="body2" sx={{ color: designTheme === 'clean' ? '#64748b' : 'rgba(255,255,255,0.7)', lineHeight: 1.6, mb: 3 }}>
-                  Engage with AI-generated challenges, interactive virtual labs, and real-time quizzes tailored specifically to your active topic and learning goals.
-                </Typography>
-              </CardContent>
-              <Box sx={{ px: 3, pb: 3 }}>
+
                 <Button
-                  variant={designTheme === 'clean' ? 'contained' : 'outlined'}
                   fullWidth
                   onClick={() => navigate('/games')}
-                  sx={{
-                    py: 1.2,
-                    borderRadius: 2.5,
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    bgcolor: designTheme === 'clean' ? '#ec4899' : 'transparent',
-                    borderColor: designTheme === 'cyber' ? '#f97316' : '#ec4899',
-                    color: designTheme === 'clean' ? '#fff' : (designTheme === 'cyber' ? '#f97316' : '#fbcfe8'),
-                    transition: 'all 0.3s ease',
+                  className="epic-btn-outline"
+                  sx={{ 
+                    py: '15px !important', 
+                    fontSize: '1.03rem !important',
+                    fontWeight: '800 !important',
+                    borderColor: 'rgba(16, 185, 129, 0.4) !important',
                     '&:hover': {
-                      bgcolor: designTheme === 'clean' ? '#db2777' : (designTheme === 'cyber' ? 'rgba(249,115,22,0.15)' : 'rgba(236,72,153,0.15)'),
-                      transform: 'scale(1.02)'
+                      borderColor: '#10b981 !important',
+                      color: '#10b981 !important',
+                      boxShadow: '0 0 25px rgba(16, 185, 129, 0.4) !important'
                     }
                   }}
                 >
-                  Enter Gamified Arena
+                  🎮 Enter Gamified Arena →
                 </Button>
               </Box>
-            </Card>
-          </motion.div>
+            </motion.div>
+          </Grid>
         </Grid>
-      </Grid>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

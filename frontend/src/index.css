@@ -1,195 +1,429 @@
-/* FocusLearner Pro Enhanced Design System & Animations */
+/* ==========================================================================
+   FocusLearner Pro - Epic Design Engineering & Futuristic UI Framework (Pro Level)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
 :root {
-  /* Core Colors */
-  --bg-primary: #050511;
-  --bg-secondary: #0a0a1a;
-  --bg-glass: rgba(255, 255, 255, 0.04);
+  /* Core Deep Space & Obsidian Palette */
+  --epic-bg-dark: #03040b;
+  --epic-bg-space: #080a18;
+  --epic-bg-card: rgba(14, 18, 38, 0.75);
+  --epic-bg-card-hover: rgba(22, 28, 58, 0.88);
   
-  /* Text Colors */
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --text-accent: #a78bfa;
-
-  /* Accent Gradients */
-  --gradient-primary: linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%);
-  --gradient-glow: linear-gradient(180deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
-  --gradient-text: linear-gradient(to right, #c4b5fd, #60a5fa);
-  --gradient-cyber: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
-  --gradient-sunset: linear-gradient(135deg, #f97316 0%, #ec4899 50%, #8b5cf6 100%);
-
-  /* Effects */
-  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
-  --backdrop-blur: blur(16px);
+  /* Luminous Neon Accents */
+  --neon-cyan: #00f2fe;
+  --neon-blue: #4facfe;
+  --neon-purple: #9d4edd;
+  --neon-magenta: #f72585;
+  --neon-emerald: #10b981;
+  --neon-amber: #f59e0b;
   
-  /* Layout */
-  --radius-lg: 24px;
-  --radius-md: 16px;
-  --radius-sm: 8px;
+  /* Ultra Gradients */
+  --epic-gradient-primary: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --epic-gradient-purple: linear-gradient(135deg, #7b2cbf 0%, #3a0ca3 100%);
+  --epic-gradient-cyber: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #9d4edd 100%);
+  --epic-gradient-sunset: linear-gradient(135deg, #f72585 0%, #7209b7 50%, #3a0ca3 100%);
+  --epic-gradient-emerald: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  --epic-gradient-gold: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+
+  /* Hyper-Glass & Glow Borders */
+  --glass-border-light: rgba(255, 255, 255, 0.14);
+  --glass-border-cyan: rgba(0, 242, 254, 0.4);
+  --glass-border-purple: rgba(157, 78, 221, 0.4);
+  
+  /* Deep Glow Shadows */
+  --glow-cyan: 0 0 25px rgba(0, 242, 254, 0.35), inset 0 0 15px rgba(0, 242, 254, 0.15);
+  --glow-purple: 0 0 30px rgba(157, 78, 221, 0.4), inset 0 0 15px rgba(157, 78, 221, 0.15);
+  --glow-card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(79, 172, 254, 0.12);
+  
+  /* Layout Dimensions */
+  --epic-radius-xl: 28px;
+  --epic-radius-lg: 20px;
+  --epic-radius-md: 14px;
+  --epic-radius-sm: 8px;
+}
+
+/* Global Smooth Scrolling Physics */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 86px;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(107, 33, 168, 0.08) 0%, transparent 40%);
+  background-color: var(--epic-bg-dark);
+  color: #ffffff;
   min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
 }
 
-/* Scrollbar Styling */
+/* Animated Background Light Orbs */
+body::before {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: -10%;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(79, 172, 254, 0.15) 0%, rgba(157, 78, 221, 0.08) 40%, transparent 70%);
+  filter: blur(80px);
+  z-index: 0;
+  animation: floatAurora 15s infinite alternate ease-in-out;
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -20%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(247, 37, 133, 0.12) 0%, rgba(123, 44, 191, 0.08) 40%, transparent 70%);
+  filter: blur(80px);
+  z-index: 0;
+  animation: floatAuroraReverse 18s infinite alternate ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes floatAurora {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(8vw, 6vh) scale(1.15); }
+  100% { transform: translate(-5vw, 10vh) scale(0.95); }
+}
+
+@keyframes floatAuroraReverse {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-10vw, -8vh) scale(1.2); }
+  100% { transform: translate(6vw, -5vh) scale(0.9); }
+}
+
+/* Futuristic Dot Matrix Overlay */
+.epic-matrix-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Content Container Wrapper */
+.epic-content-layer {
+  position: relative;
+  z-index: 2;
+}
+
+/* Custom Cyber Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary); 
+  background: #03040b;
 }
- 
 ::-webkit-scrollbar-thumb {
-  background: #334155; 
+  background: linear-gradient(180deg, #3a0ca3, #4facfe);
   border-radius: 4px;
-  transition: background 0.3s ease;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b; 
+  background: linear-gradient(180deg, #7209b7, #00f2fe);
 }
 
-/* Typography Utility */
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
+/* ==========================================================================
+   Pro Level Design Classes & Interactive Components
+   ========================================================================== */
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* Glassmorphism Card Utility */
-.glass-card {
-  background: var(--bg-glass);
-  backdrop-filter: var(--backdrop-blur);
-  -webkit-backdrop-filter: var(--backdrop-blur);
-  border: var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--radius-lg);
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(139, 92, 246, 0.3);
-  box-shadow: 0 16px 40px -8px rgba(139, 92, 246, 0.25);
-}
-
-/* Primary Button Style */
-.btn-primary {
-  background: var(--gradient-primary);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5);
-}
-
-/* Interactive Card Hover Effects */
-.interactive-card {
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Hyper-Glass Card with Shimmer Beam & Inner Glow */
+.epic-card {
+  background: var(--epic-bg-card) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--epic-radius-xl) !important;
+  box-shadow: var(--glow-card-shadow), inset 0 1px 1px rgba(255, 255, 255, 0.18) !important;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   position: relative;
   overflow: hidden;
 }
 
-.interactive-card:hover {
-  transform: translateY(-6px) scale(1.015);
-  box-shadow: 0 20px 35px -10px rgba(37, 99, 235, 0.25);
+.epic-card:hover {
+  transform: translateY(-8px) scale(1.015);
+  border-color: rgba(0, 242, 254, 0.45) !important;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 45px rgba(0, 242, 254, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.3) !important;
 }
 
-.interactive-card::after {
+/* Shimmer Wave Across Card Surface */
+.epic-card::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 50%;
+  left: -150%;
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
-  transition: 0.6s ease;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), rgba(0, 242, 254, 0.15), transparent);
+  transform: skewX(-25deg);
+  transition: all 0.75s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.epic-card:hover::before {
+  left: 200%;
+}
+
+/* Futuristic Cyber Borders & Corner Highlights */
+.epic-card-cyber {
+  background: linear-gradient(155deg, rgba(14, 18, 38, 0.9) 0%, rgba(26, 11, 46, 0.85) 100%) !important;
+  border: 1px solid rgba(157, 78, 221, 0.35) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(157, 78, 221, 0.18) !important;
+}
+
+.epic-card-cyber:hover {
+  border-color: #f72585 !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 45px rgba(247, 37, 133, 0.3) !important;
+}
+
+/* Glowing Typography Shines */
+.epic-text-gradient-cyan {
+  background: var(--epic-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+.epic-text-gradient-cyber {
+  background: var(--epic-gradient-cyber);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+  background-size: 200% auto;
+  animation: shineText 4s linear infinite;
+}
+
+.epic-text-gradient-sunset {
+  background: var(--epic-gradient-sunset);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+@keyframes shineText {
+  to { background-position: 200% center; }
+}
+
+/* ==========================================================================
+   PRO LEVEL BUTTONS: Click Physics, Shimmer Sweep & Shockwave Rings
+   ========================================================================== */
+
+.epic-btn-primary {
+  background: var(--epic-gradient-primary) !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  font-family: 'Outfit', sans-serif !important;
+  letter-spacing: 0.03em !important;
+  padding: 14px 28px !important;
+  border-radius: var(--epic-radius-md) !important;
+  border: none !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 242, 254, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  cursor: pointer;
+  position: relative !important;
+  overflow: hidden !important;
+  text-transform: none !important;
+  z-index: 1 !important;
+}
+
+/* Light Beam Sweep inside Button */
+.epic-btn-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -120%;
+  width: 50px;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: rotate(35deg);
+  transition: all 0.65s ease;
+  z-index: -1;
   pointer-events: none;
 }
 
-.interactive-card:hover::after {
+.epic-btn-primary:hover::after {
   left: 150%;
 }
 
-/* Keyframe Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+.epic-btn-primary:hover {
+  transform: translateY(-4px) scale(1.03) !important;
+  box-shadow: 0 18px 38px -5px rgba(0, 242, 254, 0.75), 0 0 25px rgba(79, 172, 254, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.9) !important;
 }
 
-@keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
-  50% { box-shadow: 0 0 28px rgba(139, 92, 246, 0.6); }
+/* 3D Physical Tactile Click Press */
+.epic-btn-primary:active {
+  transform: translateY(2px) scale(0.96) !important;
+  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.5), inset 0 3px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes floatSmooth {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 3s infinite ease-in-out;
-}
-
-.animate-float {
-  animation: floatSmooth 4s infinite ease-in-out;
-}
-
-/* Multiple Design Themes for UI Card Switching */
-.theme-card-clean {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
-}
-
-.theme-card-glass {
-  background: rgba(15, 23, 42, 0.85) !important;
-  backdrop-filter: blur(20px) !important;
-  color: #f8fafc !important;
-  border: 1px solid rgba(148, 163, 184, 0.18) !important;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.45) !important;
-}
-
-.theme-card-cyber {
-  background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%) !important;
+.epic-btn-purple {
+  background: var(--epic-gradient-purple) !important;
   color: #ffffff !important;
-  border: 1.5px solid #06b6d4 !important;
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.22) !important;
+  font-weight: 800 !important;
+  font-family: 'Outfit', sans-serif !important;
+  letter-spacing: 0.03em !important;
+  padding: 14px 28px !important;
+  border-radius: var(--epic-radius-md) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 10px 25px -5px rgba(157, 78, 221, 0.45) !important;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  cursor: pointer;
+  position: relative !important;
+  overflow: hidden !important;
+  text-transform: none !important;
+  z-index: 1 !important;
+}
+
+.epic-btn-purple::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -120%;
+  width: 50px;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: rotate(35deg);
+  transition: all 0.65s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.epic-btn-purple:hover::after {
+  left: 150%;
+}
+
+.epic-btn-purple:hover {
+  transform: translateY(-4px) scale(1.03) !important;
+  box-shadow: 0 18px 38px -5px rgba(157, 78, 221, 0.75), 0 0 25px rgba(247, 37, 133, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 3D Physical Tactile Click Press */
+.epic-btn-purple:active {
+  transform: translateY(2px) scale(0.96) !important;
+  box-shadow: 0 4px 15px rgba(157, 78, 221, 0.5), inset 0 3px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+.epic-btn-outline {
+  background: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: blur(10px) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-family: 'Outfit', sans-serif !important;
+  padding: 12px 24px !important;
+  border-radius: var(--epic-radius-md) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  text-transform: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.epic-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--neon-cyan) !important;
+  color: var(--neon-cyan) !important;
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.35) !important;
+  transform: translateY(-3px) !important;
+}
+
+.epic-btn-outline:active {
+  transform: translateY(1px) scale(0.97) !important;
+  background: rgba(0, 242, 254, 0.15) !important;
+}
+
+/* Glowing Status Pills & Badges */
+.epic-badge-glow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  background: rgba(0, 242, 254, 0.12);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  color: #00f2fe;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+}
+
+.epic-badge-purple {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  background: rgba(157, 78, 221, 0.15);
+  border: 1px solid rgba(157, 78, 221, 0.4);
+  color: #d8b4fe;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 15px rgba(157, 78, 221, 0.25);
+}
+
+.epic-badge-emerald {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+}
+
+/* Pulsing Dots & HUD Rings */
+@keyframes pulseRing {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 242, 254, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); }
+}
+
+@keyframes pulseRingEmerald {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.pulse-dot-cyan {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #00f2fe;
+  animation: pulseRing 2s infinite;
+}
+
+.pulse-dot-emerald {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #10b981;
+  animation: pulseRingEmerald 2s infinite;
 }

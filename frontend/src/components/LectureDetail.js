@@ -299,61 +299,104 @@ const LectureDetail = () => {
               </Box>
             )}
 
-            {/* Tabs */}
-            <Box sx={{ borderBottom: 1, borderColor: '#e2e8f0', mb: 3 }}>
-              <Tabs value={activeTab} onChange={(e, val) => setActiveTab(val)} sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, color: '#64748b' }, '& .Mui-selected': { color: '#2563eb' } }}>
-                <Tab icon={<ScienceIcon fontSize="small" />} iconPosition="start" label="Lab" />
-                <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Games" />
-                <Tab icon={<AssignmentIcon fontSize="small" />} iconPosition="start" label="Quiz" />
+            {/* High-Tech Cockpit Tabs Switcher */}
+            <Box sx={{ 
+              bgcolor: 'rgba(14, 18, 38, 0.75)', 
+              backdropFilter: 'blur(20px)',
+              borderRadius: '20px', 
+              border: '1px solid rgba(255, 255, 255, 0.12)', 
+              p: 0.8, 
+              mb: 3,
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+            }}>
+              <Tabs 
+                value={activeTab} 
+                onChange={(e, val) => setActiveTab(val)} 
+                variant="fullWidth"
+                sx={{ 
+                  '& .MuiTabs-indicator': { 
+                    height: '100%', 
+                    borderRadius: '16px', 
+                    bgcolor: 'rgba(0, 242, 254, 0.15)', 
+                    border: '1px solid rgba(0, 242, 254, 0.45)',
+                    boxShadow: '0 0 20px rgba(0, 242, 254, 0.25)',
+                    zIndex: 0 
+                  }, 
+                  '& .MuiTab-root': { 
+                    textTransform: 'none', 
+                    fontWeight: 700, 
+                    fontFamily: 'Outfit, sans-serif',
+                    fontSize: '0.95rem',
+                    color: '#94a3b8', 
+                    zIndex: 1,
+                    minHeight: 46,
+                    borderRadius: '16px',
+                    transition: 'all 0.3s ease'
+                  }, 
+                  '& .Mui-selected': { 
+                    color: '#00f2fe !important',
+                    textShadow: '0 0 12px rgba(0, 242, 254, 0.6)'
+                  } 
+                }}
+              >
+                <Tab icon={<ScienceIcon fontSize="small" />} iconPosition="start" label="Virtual AI Lab" />
+                <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Gamified Arena" />
+                <Tab icon={<AssignmentIcon fontSize="small" />} iconPosition="start" label="Neural Quiz" />
                 <Tab icon={<FolderIcon fontSize="small" />} iconPosition="start" label="Workspace Vault" />
               </Tabs>
             </Box>
 
-            {/* Tab Content with Smooth Transitions */}
-            <Box sx={{ position: 'relative', minHeight: 400 }}>
+            {/* Tab Content with Smooth Transitions & Epic Styling */}
+            <Box sx={{ position: 'relative', minHeight: 440 }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
-                  initial={{ opacity: 0, y: 18 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  exit={{ opacity: 0, y: -14 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {activeTab === 0 && (
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 1 }}>
                       {!labActivity ? (
-                        <Box p={4} sx={{ border: '1px solid #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center' }}>
-                          <ScienceIcon sx={{ fontSize: 48, color: '#3b82f6', mb: 2 }} />
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>
-                            Interactive AI Virtual Lab: {lecture?.topic}
+                        <Box className="epic-card epic-card-cyber" p={6} sx={{ textAlign: 'center', borderRadius: '24px !important' }}>
+                          <Box sx={{ width: 84, height: 84, mx: 'auto', mb: 3, borderRadius: '24px', background: 'radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, rgba(14, 18, 38, 0.8) 100%)', border: '1px solid rgba(0, 242, 254, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 35px rgba(0, 242, 254, 0.4)' }}>
+                            <ScienceIcon sx={{ fontSize: 44, color: '#00f2fe' }} />
+                          </Box>
+                          <span className="epic-badge-glow" style={{ marginBottom: '16px' }}>⚡ SYNCHRONIZED LAB MODULE</span>
+                          <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 1.5 }}>
+                            Interactive Virtual Lab: <span style={{ color: '#00f2fe' }}>{lecture?.topic}</span>
                           </Typography>
-                          <Typography variant="body2" sx={{ color: '#64748b', mb: 3, maxWidth: 600, mx: 'auto' }}>
-                            Launch a dynamic, problem-driven practice challenge tailored specifically to your current session topic and video context.
+                          <Typography variant="body1" sx={{ color: '#94a3b8', mb: 4, maxWidth: 640, mx: 'auto', lineHeight: 1.7 }}>
+                            Launch a dynamic, problem-driven practice challenge tailored directly to your active video sequence. Evaluate hypotheses, write real solutions, and earn instant XP.
                           </Typography>
                           <Button
-                            variant="contained"
                             onClick={handleLaunchLab}
                             disabled={labLoading}
-                            startIcon={labLoading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
-                            sx={{ bgcolor: '#2563eb', px: 4, py: 1.5, borderRadius: 3, fontWeight: 700, transition: 'all 0.3s ease', '&:hover': { transform: 'scale(1.03)', boxShadow: '0 6px 16px rgba(37,99,235,0.3)' } }}
+                            className="epic-btn-primary"
+                            startIcon={labLoading ? <CircularProgress size={22} color="inherit" /> : <ScienceIcon />}
+                            sx={{ fontSize: '1.05rem !important', py: '15px !important', px: '38px !important' }}
                           >
-                            {labLoading ? 'Generating Virtual Lab...' : 'Launch Lab Challenge'}
+                            {labLoading ? 'Generating Neural Virtual Lab...' : '⚡ Launch Interactive Lab Challenge →'}
                           </Button>
                         </Box>
                       ) : (
-                        <Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="700" color="#0f172a">
-                              Active Lab: {labActivity.title || lecture?.topic}
-                            </Typography>
-                            <Button variant="outlined" size="small" onClick={() => { setLabActivity(null); setLabResult(null); }}>
-                              Reset Lab
+                        <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, pb: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                            <Box display="flex" alignItems="center" gap={1.5}>
+                              <span className="pulse-dot-cyan" />
+                              <Typography variant="h5" fontWeight="900" fontFamily="Outfit, sans-serif" color="#ffffff">
+                                Active Lab: {labActivity.title || lecture?.topic}
+                              </Typography>
+                            </Box>
+                            <Button className="epic-btn-outline" size="small" onClick={() => { setLabActivity(null); setLabResult(null); }}>
+                              🔄 Reset Module
                             </Button>
                           </Box>
                           {labResult && (
-                            <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 2, borderRadius: 2 }}>
-                              <Typography fontWeight="700">{labResult.is_correct ? "Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
-                              <Typography variant="body2">{labResult.feedback}</Typography>
+                            <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 3, borderRadius: '16px', bgcolor: labResult.is_correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 242, 254, 0.15)', color: '#ffffff', border: labResult.is_correct ? '1px solid #10b981' : '1px solid #00f2fe' }}>
+                              <Typography fontWeight="800" fontFamily="Outfit, sans-serif">{labResult.is_correct ? "🏆 Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
+                              <Typography variant="body2" sx={{ mt: 0.5 }}>{labResult.feedback}</Typography>
                             </Alert>
                           )}
                           <ActivityView activity={labActivity} onSubmit={handleLabSubmit} />
@@ -362,114 +405,132 @@ const LectureDetail = () => {
                     </Box>
                   )}
                   {activeTab === 1 && (
-                    <Box sx={{ mt: 2, border: '1px solid #e2e8f0', borderRadius: 3, p: 2, bgcolor: '#ffffff' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <SportsEsportsIcon color="primary" /> Gamified Learning Arena: {lecture?.subject || 'General'}
-                      </Typography>
-                      <Box sx={{ minHeight: '500px' }}>
+                    <Box className="epic-card" sx={{ mt: 1, p: 3, borderRadius: '24px !important' }}>
+                      <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} pb={2} borderBottom="1px solid rgba(255, 255, 255, 0.1)">
+                        <Typography variant="h5" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <SportsEsportsIcon sx={{ color: '#34d399', fontSize: 30 }} /> Gamified Arena: <span style={{ color: '#34d399' }}>{lecture?.subject || 'Curriculum'}</span>
+                        </Typography>
+                        <span className="epic-badge-emerald">🎮 REAL-TIME ENGINE</span>
+                      </Box>
+                      <Box sx={{ minHeight: '520px' }}>
                         <GameLab embedded={true} subject={lecture?.subject} topic={lecture?.topic} />
                       </Box>
                     </Box>
                   )}
                   {activeTab === 2 && (
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 1 }}>
                       {!showQuiz ? (
-                        <Box p={4} sx={{ border: '1px solid #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center' }}>
-                          <AssignmentIcon sx={{ fontSize: 48, color: '#2563eb', mb: 2 }} />
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>AI Assessment Quiz: {lecture?.topic}</Typography>
-                          <Typography variant="body2" sx={{ color: '#64748b', mb: 3, maxWidth: 600, mx: 'auto' }}>
-                            Test your comprehension with dynamically generated multiple-choice questions based on this video sequence.
+                        <Box className="epic-card" p={6} sx={{ textAlign: 'center', borderRadius: '24px !important', border: '1px solid rgba(157, 78, 221, 0.4) !important' }}>
+                          <Box sx={{ width: 84, height: 84, mx: 'auto', mb: 3, borderRadius: '24px', background: 'radial-gradient(circle, rgba(157, 78, 221, 0.35) 0%, rgba(14, 18, 38, 0.8) 100%)', border: '1px solid rgba(157, 78, 221, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 35px rgba(157, 78, 221, 0.4)' }}>
+                            <AssignmentIcon sx={{ fontSize: 44, color: '#d8b4fe' }} />
+                          </Box>
+                          <span className="epic-badge-purple" style={{ marginBottom: '16px' }}>⚡ NEURAL COMPREHENSION TEST</span>
+                          <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 1.5 }}>
+                            AI Assessment Quiz: <span style={{ color: '#d8b4fe' }}>{lecture?.topic}</span>
                           </Typography>
-                          <Button variant="contained" onClick={handleStartQuiz} sx={{ bgcolor: '#2563eb', px: 4, py: 1.5, borderRadius: 3, fontWeight: 700, transition: 'all 0.3s ease', '&:hover': { transform: 'scale(1.03)', boxShadow: '0 6px 16px rgba(37,99,235,0.3)' } }}>
-                            Start AI Quiz
+                          <Typography variant="body1" sx={{ color: '#94a3b8', mb: 4, maxWidth: 620, mx: 'auto', lineHeight: 1.7 }}>
+                            Test your comprehension with dynamically generated multiple-choice challenges based on this exact video sequence. Answer accurately to unlock progression gates.
+                          </Typography>
+                          <Button onClick={handleStartQuiz} className="epic-btn-purple" sx={{ fontSize: '1.05rem !important', py: '15px !important', px: '38px !important' }}>
+                            ⚡ Start Neural Quiz Assessment →
                           </Button>
                         </Box>
                       ) : (
-                        <Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="700" color="#0f172a">Quiz: {lecture?.topic}</Typography>
-                            <Button variant="outlined" size="small" onClick={handleRetakeQuiz}>Retake New Quiz</Button>
+                        <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, pb: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                            <Box display="flex" alignItems="center" gap={1.5}>
+                              <span className="pulse-dot-cyan" />
+                              <Typography variant="h5" fontWeight="900" fontFamily="Outfit, sans-serif" color="#ffffff">
+                                Neural Quiz: {lecture?.topic}
+                              </Typography>
+                            </Box>
+                            <Button className="epic-btn-outline" size="small" onClick={handleRetakeQuiz}>
+                              🔄 Generate New Assessment
+                            </Button>
                           </Box>
                           {quizResult ? (
-                            <Alert severity={quizResult.score >= 3 ? "success" : "warning"} sx={{ mb: 3, borderRadius: 3 }}>
-                              <Typography variant="subtitle1" fontWeight={700}>
-                                Quiz Completed! Score: {quizResult.score} / {quizResult.total}
+                            <Alert severity={quizResult.score >= 3 ? "success" : "warning"} sx={{ mb: 4, borderRadius: '16px', bgcolor: quizResult.score >= 3 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(245, 158, 11, 0.18)', color: '#ffffff', border: quizResult.score >= 3 ? '1px solid #10b981' : '1px solid #f59e0b' }}>
+                              <Typography variant="h6" fontWeight="900" fontFamily="Outfit, sans-serif">
+                                🏆 Quiz Completed! Neural Mastery Score: {quizResult.score} / {quizResult.total}
                               </Typography>
-                              <Typography variant="body2">
-                                {quizResult.score >= 3 ? 'Great job mastering this topic! Proceed to next module when ready.' : 'Review the video sequence and try again to improve your score.'}
+                              <Typography variant="body2" sx={{ mt: 0.5, color: '#e2e8f0' }}>
+                                {quizResult.score >= 3 ? 'Outstanding achievement! You have mastered this module and unlocked progression.' : 'Review the synchronized video sequence above and re-try to boost your neural score.'}
                               </Typography>
                             </Alert>
                           ) : null}
                           {quiz?.map((q, index) => {
                             const answered = quizAnswers[q.id];
                             return (
-                              <Card key={q.id} sx={{ mb: 2.5, border: '1px solid #e2e8f0', borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.02)', transition: 'all 0.25s ease', '&:hover': { borderColor: '#94a3b8' } }}>
-                                <CardContent sx={{ p: 2.5 }}>
-                                  <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>{index + 1}. {q.question}</Typography>
-                                  <Grid container spacing={1.2}>
-                                    {q.options.map(opt => {
-                                      const correctAns = q.correctAnswer || q.correct_answer;
-                                      let btnColor = '#0f172a';
-                                      let btnBgcolor = '#f8fafc';
-                                      let borderColor = '#cbd5e1';
+                              <Box key={q.id} sx={{ mb: 3, p: 3, borderRadius: '20px', bgcolor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', transition: 'all 0.3s ease', '&:hover': { borderColor: 'rgba(0, 242, 254, 0.3)', bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
+                                <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" sx={{ mb: 2, color: '#ffffff', display: 'flex', gap: 1.2 }}>
+                                  <span style={{ color: '#00f2fe' }}>{index + 1}.</span> {q.question}
+                                </Typography>
+                                <Grid container spacing={1.5}>
+                                  {q.options.map(opt => {
+                                    const correctAns = q.correctAnswer || q.correct_answer;
+                                    let btnColor = '#cbd5e1';
+                                    let btnBgcolor = 'rgba(255, 255, 255, 0.04)';
+                                    let borderColor = 'rgba(255, 255, 255, 0.12)';
 
-                                      if (answered) {
-                                        if (opt === correctAns) {
-                                          btnBgcolor = '#22c55e'; // Green
-                                          btnColor = '#fff';
-                                          borderColor = '#22c55e';
-                                        } else if (answered.selected === opt && !answered.isCorrect) {
-                                          btnBgcolor = '#ef4444'; // Red
-                                          btnColor = '#fff';
-                                          borderColor = '#ef4444';
-                                        }
+                                    if (answered) {
+                                      if (opt === correctAns) {
+                                        btnBgcolor = 'rgba(16, 185, 129, 0.25)'; // Green
+                                        btnColor = '#ffffff';
+                                        borderColor = '#10b981';
+                                      } else if (answered.selected === opt && !answered.isCorrect) {
+                                        btnBgcolor = 'rgba(239, 68, 68, 0.25)'; // Red
+                                        btnColor = '#ffffff';
+                                        borderColor = '#ef4444';
                                       }
+                                    }
 
-                                      return (
-                                        <Grid item xs={12} key={opt}>
-                                          <Button
-                                            variant={answered ? "contained" : "outlined"}
-                                            fullWidth
-                                            size="medium"
-                                            disabled={!!answered && opt !== correctAns && answered.selected !== opt}
-                                            onClick={() => handleQuizOptionClick(q, opt)}
-                                            sx={{
-                                              justifyContent: "flex-start",
-                                              textAlign: "left",
-                                              py: 1,
-                                              px: 2,
-                                              borderRadius: 2,
-                                              fontWeight: 600,
-                                              textTransform: 'none',
-                                              color: btnColor,
+                                    return (
+                                      <Grid item xs={12} key={opt}>
+                                        <Button
+                                          variant="outlined"
+                                          fullWidth
+                                          disabled={!!answered && opt !== correctAns && answered.selected !== opt}
+                                          onClick={() => handleQuizOptionClick(q, opt)}
+                                          sx={{
+                                            justifyContent: "flex-start",
+                                            textAlign: "left",
+                                            py: 1.4,
+                                            px: 2.5,
+                                            borderRadius: '14px',
+                                            fontWeight: 700,
+                                            fontFamily: 'Plus Jakarta Sans, sans-serif',
+                                            fontSize: '0.98rem',
+                                            textTransform: 'none',
+                                            color: btnColor,
+                                            bgcolor: btnBgcolor,
+                                            border: `1.5px solid ${borderColor}`,
+                                            boxShadow: answered && opt === correctAns ? '0 0 20px rgba(16, 185, 129, 0.4)' : 'none',
+                                            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                            '&:hover': answered ? {} : { bgcolor: 'rgba(0, 242, 254, 0.12)', borderColor: '#00f2fe', color: '#ffffff', transform: 'translateX(6px)' },
+                                            '&.Mui-disabled': {
                                               bgcolor: btnBgcolor,
-                                              borderColor: borderColor,
-                                              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                                              '&:hover': answered ? { bgcolor: btnBgcolor } : { bgcolor: '#eff6ff', borderColor: '#3b82f6', transform: 'translateX(4px)' },
-                                              '&.Mui-disabled': {
-                                                bgcolor: btnBgcolor !== '#f8fafc' ? btnBgcolor : '#f1f5f9',
-                                                color: btnColor !== '#0f172a' ? btnColor : 'rgba(0, 0, 0, 0.38)'
-                                              }
-                                            }}
-                                          >
-                                            {opt}
-                                          </Button>
-                                        </Grid>
-                                      );
-                                    })}
-                                  </Grid>
-                                </CardContent>
-                              </Card>
+                                              color: answered && opt === correctAns ? '#ffffff' : 'rgba(255, 255, 255, 0.25)',
+                                              borderColor: borderColor
+                                            }
+                                          }}
+                                        >
+                                          {opt}
+                                        </Button>
+                                      </Grid>
+                                    );
+                                  })}
+                                </Grid>
+                              </Box>
                             );
                           })}
                           {!quizResult && quiz && quiz.length > 0 && (
                             <Button
-                              variant="contained"
-                              fullWidth
                               onClick={handleQuizSubmit}
-                              sx={{ mt: 1, bgcolor: '#2563eb', py: 1.3, borderRadius: 3, fontWeight: 700, transition: 'all 0.3s ease', '&:hover': { transform: 'scale(1.01)', boxShadow: '0 6px 18px rgba(37,99,235,0.3)' } }}
+                              className="epic-btn-primary"
+                              fullWidth
+                              sx={{ mt: 2, py: '16px !important', fontSize: '1.08rem !important' }}
                             >
-                              Finish & View Score
+                              ⚡ Submit Neural Quiz Answers & Evaluate Score →
                             </Button>
                           )}
                         </Box>
@@ -477,10 +538,12 @@ const LectureDetail = () => {
                     </Box>
                   )}
                   {activeTab === 3 && (
-                    <Box p={2}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>Workspace Vault</Typography>
-                      <Typography variant="body2" sx={{ color: '#475569', mb: 3 }}>
-                        Store and search all your essential study materials here without leaving the focus zone.
+                    <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important' }}>
+                      <Typography variant="h5" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 1, display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                        <FolderIcon sx={{ color: '#a78bfa' }} /> Workspace Vault & Knowledge Base
+                      </Typography>
+                      <Typography variant="body1" sx={{ color: '#94a3b8', mb: 3 }}>
+                        Store, query, and search all your essential study materials, encyclopedia references, and code docs right inside this focus zone.
                       </Typography>
                       <FocusVault subjectFocus={lecture?.subject} />
                     </Box>

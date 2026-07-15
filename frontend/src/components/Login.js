@@ -32,7 +32,8 @@ const Login = () => {
 
     try {
       const response = await authAPI.login(username, password);
-      const { token, user } = response.data;
+      const token = response.data.token || response.data.access_token;
+      const user = response.data.user;
 
       // Store token and user info
       localStorage.setItem('token', token);
@@ -54,7 +55,8 @@ const Login = () => {
 
       try {
         const response = await authAPI.googleLogin(tokenResponse.access_token);
-        const { token, user, is_new_user } = response.data;
+        const token = response.data.token || response.data.access_token;
+        const { user, is_new_user } = response.data;
 
         // Store token and user info
         localStorage.setItem('token', token);

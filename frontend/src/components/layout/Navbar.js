@@ -1,11 +1,13 @@
 import React from 'react';
 import { Box, Typography, Button, Avatar, Tooltip } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { useNavigate } from 'react-router-dom';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useFocusTimer } from '../../context/FocusContext';
 
 const Navbar = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { timeLeft, timerActive, isStudying } = useFocusTimer();
 
     const userStr = localStorage.getItem('user');
@@ -28,127 +30,149 @@ const Navbar = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            px: { xs: 2, md: 4 },
-            height: 72,
-            bgcolor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid #e2e8f0',
-            boxShadow: '0 4px 20px -5px rgba(0,0,0,0.04)',
+            px: { xs: 3, md: 5 },
+            height: 76,
+            bgcolor: 'rgba(8, 10, 24, 0.85)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 242, 254, 0.1)',
             position: 'sticky',
             top: 0,
             zIndex: 1100,
-            transition: 'all 0.3s ease',
+            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
             flexShrink: 0
         }}>
-            {/* Center Links with Micro-Hover Transitions */}
-            <Box sx={{ display: 'flex', gap: 3.5, flexGrow: 1, justifyContent: 'center' }}>
-                {[
-                    { label: 'Home', path: '/dashboard', hasArrow: false },
-                    { label: 'Programs', path: '/dashboard', hasArrow: true },
-                    { label: 'Courses', path: '/courses', hasArrow: false },
-                    { label: 'Applications', path: '/manage-focus', hasArrow: true }
-                ].map((item) => (
-                    <Box
-                        key={item.label}
-                        onClick={() => navigate(item.path)}
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            py: 0.5,
-                            '&:hover .nav-text': { color: '#2563eb' },
-                            '&:hover .nav-line': { width: '100%' }
-                        }}
-                    >
-                        <Typography
-                            className="nav-text"
-                            variant="body2"
-                            sx={{
-                                fontWeight: 600,
-                                color: '#334155',
-                                transition: 'color 0.25s ease',
-                                display: 'flex',
-                                alignItems: 'center'
-                            }}
-                        >
-                            {item.label}
-                            {item.hasArrow && <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.3, transition: 'transform 0.25s ease', '.nav-text:hover &': { transform: 'rotate(180deg)' } }} />}
-                        </Typography>
-                        <Box
-                            className="nav-line"
-                            sx={{
-                                position: 'absolute',
-                                bottom: 0,
-                                left: 0,
-                                width: '0%',
-                                height: 2,
-                                bgcolor: '#2563eb',
-                                borderRadius: 1,
-                                transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                            }}
-                        />
-                    </Box>
-                ))}
+            {/* Brand / Logo Section */}
+            <Box onClick={() => navigate('/dashboard')} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}>
+                <Box sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 20px rgba(0, 242, 254, 0.5)'
+                }}>
+                    <AutoAwesomeIcon sx={{ color: '#03040b', fontSize: 20 }} />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #ffffff 0%, #00f2fe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    FocusLearner<span style={{ color: '#00f2fe', WebkitTextFillColor: '#00f2fe' }}>.PRO</span>
+                </Typography>
             </Box>
 
-            {/* Right Actions */}
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <Tooltip title={`Current Active Session: ${isStudying ? 'Focus Time' : 'Break Time'}. Click to manage timers.`}>
+            {/* Center High-Tech Floating Navigation */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4, alignItems: 'center' }}>
+                {[
+                    { label: 'Command Center', path: '/dashboard', hasArrow: false },
+                    { label: 'AI Curriculums', path: '/courses', hasArrow: false },
+                    { label: 'Focus Cockpit', path: '/manage-focus', hasArrow: true },
+                    { label: 'Preferences', path: '/preferences', hasArrow: false }
+                ].map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                        <Box
+                            key={item.label}
+                            onClick={() => navigate(item.path)}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                py: 0.8,
+                                px: 1.5,
+                                borderRadius: '10px',
+                                bgcolor: isActive ? 'rgba(0, 242, 254, 0.12)' : 'transparent',
+                                border: isActive ? '1px solid rgba(0, 242, 254, 0.35)' : '1px solid transparent',
+                                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                '&:hover': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.06)',
+                                    borderColor: 'rgba(255, 255, 255, 0.18)',
+                                    transform: 'translateY(-2px)'
+                                }
+                            }}
+                        >
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    fontWeight: isActive ? 800 : 600,
+                                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                                    color: isActive ? '#00f2fe' : '#94a3b8',
+                                    transition: 'color 0.25s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    textShadow: isActive ? '0 0 12px rgba(0, 242, 254, 0.6)' : 'none'
+                                }}
+                            >
+                                {item.label}
+                                {item.hasArrow && <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.4, transition: 'transform 0.25s ease', transform: isActive ? 'rotate(180deg)' : 'none' }} />}
+                            </Typography>
+                        </Box>
+                    );
+                })}
+            </Box>
+
+            {/* Right Telemetry Instrument & Actions */}
+            <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
+                <Tooltip title={`Live HUD Telemetry: ${isStudying ? 'Focus Protocol Active' : 'Rest Sequence Running'}. Click to configure.`}>
                     <Box 
                         onClick={() => navigate('/manage-focus')}
                         sx={{ 
                             display: 'flex', 
                             alignItems: 'center', 
-                            gap: 1.2, 
-                            px: 2.2, 
-                            py: 0.6, 
-                            borderRadius: 20, 
-                            bgcolor: isStudying ? '#eff6ff' : '#ecfdf5', 
+                            gap: 1.5, 
+                            px: 2.4, 
+                            py: 0.8, 
+                            borderRadius: '24px', 
+                            bgcolor: isStudying ? 'rgba(0, 242, 254, 0.08)' : 'rgba(16, 185, 129, 0.08)', 
                             border: '1.5px solid',
-                            borderColor: isStudying ? '#3b82f6' : '#10b981',
+                            borderColor: isStudying ? '#00f2fe' : '#10b981',
                             cursor: 'pointer',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            animation: timerActive ? (isStudying ? 'pulse-focus 2s infinite' : 'pulse-break 2s infinite') : 'none',
-                            '@keyframes pulse-focus': {
-                                '0%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0.4)' },
-                                '70%': { boxShadow: '0 0 0 8px rgba(59, 130, 246, 0)' },
-                                '100%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0)' }
-                            },
-                            '@keyframes pulse-break': {
-                                '0%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.4)' },
-                                '70%': { boxShadow: '0 0 0 8px rgba(16, 185, 129, 0)' },
-                                '100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' }
-                            },
-                            '&:hover': { transform: 'scale(1.03)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
+                            boxShadow: isStudying 
+                                ? '0 0 20px rgba(0, 242, 254, 0.35), inset 0 0 10px rgba(0, 242, 254, 0.15)' 
+                                : '0 0 20px rgba(16, 185, 129, 0.35), inset 0 0 10px rgba(16, 185, 129, 0.15)',
+                            transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                            '&:hover': { transform: 'scale(1.04) translateY(-1px)', boxShadow: isStudying ? '0 0 30px rgba(0, 242, 254, 0.55)' : '0 0 30px rgba(16, 185, 129, 0.55)' }
                         }}
                     >
-                        <Box 
-                            sx={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                bgcolor: timerActive ? (isStudying ? '#2563eb' : '#10b981') : '#94a3b8',
-                                animation: timerActive ? 'blink 1.2s infinite ease-in-out' : 'none',
-                                '@keyframes blink': {
-                                    '0%, 100%': { opacity: 1, transform: 'scale(1)' },
-                                    '50%': { opacity: 0.4, transform: 'scale(0.8)' }
-                                }
-                            }}
-                        />
-                        <Typography variant="caption" sx={{ fontWeight: 800, fontSize: '0.85rem', color: isStudying ? '#1e40af' : '#065f46', letterSpacing: '0.02em' }}>
+                        <Box className={isStudying ? "pulse-dot-cyan" : "pulse-dot-emerald"} />
+                        <Typography variant="caption" sx={{ 
+                            fontWeight: 800, 
+                            fontFamily: 'JetBrains Mono, monospace', 
+                            fontSize: '0.9rem', 
+                            color: isStudying ? '#00f2fe' : '#34d399', 
+                            letterSpacing: '0.04em',
+                            textShadow: isStudying ? '0 0 10px rgba(0, 242, 254, 0.8)' : '0 0 10px rgba(16, 185, 129, 0.8)'
+                        }}>
                             {isStudying ? `F=${formatCountdown(timeLeft)}` : `B=${formatCountdown(timeLeft)}`}
                         </Typography>
                     </Box>
                 </Tooltip>
 
-                <Button onClick={() => navigate('/focus')} variant="contained" size="small" sx={{ borderRadius: 20, bgcolor: '#2563eb', color: '#ffffff', textTransform: 'none', px: 2, py: 0.5, boxShadow: 'none' }}>
-                    Focus Mode
+                <Button 
+                    onClick={() => navigate('/focus')} 
+                    className="epic-btn-primary"
+                    size="small"
+                >
+                    🚀 Enter Focus Lock
                 </Button>
-                <Tooltip title="Profile & Advanced Settings">
+
+                <Tooltip title="Operator Profile & System Settings">
                     <Avatar 
                         onClick={() => navigate('/preferences')}
-                        sx={{ bgcolor: '#2563eb', width: 36, height: 36, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+                        sx={{ 
+                            background: 'linear-gradient(135deg, #7b2cbf 0%, #3a0ca3 100%)', 
+                            border: '2px solid rgba(157, 78, 221, 0.6)',
+                            boxShadow: '0 0 15px rgba(157, 78, 221, 0.5)',
+                            width: 40, 
+                            height: 40, 
+                            fontSize: '0.9rem', 
+                            fontWeight: 800, 
+                            cursor: 'pointer', 
+                            transition: 'all 0.3s ease',
+                            '&:hover': { transform: 'scale(1.1) rotate(5deg)', borderColor: '#00f2fe', boxShadow: '0 0 25px rgba(0, 242, 254, 0.6)' }
+                        }}
                     >
                         {initials}
                     </Avatar>

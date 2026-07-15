@@ -114,6 +114,7 @@ def register():
             
             return jsonify({
                 'message': 'User registered successfully',
+                'token': tokens['access_token'],
                 'access_token': tokens['access_token'],
                 'refresh_token': tokens['refresh_token'],
                 'user': user.to_dict()
@@ -179,6 +180,7 @@ def login():
         
         return jsonify({
             'message': 'Login successful',
+            'token': tokens['access_token'],
             'access_token': tokens['access_token'],
             'refresh_token': tokens['refresh_token'],
             'user': user.to_dict()
@@ -393,6 +395,7 @@ def google_login():
         return jsonify({
             'message': 'Google authentication successful',
             'token': jwt_token,
+            'access_token': jwt_token,
             'user': user.to_dict(),
             'is_new_user': not user.password_hash  # True if just created
         }), 200
