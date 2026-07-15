@@ -32,15 +32,15 @@ const Navbar = () => {
             justifyContent: 'space-between',
             px: { xs: 3, md: 5 },
             height: 76,
-            bgcolor: 'rgba(8, 10, 24, 0.85)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-            boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 242, 254, 0.1)',
+            bgcolor: 'rgba(17, 24, 39, 0.88)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
             position: 'sticky',
             top: 0,
             zIndex: 1100,
-            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            transition: 'all 0.3s ease',
             flexShrink: 0
         }}>
             {/* Brand / Logo Section */}
@@ -48,26 +48,26 @@ const Navbar = () => {
                 <Box sx={{
                     width: 38,
                     height: 38,
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 0 20px rgba(0, 242, 254, 0.5)'
+                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
                 }}>
-                    <AutoAwesomeIcon sx={{ color: '#03040b', fontSize: 20 }} />
+                    <AutoAwesomeIcon sx={{ color: '#ffffff', fontSize: 20 }} />
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #ffffff 0%, #00f2fe 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    FocusLearner<span style={{ color: '#00f2fe', WebkitTextFillColor: '#00f2fe' }}>.PRO</span>
+                <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.02em', color: '#f8fafc' }}>
+                    FocusLearner <span style={{ color: '#6366f1', fontWeight: 900 }}>Academic</span>
                 </Typography>
             </Box>
 
-            {/* Center High-Tech Floating Navigation */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4, alignItems: 'center' }}>
+            {/* Center Navigation */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3.5, alignItems: 'center' }}>
                 {[
-                    { label: 'Command Center', path: '/dashboard', hasArrow: false },
-                    { label: 'AI Curriculums', path: '/courses', hasArrow: false },
-                    { label: 'Focus Cockpit', path: '/manage-focus', hasArrow: true },
+                    { label: 'Dashboard', path: '/dashboard', hasArrow: false },
+                    { label: 'Curriculums', path: '/courses', hasArrow: false },
+                    { label: 'Study Cockpit', path: '/manage-focus', hasArrow: true },
                     { label: 'Preferences', path: '/preferences', hasArrow: false }
                 ].map((item) => {
                     const isActive = location.pathname === item.path;
@@ -81,28 +81,26 @@ const Navbar = () => {
                                 cursor: 'pointer',
                                 position: 'relative',
                                 py: 0.8,
-                                px: 1.5,
-                                borderRadius: '10px',
-                                bgcolor: isActive ? 'rgba(0, 242, 254, 0.12)' : 'transparent',
-                                border: isActive ? '1px solid rgba(0, 242, 254, 0.35)' : '1px solid transparent',
-                                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                px: 1.6,
+                                borderRadius: '8px',
+                                bgcolor: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                                border: isActive ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent',
+                                transition: 'all 0.2s ease',
                                 '&:hover': {
-                                    bgcolor: 'rgba(255, 255, 255, 0.06)',
-                                    borderColor: 'rgba(255, 255, 255, 0.18)',
-                                    transform: 'translateY(-2px)'
+                                    bgcolor: 'rgba(255, 255, 255, 0.05)',
+                                    borderColor: 'rgba(255, 255, 255, 0.12)',
                                 }
                             }}
                         >
                             <Typography
                                 variant="body2"
                                 sx={{
-                                    fontWeight: isActive ? 800 : 600,
+                                    fontWeight: isActive ? 700 : 500,
                                     fontFamily: 'Plus Jakarta Sans, sans-serif',
-                                    color: isActive ? '#00f2fe' : '#94a3b8',
-                                    transition: 'color 0.25s ease',
+                                    color: isActive ? '#f8fafc' : '#94a3b8',
+                                    transition: 'color 0.2s ease',
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    textShadow: isActive ? '0 0 12px rgba(0, 242, 254, 0.6)' : 'none'
+                                    alignItems: 'center'
                                 }}
                             >
                                 {item.label}
@@ -113,65 +111,69 @@ const Navbar = () => {
                 })}
             </Box>
 
-            {/* Right Telemetry Instrument & Actions */}
-            <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
-                <Tooltip title={`Live HUD Telemetry: ${isStudying ? 'Focus Protocol Active' : 'Rest Sequence Running'}. Click to configure.`}>
+            {/* Right Status Instrument & Actions */}
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Tooltip title={`Study Status: ${isStudying ? 'Focus Period Active' : 'Break Period Active'}. Click to manage.`}>
                     <Box 
                         onClick={() => navigate('/manage-focus')}
                         sx={{ 
                             display: 'flex', 
                             alignItems: 'center', 
-                            gap: 1.5, 
-                            px: 2.4, 
-                            py: 0.8, 
-                            borderRadius: '24px', 
-                            bgcolor: isStudying ? 'rgba(0, 242, 254, 0.08)' : 'rgba(16, 185, 129, 0.08)', 
-                            border: '1.5px solid',
-                            borderColor: isStudying ? '#00f2fe' : '#10b981',
+                            gap: 1.2, 
+                            px: 2, 
+                            py: 0.7, 
+                            borderRadius: '20px', 
+                            bgcolor: isStudying ? 'rgba(99, 102, 241, 0.12)' : 'rgba(16, 185, 129, 0.12)', 
+                            border: '1px solid',
+                            borderColor: isStudying ? '#6366f1' : '#10b981',
                             cursor: 'pointer',
-                            boxShadow: isStudying 
-                                ? '0 0 20px rgba(0, 242, 254, 0.35), inset 0 0 10px rgba(0, 242, 254, 0.15)' 
-                                : '0 0 20px rgba(16, 185, 129, 0.35), inset 0 0 10px rgba(16, 185, 129, 0.15)',
-                            transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                            '&:hover': { transform: 'scale(1.04) translateY(-1px)', boxShadow: isStudying ? '0 0 30px rgba(0, 242, 254, 0.55)' : '0 0 30px rgba(16, 185, 129, 0.55)' }
+                            transition: 'all 0.2s ease',
+                            '&:hover': { transform: 'translateY(-1px)', bgcolor: isStudying ? 'rgba(99, 102, 241, 0.18)' : 'rgba(16, 185, 129, 0.18)' }
                         }}
                     >
-                        <Box className={isStudying ? "pulse-dot-cyan" : "pulse-dot-emerald"} />
+                        <Box className={isStudying ? "pulse-dot-cyan" : "pulse-dot-emerald"} sx={{ bgcolor: isStudying ? '#6366f1 !important' : '#10b981 !important' }} />
                         <Typography variant="caption" sx={{ 
-                            fontWeight: 800, 
+                            fontWeight: 700, 
                             fontFamily: 'JetBrains Mono, monospace', 
-                            fontSize: '0.9rem', 
-                            color: isStudying ? '#00f2fe' : '#34d399', 
-                            letterSpacing: '0.04em',
-                            textShadow: isStudying ? '0 0 10px rgba(0, 242, 254, 0.8)' : '0 0 10px rgba(16, 185, 129, 0.8)'
+                            fontSize: '0.85rem', 
+                            color: isStudying ? '#a5b4fc' : '#34d399', 
+                            letterSpacing: '0.02em'
                         }}>
-                            {isStudying ? `F=${formatCountdown(timeLeft)}` : `B=${formatCountdown(timeLeft)}`}
+                            {isStudying ? `Focus ${formatCountdown(timeLeft)}` : `Break ${formatCountdown(timeLeft)}`}
                         </Typography>
                     </Box>
                 </Tooltip>
 
                 <Button 
                     onClick={() => navigate('/focus')} 
-                    className="epic-btn-primary"
+                    variant="contained"
+                    sx={{
+                        bgcolor: '#6366f1',
+                        color: '#ffffff',
+                        fontWeight: 600,
+                        px: 2.5,
+                        py: 0.8,
+                        borderRadius: '10px',
+                        '&:hover': { bgcolor: '#4f46e5' }
+                    }}
                     size="small"
                 >
-                    🚀 Enter Focus Lock
+                    Enter Focus Lock
                 </Button>
 
-                <Tooltip title="Operator Profile & System Settings">
+                <Tooltip title="Profile & Settings">
                     <Avatar 
                         onClick={() => navigate('/preferences')}
                         sx={{ 
-                            background: 'linear-gradient(135deg, #7b2cbf 0%, #3a0ca3 100%)', 
-                            border: '2px solid rgba(157, 78, 221, 0.6)',
-                            boxShadow: '0 0 15px rgba(157, 78, 221, 0.5)',
-                            width: 40, 
-                            height: 40, 
-                            fontSize: '0.9rem', 
-                            fontWeight: 800, 
+                            background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)', 
+                            border: '2px solid rgba(255, 255, 255, 0.15)',
+                            width: 38, 
+                            height: 38, 
+                            fontSize: '0.85rem', 
+                            fontWeight: 700, 
                             cursor: 'pointer', 
-                            transition: 'all 0.3s ease',
-                            '&:hover': { transform: 'scale(1.1) rotate(5deg)', borderColor: '#00f2fe', boxShadow: '0 0 25px rgba(0, 242, 254, 0.6)' }
+                            transition: 'all 0.2s ease',
+                            '&:hover': { borderColor: '#6366f1' }
                         }}
                     >
                         {initials}

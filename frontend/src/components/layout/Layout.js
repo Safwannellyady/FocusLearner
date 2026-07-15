@@ -7,7 +7,7 @@ const Layout = ({ children }) => {
     const [open, setOpen] = useState(true);
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f8fafc', overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#0b0f19', color: '#f8fafc', overflow: 'hidden' }}>
             <Sidebar open={open} setOpen={setOpen} />
             <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden' }}>
                 <Navbar />

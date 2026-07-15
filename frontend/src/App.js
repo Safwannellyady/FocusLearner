@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import Dashboard from './components/Dashboard';
 import DashboardNew from './components/DashboardNew';
 import LectureDetail from './components/LectureDetail';
 import Preferences from './components/Preferences';
@@ -29,42 +30,44 @@ const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.goo
 
 const theme = createTheme({
   palette: {
-    mode: 'light',
+    mode: 'dark',
     primary: {
-      main: '#2563eb', // Blue
+      main: '#6366f1', // Refined Academic Indigo
     },
     secondary: {
-      main: '#475569', // Slate
+      main: '#f59e0b', // Warm Scholar Amber / Gold
     },
     background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
+      default: '#0b0f19', // Deep Scholar Slate
+      paper: '#111827',
     },
     text: {
-      primary: '#0f172a',
-      secondary: '#64748b',
+      primary: '#f8fafc',
+      secondary: '#94a3b8',
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: { fontWeight: 700 },
-    h2: { fontWeight: 700 },
-    h3: { fontWeight: 600 },
-    button: { textTransform: 'none', fontWeight: 600 },
+    fontFamily: '"Plus Jakarta Sans", "Outfit", "Inter", sans-serif',
+    h1: { fontWeight: 800, fontFamily: '"Outfit", sans-serif' },
+    h2: { fontWeight: 800, fontFamily: '"Outfit", sans-serif' },
+    h3: { fontWeight: 700, fontFamily: '"Outfit", sans-serif' },
+    h4: { fontWeight: 700, fontFamily: '"Outfit", sans-serif' },
+    button: { textTransform: 'none', fontWeight: 600, fontFamily: '"Plus Jakarta Sans", sans-serif' },
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#f8fafc',
-          scrollbarColor: "#cbd5e1 #f8fafc",
+          backgroundColor: '#0b0f19',
+          color: '#f8fafc',
+          scrollbarColor: "#475569 #0b0f19",
           "&::-webkit-scrollbar, & *::-webkit-scrollbar": {
-            backgroundColor: "#f8fafc",
+            backgroundColor: "#0b0f19",
             width: '8px',
           },
           "&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
             borderRadius: 8,
-            backgroundColor: "#cbd5e1",
+            backgroundColor: "#475569",
             minHeight: 24,
           },
         },
@@ -73,28 +76,20 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+          borderRadius: 20,
+          background: '#111827',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '8px 24px',
+          borderRadius: 12,
+          padding: '10px 24px',
           textTransform: 'none',
           fontWeight: 600
-        },
-        containedPrimary: {
-          background: '#2563eb',
-          boxShadow: 'none',
-          '&:hover': {
-            background: '#1d4ed8',
-            boxShadow: 'none',
-          }
         },
       },
     },
@@ -116,7 +111,7 @@ function App() {
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Layout>
-                    <DashboardNew />
+                    <Dashboard />
                   </Layout>
                 </ProtectedRoute>
               }
@@ -146,6 +141,14 @@ function App() {
               }
               />
               <Route path="/courses" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CreateFocusSession />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/create-focus-session" element={
                 <ProtectedRoute>
                   <Layout>
                     <CreateFocusSession />
