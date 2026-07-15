@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Button, TextField, Grid, Card, CardContent, CardActions,
   IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  InputAdornment, LinearProgress, Alert, Tabs, Tab
+  InputAdornment, LinearProgress, Alert, Tabs, Tab, Paper, Chip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
@@ -64,6 +64,25 @@ const FocusVault = ({ subjectFocus }) => {
     }
   };
 
+  // Extracts main subject/keywords from conversational queries for Wikipedia MediaWiki API handler
+  const cleanWikipediaQuery = (raw) => {
+    if (!raw) return '';
+    let q = raw.trim();
+    // Remove conversational question starters and stop verbs
+    const conversationalPatterns = [
+      /^(who|what|where|when|why|how)\s+(is|are|was|were|did|does|do|can|could|would|should|invented|discovered|created|wrote|made|built|defined|explain|about|to)\s+/i,
+      /^(tell me about|explain|describe|give me info on|what is the meaning of|how does|who is|who was|what are)\s+/i,
+      /\b(invented by|invented|discovered by|discovered|created by|created|works|work|used for|meaning of|definition of)\b/gi,
+      /[?!.,;:]/g
+    ];
+    for (const pattern of conversationalPatterns) {
+      q = q.replace(pattern, ' ');
+    }
+    // Clean up extra whitespace and common filler words
+    q = q.replace(/\b(the|a|an|of|in|on|at|by|for|with|about)\b/gi, ' ').replace(/\s+/g, ' ').trim();
+    return q || raw.trim();
+  };
+
   const fetchWikipedia = async (query) => {
     if (!query) {
       setWikiResults([]);
@@ -71,7 +90,8 @@ const FocusVault = ({ subjectFocus }) => {
     }
     setLoading(true);
     try {
-      const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`;
+      const processedQuery = cleanWikipediaQuery(query);
+      const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(processedQuery)}&utf8=&format=json&origin=*`;
       const res = await fetch(url);
       const data = await res.json();
       setWikiResults(data.query?.search || []);
@@ -266,38 +286,106 @@ const FocusVault = ({ subjectFocus }) => {
 
       {/* Results Rendering */}
       <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 1 }}>
-        {/* VAULT TAB */}
+        {/* VAULT TAB (List Type with Click to Open & Long Press / Context Menu to Delete) */}
         {activeTab === 0 && (
-          <Grid container spacing={3}>
+          <Box>
             {!loading && materials.length === 0 ? (
-              <Grid item xs={12}>
-                <Box textAlign="center" py={5}>
-                  <Typography color="text.secondary">Your vault is empty. Add materials above or search the web to save items here.</Typography>
-                </Box>
-              </Grid>
+              <Box textAlign="center" py={5} sx={{ bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: '20px', border: '1px dashed rgba(255, 255, 255, 0.15)' }}>
+                <Typography color="#94a3b8" fontWeight="600">Your workspace vault is empty.</Typography>
+                <Typography variant="caption" color="#64748b" display="block" mt={0.5}>Add personal documents, PDFs, or code references above, or bookmark directly from Wikipedia.</Typography>
+              </Box>
             ) : (
-              materials.map(mat => (
-                <Grid item xs={12} sm={6} md={4} key={mat.id}>
-                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s, box-shadow 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' } }}>
-                    <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                      <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: mat.material_type === 'document' ? '#eff6ff' : mat.material_type === 'image' ? '#fdf4ff' : '#f0fdf4' }}>
-                        {getIconForType(mat.material_type)}
+              <Box display="flex" flexDirection="column" gap={1.8}>
+                {materials.map(mat => {
+                  let touchTimer = null;
+                  const handleTouchStart = () => {
+                    touchTimer = setTimeout(() => {
+                      if (window.confirm(`Delete "${mat.title}" from your vault?`)) {
+                        handleDelete(mat.id);
+                      }
+                    }, 650);
+                  };
+                  const handleTouchEnd = () => {
+                    if (touchTimer) clearTimeout(touchTimer);
+                  };
+
+                  return (
+                    <Paper
+                      key={mat.id}
+                      onClick={() => handleView(mat)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        if (window.confirm(`Long-Press Action: Delete "${mat.title}"?`)) {
+                          handleDelete(mat.id);
+                        }
+                      }}
+                      onTouchStart={handleTouchStart}
+                      onTouchEnd={handleTouchEnd}
+                      sx={{
+                        p: 2.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderRadius: '16px',
+                        bgcolor: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        cursor: 'pointer',
+                        transition: 'all 0.25s ease',
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 242, 254, 0.08)',
+                          borderColor: '#00f2fe',
+                          transform: 'translateX(6px)'
+                        }
+                      }}
+                    >
+                      <Box display="flex" alignItems="center" gap={2} sx={{ overflow: 'hidden' }}>
+                        <Box sx={{ p: 1.6, borderRadius: '12px', bgcolor: mat.material_type === 'document' ? 'rgba(56, 189, 248, 0.15)' : mat.material_type === 'image' ? 'rgba(244, 114, 182, 0.15)' : 'rgba(52, 211, 153, 0.15)', color: mat.material_type === 'document' ? '#38bdf8' : mat.material_type === 'image' ? '#f472b6' : '#34d399' }}>
+                          {getIconForType(mat.material_type)}
+                        </Box>
+                        <Box sx={{ overflow: 'hidden' }}>
+                          <Typography variant="subtitle1" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff" noWrap title={mat.title}>
+                            {mat.title}
+                          </Typography>
+                          <Box display="flex" alignItems="center" gap={1.5} mt={0.3}>
+                            <Chip label={mat.material_type.toUpperCase()} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 800, bgcolor: 'rgba(255,255,255,0.08)', color: '#cbd5e1' }} />
+                            <Typography variant="caption" color="#94a3b8">
+                              Added {new Date(mat.created_at).toLocaleDateString()}
+                            </Typography>
+                            <Typography variant="caption" color="#00f2fe" fontWeight="700">
+                              (Click to Open • Long-Press to Delete)
+                            </Typography>
+                          </Box>
+                        </Box>
                       </Box>
-                      <Box sx={{ overflow: 'hidden' }}>
-                        <Typography variant="subtitle1" fontWeight={600} noWrap title={mat.title}>{mat.title}</Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">{new Date(mat.created_at).toLocaleDateString()}</Typography>
-                        {mat.material_type === 'link' && <Typography variant="body2" color="primary" noWrap sx={{ mt: 1, textDecoration: 'underline' }}>{mat.url}</Typography>}
+
+                      <Box display="flex" alignItems="center" gap={1} onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="small"
+                          startIcon={<OpenInNewIcon />}
+                          onClick={() => handleView(mat)}
+                          sx={{ color: '#00f2fe', fontWeight: 700, borderRadius: '10px', px: 2, '&:hover': { bgcolor: 'rgba(0, 242, 254, 0.15)' } }}
+                        >
+                          Open
+                        </Button>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            if (window.confirm(`Delete "${mat.title}"?`)) {
+                              handleDelete(mat.id);
+                            }
+                          }}
+                          sx={{ color: '#ff4b2b', bgcolor: 'rgba(255, 75, 43, 0.1)', '&:hover': { bgcolor: 'rgba(255, 75, 43, 0.25)' } }}
+                          title="Delete material"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
                       </Box>
-                    </CardContent>
-                    <CardActions sx={{ borderTop: '1px solid #f1f5f9', justifyContent: 'space-between', px: 2 }}>
-                      <Button size="small" startIcon={<OpenInNewIcon />} onClick={() => handleView(mat)} sx={{ textTransform: 'none', fontWeight: 600 }}>View</Button>
-                      <IconButton size="small" color="error" onClick={() => handleDelete(mat.id)}><DeleteIcon fontSize="small" /></IconButton>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              ))
+                    </Paper>
+                  );
+                })}
+              </Box>
             )}
-          </Grid>
+          </Box>
         )}
 
         {/* WIKIPEDIA TAB */}

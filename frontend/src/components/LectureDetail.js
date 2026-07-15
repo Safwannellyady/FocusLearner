@@ -17,6 +17,7 @@ import GameLab from './GameLab';
 import ActivityView from './ActivityView';
 import AIChatWidget from './AIChatWidget';
 import FocusVault from './FocusVault';
+import VirtualLab from './VirtualLab';
 import FolderIcon from '@mui/icons-material/Folder';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -358,39 +359,40 @@ const LectureDetail = () => {
                 >
                   {activeTab === 0 && (
                     <Box sx={{ mt: 1 }}>
+                      <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important', mb: 3 }}>
+                        <VirtualLab subject={lecture?.subject} topic={lecture?.topic} videoTitle={activeVideo?.title} />
+                      </Box>
                       {!labActivity ? (
-                        <Box className="epic-card epic-card-cyber" p={6} sx={{ textAlign: 'center', borderRadius: '24px !important' }}>
-                          <Box sx={{ width: 84, height: 84, mx: 'auto', mb: 3, borderRadius: '24px', background: 'radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, rgba(14, 18, 38, 0.8) 100%)', border: '1px solid rgba(0, 242, 254, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 35px rgba(0, 242, 254, 0.4)' }}>
-                            <ScienceIcon sx={{ fontSize: 44, color: '#00f2fe' }} />
+                        <Box className="epic-card" p={3.5} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '20px !important' }}>
+                          <Box>
+                            <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff">
+                              ⚡ Want a Scored Problem Challenge?
+                            </Typography>
+                            <Typography variant="body2" color="#94a3b8">
+                              Our AI will generate a specific hypothesis & multi-step practice challenge for {lecture?.topic}.
+                            </Typography>
                           </Box>
-                          <span className="epic-badge-glow" style={{ marginBottom: '16px' }}>⚡ SYNCHRONIZED LAB MODULE</span>
-                          <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 1.5 }}>
-                            Interactive Virtual Lab: <span style={{ color: '#00f2fe' }}>{lecture?.topic}</span>
-                          </Typography>
-                          <Typography variant="body1" sx={{ color: '#94a3b8', mb: 4, maxWidth: 640, mx: 'auto', lineHeight: 1.7 }}>
-                            Launch a dynamic, problem-driven practice challenge tailored directly to your active video sequence. Evaluate hypotheses, write real solutions, and earn instant XP.
-                          </Typography>
                           <Button
                             onClick={handleLaunchLab}
                             disabled={labLoading}
-                            className="epic-btn-primary"
-                            startIcon={labLoading ? <CircularProgress size={22} color="inherit" /> : <ScienceIcon />}
-                            sx={{ fontSize: '1.05rem !important', py: '15px !important', px: '38px !important' }}
+                            className="epic-btn-purple"
+                            startIcon={labLoading ? <CircularProgress size={18} color="inherit" /> : <ScienceIcon />}
+                            sx={{ fontSize: '0.95rem !important', py: '12px !important', px: '28px !important' }}
                           >
-                            {labLoading ? 'Generating Neural Virtual Lab...' : '⚡ Launch Interactive Lab Challenge →'}
+                            {labLoading ? 'Generating Challenge...' : '⚡ Generate Practice Problem →'}
                           </Button>
                         </Box>
                       ) : (
-                        <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important' }}>
+                        <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important', mt: 3 }}>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, pb: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                             <Box display="flex" alignItems="center" gap={1.5}>
                               <span className="pulse-dot-cyan" />
                               <Typography variant="h5" fontWeight="900" fontFamily="Outfit, sans-serif" color="#ffffff">
-                                Active Lab: {labActivity.title || lecture?.topic}
+                                Scored Lab Challenge: {labActivity.title || lecture?.topic}
                               </Typography>
                             </Box>
                             <Button className="epic-btn-outline" size="small" onClick={() => { setLabActivity(null); setLabResult(null); }}>
-                              🔄 Reset Module
+                              🔄 Close Problem
                             </Button>
                           </Box>
                           {labResult && (

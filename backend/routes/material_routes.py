@@ -102,6 +102,21 @@ def add_material():
         current_app.logger.error(f'Error adding material: {e}')
         return jsonify({'error': 'Internal server error'}), 500
 
+@material_routes.route('/<int:material_id>', methods=['GET'])
+@token_required
+def get_single_material(material_id):
+    """Retrieve a single vault document by ID with strict multi-tenant JWT user isolation check"""
+    current_user_id = request.current_user_id
+    
+    # Enforce SQL ownership check: query by both material ID AND current_user_id
+    material = SessionMaterial.query.filter_by(id=material_id, user_id=current_user_id).first()
+    
+    # If no match exists, return 403/404 instantly (prevents User A from reading User B's vault files)
+    if not material:
+        return jsonify({"error": "Unauthorized: Document not found or access denied"}), 403
+        
+    return jsonify({"material": material.to_dict()}), 200
+
 @material_routes.route('/<int:material_id>', methods=['DELETE'])
 @token_required
 def delete_material(material_id):
@@ -133,6 +148,23 @@ import requests
 import urllib.parse
 import re
 
+def extract_wikipedia_subject(raw_query):
+    """Rewrite conversational questions into clean page titles/keywords for MediaWiki API"""
+    if not raw_query:
+        return ""
+    q = raw_query.strip()
+    patterns = [
+        r'^(who|what|where|when|why|how)\s+(is|are|was|were|did|does|do|can|could|would|should|invented|discovered|created|wrote|made|built|defined|explain|about|to)\s+',
+        r'^(tell me about|explain|describe|give me info on|what is the meaning of|how does|who is|who was|what are)\s+',
+        r'\b(invented by|invented|discovered by|discovered|created by|created|works|work|used for|meaning of|definition of)\b'
+    ]
+    for p in patterns:
+        q = re.sub(p, ' ', q, flags=re.IGNORECASE)
+    q = re.sub(r'[?!.,;:]', '', q)
+    q = re.sub(r'\b(the|a|an|of|in|on|at|by|for|with|about)\b', ' ', q, flags=re.IGNORECASE)
+    q = re.sub(r'\s+', ' ', q).strip()
+    return q if q else raw_query.strip()
+
 @material_routes.route('/search_web', methods=['GET'])
 @token_required
 def search_web_results():
@@ -142,11 +174,12 @@ def search_web_results():
         return jsonify({'results': []}), 200
         
     results = []
-    encoded_query = urllib.parse.quote(query)
     
-    # 1. Wikipedia Encyclopedia Query
+    # 1. Wikipedia Encyclopedia Query (Cleaned & Processed for MediaWiki API)
     try:
-        wiki_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={encoded_query}&utf8=&format=json&srlimit=4"
+        clean_wiki_query = extract_wikipedia_subject(query)
+        encoded_wiki_query = urllib.parse.quote(clean_wiki_query)
+        wiki_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={encoded_wiki_query}&utf8=&format=json&srlimit=4"
         wiki_res = requests.get(wiki_url, timeout=4).json()
         if 'query' in wiki_res and 'search' in wiki_res['query']:
             for item in wiki_res['query']['search']:

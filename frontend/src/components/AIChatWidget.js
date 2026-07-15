@@ -108,17 +108,17 @@ const AIChatWidget = ({ context, videoId }) => {
                             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.36)',
                         }}>
                             {/* Header */}
-                            <Box sx={{ p: 2, background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)' }}>
-                                        <SmartToyIcon />
+                            <Box sx={{ p: 2, background: 'linear-gradient(135deg, #4f46e5 0%, #00f2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Box display="flex" alignItems="center" gap={1.2}>
+                                    <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.25)', border: '1px solid #ffffff' }}>
+                                        <SmartToyIcon sx={{ color: '#00f2fe' }} />
                                     </Avatar>
                                     <Box>
-                                        <Typography variant="subtitle1" fontWeight="700" color="white" lineHeight={1.2}>
-                                            FocusBot
+                                        <Typography variant="subtitle1" fontWeight="800" fontFamily="Outfit, sans-serif" color="white" lineHeight={1.2}>
+                                            Deep-Learned AI Mentor
                                         </Typography>
-                                        <Typography variant="caption" color="rgba(255,255,255,0.8)">
-                                            AI Tutor
+                                        <Typography variant="caption" color="rgba(255,255,255,0.9)" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <span className="pulse-dot-cyan" /> 100% Curriculum & Vault Synced
                                         </Typography>
                                     </Box>
                                 </Box>
