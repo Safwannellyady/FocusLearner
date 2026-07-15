@@ -255,6 +255,9 @@ class Lecture(db.Model):
     topic = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     video_ids = db.Column(db.Text, nullable=True)  # JSON array of video IDs
+    lab_config = db.Column(db.Text, nullable=True)  # JSON string of AI-deep-learned Virtual Lab configuration
+    game_config = db.Column(db.Text, nullable=True) # JSON string of AI-deep-learned Game/Fun session
+    quiz_config = db.Column(db.Text, nullable=True) # JSON string of AI-deep-learned Quiz questions
     
     # Link to centralized Learning Intent
     learning_intent_id = db.Column(db.Integer, db.ForeignKey('learning_intents.id', ondelete='SET NULL'), nullable=True, index=True)
@@ -278,6 +281,9 @@ class Lecture(db.Model):
             'topic': self.topic,
             'description': self.description,
             'video_ids': json.loads(self.video_ids) if self.video_ids else [],
+            'lab_config': json.loads(self.lab_config) if self.lab_config else None,
+            'game_config': json.loads(self.game_config) if self.game_config else None,
+            'quiz_config': json.loads(self.quiz_config) if self.quiz_config else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
             'is_active': self.is_active

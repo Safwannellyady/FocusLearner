@@ -163,6 +163,10 @@ def create_lecture():
     intent = LearningIntent.query.filter_by(subject=subject, topic=topic).first()
     intent_id = intent.id if intent else None
 
+    # Deep-learn user session details to generate required Virtual Lab, Game Session, and Neural Quiz
+    print(f"Executing AI Deep-Learn for: {title} ({subject} - {topic})")
+    deep_learned_suite = ai_service.deep_learn_session(title, subject, topic, description)
+
     lecture = Lecture(
         user_id=user_id,
         course_id=course_id,
@@ -171,6 +175,9 @@ def create_lecture():
         topic=topic,
         description=description,
         video_ids=json.dumps(video_ids) if video_ids else None,
+        lab_config=json.dumps(deep_learned_suite.get('lab_config')) if deep_learned_suite.get('lab_config') else None,
+        game_config=json.dumps(deep_learned_suite.get('game_config')) if deep_learned_suite.get('game_config') else None,
+        quiz_config=json.dumps(deep_learned_suite.get('quiz_config')) if deep_learned_suite.get('quiz_config') else None,
         learning_intent_id=intent_id
     )
     

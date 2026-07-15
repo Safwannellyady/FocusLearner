@@ -14,9 +14,12 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BugReportIcon from '@mui/icons-material/BugReport';
 
-const VirtualLab = ({ subject = '', topic = '', videoTitle = '' }) => {
-  // Determine domain type based on subject/topic text
+const VirtualLab = ({ subject = '', topic = '', videoTitle = '', labConfig = null }) => {
+  // Determine domain type based on deep-learned labConfig or subject/topic text
   const getDomainType = () => {
+    if (labConfig && labConfig.mode) {
+      return labConfig.mode;
+    }
     const text = `${subject} ${topic}`.toLowerCase();
     if (text.includes('code') || text.includes('python') || text.includes('javascript') || text.includes('react') || text.includes('cpp') || text.includes('c++') || text.includes('rust') || text.includes('sql') || text.includes('algorithm')) {
       return 'coding';
@@ -37,12 +40,17 @@ const VirtualLab = ({ subject = '', topic = '', videoTitle = '' }) => {
   const [aiFeedback, setAiFeedback] = useState('');
 
   useEffect(() => {
-    setActiveDomain(getDomainType());
-  }, [subject, topic]);
+    const domain = getDomainType();
+    setActiveDomain(domain);
+    if (labConfig && labConfig.starter_code) {
+      setCode(labConfig.starter_code);
+      if (labConfig.language) setLanguage(labConfig.language);
+    }
+  }, [subject, topic, labConfig]);
 
   // --- CODING LAB STATE ---
-  const [language, setLanguage] = useState('python');
-  const [code, setCode] = useState(`# AI Deep-Learned Template for: ${topic || 'Data Processing'}
+  const [language, setLanguage] = useState(labConfig?.language || 'python');
+  const [code, setCode] = useState(labConfig?.starter_code || `# AI Deep-Learned Template for: ${topic || 'Data Processing'}
 # Language: Python 3.11
 
 def solve_challenge(data):

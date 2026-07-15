@@ -25,7 +25,7 @@ import { gameAPI } from '../services/api';
 import ActivityView from './ActivityView';
 import Leaderboard from './Leaderboard';
 
-const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic }) => {
+const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic, gameConfig = null }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -39,6 +39,18 @@ const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic }) =
     setLoading(true);
     setResult(null);
     try {
+      if (gameConfig && gameConfig.trivia_list && gameConfig.trivia_list.length > 0) {
+        setActiveActivity({
+          challenge_id: `deep_learned_${Date.now()}`,
+          type: 'quiz',
+          title: gameConfig.title || `${topic} Arena Challenge`,
+          questions: gameConfig.trivia_list,
+          points: gameConfig.xp_reward || 150
+        });
+        setActivityOpen(true);
+        setLoading(false);
+        return;
+      }
       const response = await gameAPI.generateChallenge(subject, 1, topic, null);
       if (response.data.challenge) {
         setActiveActivity(response.data.challenge);

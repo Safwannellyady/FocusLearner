@@ -415,7 +415,7 @@ const LectureDetail = () => {
                         <span className="epic-badge-emerald">🎮 REAL-TIME ENGINE</span>
                       </Box>
                       <Box sx={{ minHeight: '520px' }}>
-                        <GameLab embedded={true} subject={lecture?.subject} topic={lecture?.topic} />
+                        <GameLab embedded={true} subject={lecture?.subject} topic={lecture?.topic} gameConfig={lecture?.game_config} />
                       </Box>
                     </Box>
                   )}
