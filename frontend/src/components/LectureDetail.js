@@ -18,6 +18,7 @@ import ActivityView from './ActivityView';
 import AIChatWidget from './AIChatWidget';
 import FocusVault from './FocusVault';
 import FolderIcon from '@mui/icons-material/Folder';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const LectureDetail = () => {
   const { id } = useParams();
@@ -308,95 +309,109 @@ const LectureDetail = () => {
               </Tabs>
             </Box>
 
-            {/* Tab Content */}
-            <Box>
-              {activeTab === 0 && (
-                <Box sx={{ mt: 2 }}>
-                  {!labActivity ? (
-                    <Box p={4} sx={{ border: '1px solid #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center' }}>
-                      <ScienceIcon sx={{ fontSize: 48, color: '#3b82f6', mb: 2 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>
-                        Interactive AI Virtual Lab: {lecture?.topic}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b', mb: 3, maxWidth: 600, mx: 'auto' }}>
-                        Launch a dynamic, problem-driven practice challenge tailored specifically to your current session topic and video context.
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        onClick={handleLaunchLab}
-                        disabled={labLoading}
-                        startIcon={labLoading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
-                        sx={{ bgcolor: '#2563eb', px: 4, py: 1.5, borderRadius: 3, fontWeight: 700 }}
-                      >
-                        {labLoading ? 'Generating Virtual Lab...' : 'Launch Lab Challenge'}
-                      </Button>
-                    </Box>
-                  ) : (
-                    <Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6" fontWeight="700" color="#0f172a">
-                          Active Lab: {labActivity.title || lecture?.topic}
-                        </Typography>
-                        <Button variant="outlined" size="small" onClick={() => { setLabActivity(null); setLabResult(null); }}>
-                          Reset Lab
-                        </Button>
-                      </Box>
-                      {labResult && (
-                        <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 2, borderRadius: 2 }}>
-                          <Typography fontWeight="700">{labResult.is_correct ? "Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
-                          <Typography variant="body2">{labResult.feedback}</Typography>
-                        </Alert>
-                      )}
-                      <ActivityView activity={labActivity} onSubmit={handleLabSubmit} />
-                    </Box>
-                  )}
-                </Box>
-              )}
-              {activeTab === 1 && (
-                <Box sx={{ mt: 2, border: '1px solid #e2e8f0', borderRadius: 3, p: 2, bgcolor: '#ffffff' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <SportsEsportsIcon color="primary" /> Gamified Learning Arena: {lecture?.subject || 'General'}
-                  </Typography>
-                  <Box sx={{ minHeight: '500px' }}>
-                    <GameLab embedded={true} subject={lecture?.subject} topic={lecture?.topic} />
-                  </Box>
-                </Box>
-              )}
-              {activeTab === 2 && (
-                <Box p={2}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>Quiz & Exercises</Typography>
-                  {!showQuiz ? (
-                    <Box sx={{ p: 3, border: '1px solid #e2e8f0', borderRadius: 3, bgcolor: '#eff6ff' }}>
-                      <Typography variant="subtitle1" fontWeight={700} color="#1e40af" mb={1}>Unit Test: {lecture?.topic}</Typography>
-                      <Typography variant="body2" color="#3b82f6" mb={2}>Assess your understanding with a dynamic AI-generated quiz.</Typography>
-                      <Button variant="contained" onClick={handleStartQuiz} sx={{ bgcolor: '#2563eb', color: '#fff' }}>Start AI Quiz</Button>
-                    </Box>
-                  ) : (
-                    <Box>
-                      {quizResult ? (
-                        <Box>
-                          <Alert severity={quizResult.score === quizResult.total ? "success" : "info"} sx={{ mb: 2 }}>
-                            You scored {quizResult.score} out of {quizResult.total}!
-                          </Alert>
-                          <Box sx={{ display: 'flex', gap: 2 }}>
-                            <Button variant="contained" onClick={handleRetakeQuiz} sx={{ bgcolor: '#2563eb' }}>Retake Quiz</Button>
-                            <Button variant="outlined" onClick={() => setShowQuiz(false)}>Close</Button>
-                          </Box>
+            {/* Tab Content with Smooth Transitions */}
+            <Box sx={{ position: 'relative', minHeight: 400 }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {activeTab === 0 && (
+                    <Box sx={{ mt: 2 }}>
+                      {!labActivity ? (
+                        <Box p={4} sx={{ border: '1px solid #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center' }}>
+                          <ScienceIcon sx={{ fontSize: 48, color: '#3b82f6', mb: 2 }} />
+                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>
+                            Interactive AI Virtual Lab: {lecture?.topic}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#64748b', mb: 3, maxWidth: 600, mx: 'auto' }}>
+                            Launch a dynamic, problem-driven practice challenge tailored specifically to your current session topic and video context.
+                          </Typography>
+                          <Button
+                            variant="contained"
+                            onClick={handleLaunchLab}
+                            disabled={labLoading}
+                            startIcon={labLoading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
+                            sx={{ bgcolor: '#2563eb', px: 4, py: 1.5, borderRadius: 3, fontWeight: 700, transition: 'all 0.3s ease', '&:hover': { transform: 'scale(1.03)', boxShadow: '0 6px 16px rgba(37,99,235,0.3)' } }}
+                          >
+                            {labLoading ? 'Generating Virtual Lab...' : 'Launch Lab Challenge'}
+                          </Button>
                         </Box>
                       ) : (
                         <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6" fontWeight="700" color="#0f172a">
+                              Active Lab: {labActivity.title || lecture?.topic}
+                            </Typography>
+                            <Button variant="outlined" size="small" onClick={() => { setLabActivity(null); setLabResult(null); }}>
+                              Reset Lab
+                            </Button>
+                          </Box>
+                          {labResult && (
+                            <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 2, borderRadius: 2 }}>
+                              <Typography fontWeight="700">{labResult.is_correct ? "Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
+                              <Typography variant="body2">{labResult.feedback}</Typography>
+                            </Alert>
+                          )}
+                          <ActivityView activity={labActivity} onSubmit={handleLabSubmit} />
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+                  {activeTab === 1 && (
+                    <Box sx={{ mt: 2, border: '1px solid #e2e8f0', borderRadius: 3, p: 2, bgcolor: '#ffffff' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <SportsEsportsIcon color="primary" /> Gamified Learning Arena: {lecture?.subject || 'General'}
+                      </Typography>
+                      <Box sx={{ minHeight: '500px' }}>
+                        <GameLab embedded={true} subject={lecture?.subject} topic={lecture?.topic} />
+                      </Box>
+                    </Box>
+                  )}
+                  {activeTab === 2 && (
+                    <Box sx={{ mt: 2 }}>
+                      {!showQuiz ? (
+                        <Box p={4} sx={{ border: '1px solid #cbd5e1', borderRadius: 3, bgcolor: '#f8fafc', textAlign: 'center' }}>
+                          <AssignmentIcon sx={{ fontSize: 48, color: '#2563eb', mb: 2 }} />
+                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>AI Assessment Quiz: {lecture?.topic}</Typography>
+                          <Typography variant="body2" sx={{ color: '#64748b', mb: 3, maxWidth: 600, mx: 'auto' }}>
+                            Test your comprehension with dynamically generated multiple-choice questions based on this video sequence.
+                          </Typography>
+                          <Button variant="contained" onClick={handleStartQuiz} sx={{ bgcolor: '#2563eb', px: 4, py: 1.5, borderRadius: 3, fontWeight: 700, transition: 'all 0.3s ease', '&:hover': { transform: 'scale(1.03)', boxShadow: '0 6px 16px rgba(37,99,235,0.3)' } }}>
+                            Start AI Quiz
+                          </Button>
+                        </Box>
+                      ) : (
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6" fontWeight="700" color="#0f172a">Quiz: {lecture?.topic}</Typography>
+                            <Button variant="outlined" size="small" onClick={handleRetakeQuiz}>Retake New Quiz</Button>
+                          </Box>
+                          {quizResult ? (
+                            <Alert severity={quizResult.score >= 3 ? "success" : "warning"} sx={{ mb: 3, borderRadius: 3 }}>
+                              <Typography variant="subtitle1" fontWeight={700}>
+                                Quiz Completed! Score: {quizResult.score} / {quizResult.total}
+                              </Typography>
+                              <Typography variant="body2">
+                                {quizResult.score >= 3 ? 'Great job mastering this topic! Proceed to next module when ready.' : 'Review the video sequence and try again to improve your score.'}
+                              </Typography>
+                            </Alert>
+                          ) : null}
                           {quiz?.map((q, index) => {
                             const answered = quizAnswers[q.id];
                             return (
-                              <Card key={q.id} sx={{ mb: 2, border: '1px solid #e2e8f0', boxShadow: 'none' }}>
-                                <CardContent>
-                                  <Typography variant="subtitle1" fontWeight={600}>{index + 1}. {q.question}</Typography>
-                                  <Grid container spacing={1} sx={{ mt: 1 }}>
+                              <Card key={q.id} sx={{ mb: 2.5, border: '1px solid #e2e8f0', borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.02)', transition: 'all 0.25s ease', '&:hover': { borderColor: '#94a3b8' } }}>
+                                <CardContent sx={{ p: 2.5 }}>
+                                  <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>{index + 1}. {q.question}</Typography>
+                                  <Grid container spacing={1.2}>
                                     {q.options.map(opt => {
                                       const correctAns = q.correctAnswer || q.correct_answer;
                                       let btnColor = '#0f172a';
-                                      let btnBgcolor = 'transparent';
-                                      let borderColor = 'rgba(0, 0, 0, 0.23)';
+                                      let btnBgcolor = '#f8fafc';
+                                      let borderColor = '#cbd5e1';
 
                                       if (answered) {
                                         if (opt === correctAns) {
@@ -415,19 +430,25 @@ const LectureDetail = () => {
                                           <Button
                                             variant={answered ? "contained" : "outlined"}
                                             fullWidth
-                                            size="small"
+                                            size="medium"
                                             disabled={!!answered && opt !== correctAns && answered.selected !== opt}
                                             onClick={() => handleQuizOptionClick(q, opt)}
                                             sx={{
                                               justifyContent: "flex-start",
                                               textAlign: "left",
+                                              py: 1,
+                                              px: 2,
+                                              borderRadius: 2,
+                                              fontWeight: 600,
+                                              textTransform: 'none',
                                               color: btnColor,
                                               bgcolor: btnBgcolor,
                                               borderColor: borderColor,
-                                              '&:hover': answered ? { bgcolor: btnBgcolor } : {},
+                                              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                              '&:hover': answered ? { bgcolor: btnBgcolor } : { bgcolor: '#eff6ff', borderColor: '#3b82f6', transform: 'translateX(4px)' },
                                               '&.Mui-disabled': {
-                                                bgcolor: btnBgcolor !== 'transparent' ? btnBgcolor : 'transparent',
-                                                color: btnColor !== '#0f172a' ? btnColor : 'rgba(0, 0, 0, 0.26)'
+                                                bgcolor: btnBgcolor !== '#f8fafc' ? btnBgcolor : '#f1f5f9',
+                                                color: btnColor !== '#0f172a' ? btnColor : 'rgba(0, 0, 0, 0.38)'
                                               }
                                             }}
                                           >
@@ -441,30 +462,31 @@ const LectureDetail = () => {
                               </Card>
                             );
                           })}
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            disabled={Object.keys(quizAnswers).length !== quiz?.length}
-                            onClick={handleQuizSubmit}
-                            sx={{ mt: 2, bgcolor: '#2563eb' }}
-                          >
-                            Finish & View Score
-                          </Button>
+                          {!quizResult && quiz && quiz.length > 0 && (
+                            <Button
+                              variant="contained"
+                              fullWidth
+                              onClick={handleQuizSubmit}
+                              sx={{ mt: 1, bgcolor: '#2563eb', py: 1.3, borderRadius: 3, fontWeight: 700, transition: 'all 0.3s ease', '&:hover': { transform: 'scale(1.01)', boxShadow: '0 6px 18px rgba(37,99,235,0.3)' } }}
+                            >
+                              Finish & View Score
+                            </Button>
+                          )}
                         </Box>
                       )}
                     </Box>
                   )}
-                </Box>
-              )}
-              {activeTab === 3 && (
-                <Box p={2}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>Workspace Vault</Typography>
-                  <Typography variant="body2" sx={{ color: '#475569', mb: 3 }}>
-                    Store and search all your essential study materials here without leaving the focus zone.
-                  </Typography>
-                  <FocusVault subjectFocus={lecture?.subject} />
-                </Box>
-              )}
+                  {activeTab === 3 && (
+                    <Box p={2}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>Workspace Vault</Typography>
+                      <Typography variant="body2" sx={{ color: '#475569', mb: 3 }}>
+                        Store and search all your essential study materials here without leaving the focus zone.
+                      </Typography>
+                      <FocusVault subjectFocus={lecture?.subject} />
+                    </Box>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </Box>
           </Grid>
 

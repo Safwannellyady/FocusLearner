@@ -28,18 +28,68 @@ const Navbar = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            px: 4,
+            px: { xs: 2, md: 4 },
             height: 72,
-            bgcolor: '#ffffff',
+            bgcolor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)',
             borderBottom: '1px solid #e2e8f0',
+            boxShadow: '0 4px 20px -5px rgba(0,0,0,0.04)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 1100,
+            transition: 'all 0.3s ease',
             flexShrink: 0
         }}>
-            {/* Center Links */}
-            <Box sx={{ display: 'flex', gap: 3, flexGrow: 1, justifyContent: 'center' }}>
-                <Typography onClick={() => navigate('/dashboard')} variant="body2" sx={{ fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>Home</Typography>
-                <Typography onClick={() => navigate('/dashboard')} variant="body2" sx={{ fontWeight: 500, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>Programs <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.5 }} /></Typography>
-                <Typography onClick={() => navigate('/courses')} variant="body2" sx={{ fontWeight: 500, color: '#0f172a', cursor: 'pointer' }}>Courses</Typography>
-                <Typography onClick={() => navigate('/manage-focus')} variant="body2" sx={{ fontWeight: 500, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>Applications <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.5 }} /></Typography>
+            {/* Center Links with Micro-Hover Transitions */}
+            <Box sx={{ display: 'flex', gap: 3.5, flexGrow: 1, justifyContent: 'center' }}>
+                {[
+                    { label: 'Home', path: '/dashboard', hasArrow: false },
+                    { label: 'Programs', path: '/dashboard', hasArrow: true },
+                    { label: 'Courses', path: '/courses', hasArrow: false },
+                    { label: 'Applications', path: '/manage-focus', hasArrow: true }
+                ].map((item) => (
+                    <Box
+                        key={item.label}
+                        onClick={() => navigate(item.path)}
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            py: 0.5,
+                            '&:hover .nav-text': { color: '#2563eb' },
+                            '&:hover .nav-line': { width: '100%' }
+                        }}
+                    >
+                        <Typography
+                            className="nav-text"
+                            variant="body2"
+                            sx={{
+                                fontWeight: 600,
+                                color: '#334155',
+                                transition: 'color 0.25s ease',
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}
+                        >
+                            {item.label}
+                            {item.hasArrow && <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.3, transition: 'transform 0.25s ease', '.nav-text:hover &': { transform: 'rotate(180deg)' } }} />}
+                        </Typography>
+                        <Box
+                            className="nav-line"
+                            sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                width: '0%',
+                                height: 2,
+                                bgcolor: '#2563eb',
+                                borderRadius: 1,
+                                transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
+                        />
+                    </Box>
+                ))}
             </Box>
 
             {/* Right Actions */}
