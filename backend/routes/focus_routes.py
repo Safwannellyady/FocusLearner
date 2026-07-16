@@ -25,9 +25,9 @@ youtube_service = YouTubeService()
 @token_required
 def lock_focus():
     """Lock a focus session with a specific subject"""
-    data = request.get_json()
+    data = request.get_json() or {}
     user_id = request.current_user_id
-    subject_focus = data.get('subject_focus')
+    subject_focus = data.get('subject_focus') or data.get('subjectFocus')
     
     if not subject_focus:
         return jsonify({'error': 'subject_focus is required'}), 400
@@ -114,9 +114,9 @@ def get_current_focus():
 @token_required
 def update_current_video():
     """Update the current video being watched in the focus session"""
-    data = request.get_json()
+    data = request.get_json() or {}
     user_id = request.current_user_id
-    video_id = data.get('video_id')
+    video_id = data.get('video_id') or data.get('videoId')
     timestamp = data.get('timestamp', 0)
     
     session = FocusSession.query.filter_by(
@@ -196,10 +196,10 @@ from models import DistractionLog
 @token_required
 def log_distraction():
     """Log a completed distraction event"""
-    data = request.get_json()
+    data = request.get_json() or {}
     user_id = request.current_user_id
     
-    duration = data.get('duration')
+    duration = data.get('duration', 0)
     reason = data.get('reason', 'tab_switch')
     timestamp = data.get('timestamp') # ISO string
     

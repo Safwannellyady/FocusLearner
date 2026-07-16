@@ -173,6 +173,7 @@ def search_web_results():
     if not query:
         return jsonify({'results': []}), 200
         
+    encoded_query = urllib.parse.quote(query)
     results = []
     
     # 1. Wikipedia Encyclopedia Query (Cleaned & Processed for MediaWiki API)

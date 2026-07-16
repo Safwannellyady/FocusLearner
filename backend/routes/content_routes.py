@@ -52,28 +52,57 @@ def search_content():
     if not query:
         query = subject_focus
     
-    if source == 'youtube':
+    if source == 'youtube' or not source:
         videos = youtube_service.search_videos(
             query=query,
             subject_focus=subject_focus,
             max_results=20
         )
-        
         return jsonify({
-            'source': source,
+            'source': 'youtube',
             'query': query,
             'subject_focus': subject_focus,
             'results': videos,
             'count': len(videos)
         }), 200
     
-    # Placeholder for other sources
-    return jsonify({
-        'source': source,
-        'query': query,
-        'results': [],
-        'message': f'{source} integration coming soon'
-    }), 200
+    # Handle educational web/article sources via DuckDuckGo & Wikipedia search fallback
+    try:
+        import requests, urllib.parse
+        encoded_q = urllib.parse.quote(query)
+        ddg_url = f"https://api.duckduckgo.com/?q={encoded_q}&format=json&no_html=1&skip_disambig=1"
+        res = requests.get(ddg_url, timeout=3).json()
+        web_results = []
+        if res.get('AbstractText') and res.get('AbstractURL'):
+            web_results.append({
+                'title': res.get('Heading', query),
+                'description': res.get('AbstractText'),
+                'url': res.get('AbstractURL'),
+                'source': source
+            })
+        for topic in res.get('RelatedTopics', [])[:5]:
+            if isinstance(topic, dict) and topic.get('Text') and topic.get('FirstURL'):
+                web_results.append({
+                    'title': topic.get('Text', '').split(' - ')[0][:80],
+                    'description': topic.get('Text', ''),
+                    'url': topic.get('FirstURL'),
+                    'source': source
+                })
+        return jsonify({
+            'source': source,
+            'query': query,
+            'subject_focus': subject_focus,
+            'results': web_results,
+            'count': len(web_results)
+        }), 200
+    except Exception as e:
+        print(f"Content search error for {source}: {e}")
+        return jsonify({
+            'source': source,
+            'query': query,
+            'results': [],
+            'message': f'No results found for {source}'
+        }), 200
 
 
 @content_routes.route('/filter', methods=['POST'])

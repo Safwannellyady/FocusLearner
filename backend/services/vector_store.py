@@ -23,3 +23,7 @@ class VectorStore:
             full_text = self.transcripts[video_id]
             return [full_text[:50000]]
         return []
+
+
+vector_store = VectorStore()
+

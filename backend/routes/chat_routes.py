@@ -27,11 +27,11 @@ def _format_db_history(db_messages):
 @token_required
 def send_message():
     """Send message to AI Tutor and save to database"""
-    data = request.get_json()
+    data = request.get_json() or {}
     user_id = request.current_user_id
     message = data.get('message')
     context = data.get('context')  # Video title/subject
-    video_id = data.get('videoId')
+    video_id = data.get('videoId') or data.get('video_id')
     
     if not message:
         return jsonify({'error': 'Message is required'}), 400

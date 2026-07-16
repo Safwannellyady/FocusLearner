@@ -1,12 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
-import DashboardNew from './components/DashboardNew';
 import LectureDetail from './components/LectureDetail';
 import Preferences from './components/Preferences';
 import ProtectedRoute from './components/ProtectedRoute';

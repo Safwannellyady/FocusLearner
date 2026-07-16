@@ -361,43 +361,73 @@ class AIService:
              return {"analysis": "Incorrect answer. Review the basic concepts.", "remediation_focus": subject}
         return parsed
 
-    def answer_question(self, video_id: str, message: str, history: List[Dict[str, str]] = None) -> str:
+    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, Any]] = None, video_id: Optional[str] = None) -> str:
         """
-        Answer a student's question using video RAG context and chat history.
+        Main chat interface called by chat_routes.py.
+        Handles video context, subject context, history, and RAG retrieval.
         """
-        if not self.api_key:
-            return f"That's a great question about the lecture! Based on the key concepts covered, make sure to review the core formulas and examples shown in the video timeline. (AI Tutor offline fallback)"
-            
         if history is None:
             history = []
+        
+        if video_id:
+            from services.vector_store import vector_store
+            if not vector_store.is_video_processed(video_id):
+                try:
+                    from services.youtube_service import YouTubeService
+                    YouTubeService().get_video_transcript(video_id)
+                except Exception as e:
+                    print(f"Transcript load error in chat: {e}")
+
+        if not self.api_key:
+            return self._get_fallback_chat_response(message, context, video_id)
             
         system_instruction = (
-            "You are FocusLearner AI, an expert AI tutor helping a student understand a video lecture. "
-            "Use the provided transcript excerpts and context to answer clearly and concisely. "
-            "If the answer is not in the transcript, use your general domain knowledge but mention it is supplementary."
+            "You are FocusLearner AI, an encouraging and expert AI mentor assisting a student. "
+            "Explain concepts clearly, concisely, and accurately without any fluff. "
         )
-        
-        # Try to get RAG context if video_id provided
+        if context:
+            system_instruction += f"\nCurrent Study Subject/Video Context: {context}\n"
+            
         if video_id:
             try:
-                from services.video_service import VideoService
-                vs = VideoService()
-                relevant_chunks = vs.query_context(video_id, message)
-                if relevant_chunks:
-                    system_instruction += f"\n\nTranscript Excerpts related to query:\n{ ' ... '.join(relevant_chunks) }\n"
+                from services.vector_store import vector_store
+                relevant_chunks = vector_store.query_context(video_id, message)
+                if relevant_chunks and relevant_chunks[0]:
+                    system_instruction += f"\nVideo Transcript Excerpt:\n{relevant_chunks[0][:15000]}\n"
             except Exception as e:
                 print(f"RAG Error: {e}")
-            
-        full_prompt = f"System: {system_instruction}\n"
-        
-        for msg in history[-5:]: # Keep last 5 turns for context window
+
+        full_prompt = f"System: {system_instruction}\n\n"
+        for msg in history[-10:]:
             role = "User" if msg.get("role") == "user" else "Tutor"
-            content = msg.get("parts", [""])[0] 
+            parts = msg.get("parts", [""])
+            content = parts[0] if parts else ""
             full_prompt += f"{role}: {content}\n"
             
         full_prompt += f"User: {message}\nTutor:"
         
-        return self._call_gemini(full_prompt)
+        resp = self._call_gemini(full_prompt)
+        if not resp:
+            return self._get_fallback_chat_response(message, context, video_id)
+        return resp
+
+    def _get_fallback_chat_response(self, message: str, context: Optional[str] = None, video_id: Optional[str] = None) -> str:
+        """Fallback response when API key is missing or offline"""
+        msg_lower = message.lower()
+        ctx_str = f" regarding {context}" if context else ""
+        if any(w in msg_lower for w in ['hello', 'hi', 'hey', 'start']):
+            return f"Hello! I am your FocusLearner AI Mentor. How can I help you understand the concepts{ctx_str} today?"
+        if any(w in msg_lower for w in ['joke', 'funny']):
+            return "Why do Python programmers prefer dark mode? Because light attracts bugs!"
+        if any(w in msg_lower for w in ['help', 'what is', 'explain', 'how']):
+            return f"That is a great question{ctx_str}! To master this concept, break it down into core principles: 1) Identify given variables and constraints, 2) Apply the foundational formula or theorem, and 3) Verify your solution step-by-step against edge cases."
+        return f"I hear your question about '{message[:40]}...'. When studying{ctx_str}, active recall and testing yourself on key definitions will reinforce neural retention! Let's tackle a practice challenge together."
+
+    def answer_question(self, video_id: str, message: str, history: List[Dict[str, str]] = None) -> str:
+        """
+        Answer a student's question using video RAG context and chat history.
+        """
+        return self.chat(message=message, context=None, history=history, video_id=video_id)
 
     def _get_mock_quiz(self, subject, topic, count):
         """Fallback to high-quality topic-synchronized static quizzes if AI fails"""
