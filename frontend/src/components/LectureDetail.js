@@ -117,6 +117,11 @@ const LectureDetail = () => {
 
   const handleStartQuiz = async () => {
     try {
+      if (lecture?.quiz_config && Array.isArray(lecture.quiz_config) && lecture.quiz_config.length > 0) {
+        setQuiz(lecture.quiz_config);
+        setShowQuiz(true);
+        return;
+      }
       const videoContext = lecture ? { title: lecture.title, description: lecture.description } : null;
       const res = await lectureAPI.generateQuiz(lecture.subject, lecture.topic, 5, videoContext);
       if (res.data.quiz) { setQuiz(res.data.quiz); setShowQuiz(true); }
