@@ -47,6 +47,8 @@ class User(db.Model):
     activity_results = db.relationship('ActivityResult', backref='user', lazy=True, cascade='all, delete-orphan')
     learning_loop_states = db.relationship('LearningLoopState', backref='user', lazy=True, cascade='all, delete-orphan')
     topic_mastery = db.relationship('UserTopicMastery', backref='user', lazy=True, cascade='all, delete-orphan')
+    srs_cards = db.relationship('SpacedRepetitionCard', backref='user', lazy=True, cascade='all, delete-orphan')
+    room_participations = db.relationship('StudyRoomParticipant', backref='user', lazy=True, cascade='all, delete-orphan')
     
     # Indexes for performance
     __table_args__ = (
@@ -568,4 +570,155 @@ class SessionMaterial(db.Model):
             'subject_focus': self.subject_focus,
             'created_at': self.created_at.isoformat()
         }
+
+
+class SpacedRepetitionCard(db.Model):
+    """Adaptive Spaced Repetition (SuperMemo SM-2) flashcard for tracking review schedules and memory retention"""
+    __tablename__ = 'spaced_repetition_cards'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    subject = db.Column(db.String(100), nullable=False, index=True)
+    topic = db.Column(db.String(200), nullable=False, index=True)
+    question = db.Column(db.Text, nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+    ease_factor = db.Column(db.Float, default=2.5)  # SM-2 initial ease factor
+    interval = db.Column(db.Integer, default=1)      # Days until next review
+    repetitions = db.Column(db.Integer, default=0)   # Number of consecutive correct reviews
+    last_reviewed_at = db.Column(db.DateTime, nullable=True)
+    next_review_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (
+        db.Index('idx_srs_user_review', 'user_id', 'next_review_at'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'subject': self.subject,
+            'topic': self.topic,
+            'question': self.question,
+            'answer': self.answer,
+            'ease_factor': round(self.ease_factor, 2),
+            'interval': self.interval,
+            'repetitions': self.repetitions,
+            'last_reviewed_at': self.last_reviewed_at.isoformat() if self.last_reviewed_at else None,
+            'next_review_at': self.next_review_at.isoformat() if self.next_review_at else None,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class StudyRoom(db.Model):
+    """Multiplayer Study Room with Pomodoro synchronization and scheduled discussion/review sessions"""
+    __tablename__ = 'study_rooms'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    room_code = db.Column(db.String(10), unique=True, nullable=False, index=True)
+    title = db.Column(db.String(200), nullable=False)
+    subject_focus = db.Column(db.String(100), nullable=False)
+    target_duration = db.Column(db.Integer, default=25)  # Pomodoro sprint duration in minutes
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    participants = db.relationship('StudyRoomParticipant', backref='room', lazy=True, cascade='all, delete-orphan')
+    scheduled_discussions = db.relationship('ScheduledDiscussion', backref='room', lazy=True, cascade='all, delete-orphan')
+    messages = db.relationship('RoomMessage', backref='room', lazy=True, cascade='all, delete-orphan')
+    
+    def to_dict(self, include_participants=False):
+        data = {
+            'id': self.id,
+            'room_code': self.room_code,
+            'title': self.title,
+            'subject_focus': self.subject_focus,
+            'target_duration': self.target_duration,
+            'is_active': self.is_active,
+            'created_by': self.created_by,
+            'created_at': self.created_at.isoformat(),
+            'participant_count': len(self.participants)
+        }
+        if include_participants:
+            data['participants'] = [p.to_dict() for p in self.participants]
+            data['scheduled_discussions'] = [sd.to_dict() for sd in self.scheduled_discussions]
+        return data
+
+
+class StudyRoomParticipant(db.Model):
+    """Tracks active participants inside a Study Room and their synchronized Pomodoro focus status"""
+    __tablename__ = 'study_room_participants'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_focused = db.Column(db.Boolean, default=True)
+    current_streak = db.Column(db.Integer, default=0)  # Consecutive focus blocks completed
+    last_active_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (
+        db.UniqueConstraint('room_id', 'user_id', name='uq_room_user_participant'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'room_id': self.room_id,
+            'user_id': self.user_id,
+            'username': self.user.username if self.user else f"User {self.user_id}",
+            'joined_at': self.joined_at.isoformat(),
+            'is_focused': self.is_focused,
+            'current_streak': self.current_streak,
+            'last_active_at': self.last_active_at.isoformat() if self.last_active_at else None
+        }
+
+
+class ScheduledDiscussion(db.Model):
+    """Schedules review & discussion sessions inside Study Rooms after studying with classmates"""
+    __tablename__ = 'scheduled_discussions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
+    title = db.Column(db.String(200), nullable=False)
+    topic_summary = db.Column(db.Text, nullable=True)
+    scheduled_at = db.Column(db.DateTime, nullable=False, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'room_id': self.room_id,
+            'title': self.title,
+            'topic_summary': self.topic_summary,
+            'scheduled_at': self.scheduled_at.isoformat(),
+            'created_by': self.created_by,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class RoomMessage(db.Model):
+    """Discussion/chat messages inside a Study Room during scheduled review or breaks"""
+    __tablename__ = 'room_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_review_note = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'room_id': self.room_id,
+            'user_id': self.user_id,
+            'username': self.room.participants[0].user.username if self.room and self.room.participants else f"User {self.user_id}",
+            'message': self.message,
+            'is_review_note': self.is_review_note,
+            'created_at': self.created_at.isoformat()
+        }
+
 

@@ -225,3 +225,55 @@ def log_distraction():
     
     return jsonify({'message': 'Distraction logged', 'log': log.to_dict()}), 201
 
+
+@focus_routes.route('/recommendation', methods=['GET'])
+@token_required
+def get_focus_recommendation():
+    """AI-driven Smart Pomodoro recommendations based on recent distraction patterns and streak"""
+    user_id = request.current_user_id
+    
+    # Check distraction logs in the past 24 hours
+    twenty_four_hrs_ago = datetime.utcnow() - timedelta(hours=24)
+    recent_distractions = DistractionLog.query.filter(
+        DistractionLog.user_id == user_id,
+        DistractionLog.started_at >= twenty_four_hrs_ago
+    ).count()
+    
+    total_duration_distracted = db.session.query(db.func.sum(DistractionLog.duration)).filter(
+        DistractionLog.user_id == user_id,
+        DistractionLog.started_at >= twenty_four_hrs_ago
+    ).scalar() or 0
+    
+    if recent_distractions > 5 or total_duration_distracted > 300:
+        recommendation = {
+            'sprint_minutes': 15,
+            'break_minutes': 5,
+            'mode': 'Cognitive Recovery Sprint',
+            'soundscape': 'Lo-Fi Ambient Beats',
+            'reasoning': 'High recent context-switching detected. A shorter 15-minute focused sprint will help reset attention cadence.'
+        }
+    elif recent_distractions == 0:
+        recommendation = {
+            'sprint_minutes': 50,
+            'break_minutes': 10,
+            'mode': 'Deep Work Flow State',
+            'soundscape': 'Binaural Theta Waves (6Hz)',
+            'reasoning': 'Zero distractions logged today! Your focus cadence is primed for a 50-minute deep engineering block.'
+        }
+    else:
+        recommendation = {
+            'sprint_minutes': 25,
+            'break_minutes': 5,
+            'mode': 'Standard Pomodoro Sprint',
+            'soundscape': 'Soft White Noise & Rain',
+            'reasoning': 'Balanced attention cadence. 25 minutes of high-density focus followed by a 5-minute consolidation break.'
+        }
+        
+    return jsonify({
+        'recommendation': recommendation,
+        'metrics': {
+            'recent_distraction_count': recent_distractions,
+            'distraction_seconds_24h': total_duration_distracted
+        }
+    }), 200
+

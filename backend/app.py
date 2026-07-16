@@ -65,6 +65,8 @@ from routes.taxonomy_routes import taxonomy_bp
 from routes.analytics_routes import analytics_bp
 from routes.badges_routes import badges_routes
 from routes.material_routes import material_routes
+from routes.srs_routes import srs_routes
+from routes.room_routes import room_routes
 
 app.register_blueprint(focus_routes)
 app.register_blueprint(content_routes)
@@ -77,6 +79,8 @@ app.register_blueprint(taxonomy_bp, url_prefix='/api/taxonomy')
 app.register_blueprint(analytics_bp)
 app.register_blueprint(badges_routes)
 app.register_blueprint(material_routes)
+app.register_blueprint(srs_routes)
+app.register_blueprint(room_routes)
 
 # Error handlers
 @app.errorhandler(404)

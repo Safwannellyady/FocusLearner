@@ -588,6 +588,122 @@ const Dashboard = () => {
               </TiltCard>
             </motion.div>
           </Grid>
+
+          {/* Module 4: Collaborative Study & Discussion Rooms */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              style={{ height: '100%' }}
+            >
+              <TiltCard className={getCardStyleClass()}>
+                <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                  <Box>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3.5}>
+                      <Box sx={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: '16px',
+                        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                        border: '1px solid rgba(245, 158, 11, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(245, 158, 11, 0.2)'
+                      }}>
+                        <BoltIcon sx={{ fontSize: 32, color: '#fbbf24' }} />
+                      </Box>
+                      <span className="epic-badge-glow" style={{ borderColor: '#f59e0b', color: '#fde68a', background: 'rgba(245, 158, 11, 0.15)' }}>👥 MULTIPLAYER ROOMS</span>
+                    </Box>
+
+                    <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', mb: 1.8, color: '#ffffff' }}>
+                      Collaborative Study & Discussion Rooms
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#94a3b8', lineHeight: 1.7, mb: 4, fontSize: '1rem' }}>
+                      Join classmates for synchronized Pomodoro focus sprints. Schedule post-study review sessions and collaborate inside live concept discussion rooms.
+                    </Typography>
+                  </Box>
+
+                  <Button
+                    fullWidth
+                    onClick={() => navigate('/arena')}
+                    variant="contained"
+                    sx={{ 
+                      py: 1.5, 
+                      fontSize: '0.98rem',
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      color: '#ffffff',
+                      borderRadius: '10px',
+                      '&:hover': { opacity: 0.9 }
+                    }}
+                  >
+                    Launch Study Arena & Rooms →
+                  </Button>
+                </Box>
+              </TiltCard>
+            </motion.div>
+          </Grid>
+
+          {/* Module 5: Visual Knowledge Graph */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              style={{ height: '100%' }}
+            >
+              <TiltCard className={getCardStyleClass()}>
+                <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                  <Box>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3.5}>
+                      <Box sx={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: '16px',
+                        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                        border: '1px solid rgba(99, 102, 241, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(99, 102, 241, 0.2)'
+                      }}>
+                        <CodeIcon sx={{ fontSize: 32, color: '#818cf8' }} />
+                      </Box>
+                      <span className="epic-badge-purple" style={{ borderColor: '#8b5cf6', color: '#d8b4fe', background: 'rgba(139, 92, 246, 0.15)' }}>🕸️ KNOWLEDGE GRAPH</span>
+                    </Box>
+
+                    <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', mb: 1.8, color: '#ffffff' }}>
+                      Visual Knowledge Map & Prerequisite Tree
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#94a3b8', lineHeight: 1.7, mb: 4, fontSize: '1rem' }}>
+                      Explore interactive concept hierarchies and prerequisite chains with real-time retention state tracking (Mastered, Weak Spot, In Progress).
+                    </Typography>
+                  </Box>
+
+                  <Button
+                    fullWidth
+                    onClick={() => navigate('/knowledge-graph')}
+                    variant="outlined"
+                    sx={{ 
+                      py: 1.5, 
+                      fontSize: '0.98rem',
+                      fontWeight: 600,
+                      borderColor: 'rgba(99, 102, 241, 0.5)',
+                      color: '#a5b4fc',
+                      borderRadius: '10px',
+                      '&:hover': { borderColor: '#6366f1', bgcolor: 'rgba(99, 102, 241, 0.1)' }
+                    }}
+                  >
+                    Open Knowledge Graph →
+                  </Button>
+                </Box>
+              </TiltCard>
+            </motion.div>
+          </Grid>
         </Grid>
 
         {/* Section Heading: Curriculum Execution */}

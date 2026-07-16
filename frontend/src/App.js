@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Box } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -23,6 +24,8 @@ import CreateFocusSession from './components/CreateFocusSession';
 import MyEnrollments from './components/MyEnrollments';
 import ManageFocus from './components/ManageFocus';
 import Badges from './components/Badges';
+import FocusArena from './components/FocusArena';
+import KnowledgeGraph from './components/common/KnowledgeGraph';
 import { FocusProvider } from './context/FocusContext';
 
 const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
@@ -231,6 +234,24 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <ProgressDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/arena" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <FocusArena />
+                  </Layout>
+                </ProtectedRoute>
+              }
+              />
+              <Route path="/knowledge-graph" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Box sx={{ p: { xs: 2, md: 4 } }}>
+                      <KnowledgeGraph />
+                    </Box>
                   </Layout>
                 </ProtectedRoute>
               }

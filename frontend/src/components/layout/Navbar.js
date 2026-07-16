@@ -144,21 +144,48 @@ const Navbar = () => {
                     </Box>
                 </Tooltip>
 
+                <Tooltip title="Global Command Palette & Instant AI Tutor (Ctrl+K)">
+                    <Box
+                        onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+                        sx={{
+                            display: { xs: 'none', lg: 'flex' },
+                            alignItems: 'center',
+                            gap: 1,
+                            px: 1.8,
+                            py: 0.6,
+                            borderRadius: '10px',
+                            bgcolor: 'rgba(30, 41, 59, 0.7)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            color: '#94a3b8',
+                            fontSize: '0.82rem',
+                            transition: 'all 0.2s ease',
+                            '&:hover': { borderColor: '#6366f1', color: '#f8fafc' }
+                        }}
+                    >
+                        <span>🔍 Ask AI / Jump</span>
+                        <Box sx={{ px: 0.8, py: 0.2, bgcolor: 'rgba(255,255,255,0.08)', borderRadius: 1, fontSize: '0.7rem', fontWeight: 700, color: '#e2e8f0' }}>
+                            Ctrl + K
+                        </Box>
+                    </Box>
+                </Tooltip>
+
                 <Button 
                     onClick={() => navigate('/focus')} 
                     variant="contained"
                     sx={{
-                        bgcolor: '#6366f1',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                         color: '#ffffff',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         px: 2.5,
                         py: 0.8,
                         borderRadius: '10px',
-                        '&:hover': { bgcolor: '#4f46e5' }
+                        boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
+                        '&:hover': { background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)' }
                     }}
                     size="small"
                 >
-                    Enter Focus Lock
+                    Focus Studio ⚡
                 </Button>
 
                 <Tooltip title="Profile & Settings">
