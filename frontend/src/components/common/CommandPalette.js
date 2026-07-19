@@ -3,7 +3,7 @@ import { Dialog, DialogContent, Box, TextField, Typography, Chip, IconButton, Ci
 import { Search, AutoAwesome, School, Launch, Close, ArrowForward, Bolt } from '@mui/icons-material';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const CommandPalette = ({ isOpen, onClose, onNavigate }) => {
   const [query, setQuery] = useState('');

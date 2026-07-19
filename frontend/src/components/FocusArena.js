@@ -3,7 +3,7 @@ import { Box, Typography, Paper, TextField, Button, Grid, Chip, Divider, Tabs, T
 import { Group, AccessTime, Chat, Schedule, Send, EmojiEvents, PlayArrow, AddCircle } from '@mui/icons-material';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const FocusArena = () => {
   const [activeTab, setActiveTab] = useState(0); // 0: Study Room & Pomodoro, 1: Discussion & Scheduled Reviews

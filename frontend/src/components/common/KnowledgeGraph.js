@@ -3,7 +3,7 @@ import { Box, Typography, Paper, CircularProgress, Chip, Button, Divider, Alert 
 import { School, CheckCircle, RadioButtonUnchecked, Warning, Lock, ArrowForward, Refresh } from '@mui/icons-material';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
   const [graphData, setGraphData] = useState(null);

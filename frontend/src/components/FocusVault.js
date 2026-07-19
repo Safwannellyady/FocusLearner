@@ -18,7 +18,7 @@ import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import FolderIcon from '@mui/icons-material/Folder';
 import { materialAPI } from '../services/api';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, ''); // Remove trailing /api
 
 const FocusVault = ({ subjectFocus }) => {

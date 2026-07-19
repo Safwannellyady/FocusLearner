@@ -20,7 +20,7 @@ import axios from 'axios';
 import { focusAPI } from '../services/api';
 import FocusTimer from './FocusTimer';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const FocusLock = () => {
   const navigate = useNavigate();
