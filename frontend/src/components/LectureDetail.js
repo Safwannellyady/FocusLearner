@@ -599,7 +599,7 @@ const LectureDetail = () => {
 
       {/* Persistent AI Chat Widget (Floating) */}
       <AIChatWidget
-        context={`Viewing Lecture: ${lecture.title}. Topic: ${lecture.topic}. Video: ${activeVideo?.title || 'None'} @ ${Math.floor(currentTime)}s. Active Loop Stage: ${loopStatus?.stage || 'Unknown'}`}
+        context={`Viewing Lecture: ${lecture?.title || 'Unknown'}. Topic: ${lecture?.topic || 'Unknown'}. Video: ${activeVideo?.title || 'None'} @ ${Math.floor(currentTime)}s. Active Loop Stage: ${loopStatus?.stage || 'Unknown'}`}
         videoId={activeVideo?.video_id}
       />
 
