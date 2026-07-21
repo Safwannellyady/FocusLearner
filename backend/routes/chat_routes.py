@@ -32,6 +32,7 @@ def send_message():
     message = data.get('message')
     context = data.get('context')  # Video title/subject
     video_id = data.get('videoId') or data.get('video_id')
+    timestamp = data.get('timestamp')  # Current video timestamp in seconds
     
     if not message:
         return jsonify({'error': 'Message is required'}), 400
@@ -42,10 +43,10 @@ def send_message():
             .order_by(ChatMessage.created_at.asc()).limit(20).all()
         history_context = _format_db_history(recent_msgs)
         
-        # Call AI
-        response_text = ai_service.chat(message, context, history_context, video_id)
-        if not response_text:
-            response_text = "I'm having trouble connecting to my brain right now. Please try again."
+        # Call AI with RAG support
+        ai_result = ai_service.chat(message, context, history_context, video_id, timestamp)
+        response_text = ai_result.get('response', "I'm having trouble connecting to my brain right now. Please try again.")
+        sources = ai_result.get('sources', [])
 
         # Save to Database
         new_msg = ChatMessage(
@@ -65,7 +66,8 @@ def send_message():
         
         return jsonify({
             'response': response_text,
-            'history': updated_history
+            'history': updated_history,
+            'sources': sources
         }), 200
         
     except Exception as e:
@@ -101,3 +103,44 @@ def clear_history():
         db.session.rollback()
         print(f"Clear History Error: {e}")
         return jsonify({'error': 'Failed to clear history'}), 500
+
+
+@chat_routes.route('/reindex', methods=['POST'])
+@token_required
+def reindex_transcript():
+    """Manually trigger transcript re-indexing for a video"""
+    data = request.get_json() or {}
+    video_id = data.get('videoId') or data.get('video_id')
+    
+    if not video_id:
+        return jsonify({'error': 'Video ID is required'}), 400
+    
+    try:
+        from services.vector_service import vector_service
+        from services.youtube_service import YouTubeService
+        
+        # Fetch transcript
+        yt_service = YouTubeService()
+        transcript_data = yt_service.get_video_transcript(video_id)
+        
+        if not transcript_data:
+            return jsonify({'error': 'Failed to fetch transcript'}), 400
+        
+        # Index in vector database
+        transcript_text = transcript_data.get('transcript', '')
+        metadata = {
+            'title': transcript_data.get('title', ''),
+            'subject': data.get('subject', ''),
+            'topic': data.get('topic', '')
+        }
+        
+        success = vector_service.index_transcript(video_id, transcript_text, metadata)
+        
+        if success:
+            return jsonify({'message': 'Transcript indexed successfully'}), 200
+        else:
+            return jsonify({'error': 'Failed to index transcript'}), 500
+            
+    except Exception as e:
+        print(f"Reindex Error: {e}")
+        return jsonify({'error': 'Failed to reindex transcript'}), 500

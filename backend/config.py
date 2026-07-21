@@ -68,6 +68,19 @@ class Config:
     GEMINI_MAX_TOKENS = int(os.getenv('GEMINI_MAX_TOKENS', '1024'))
     GEMINI_TEMPERATURE = float(os.getenv('GEMINI_TEMPERATURE', '0.7'))
     
+    # Vector Database Configuration (Pinecone)
+    PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
+    PINECONE_ENVIRONMENT = os.getenv('PINECONE_ENVIRONMENT', 'us-east-1-aws')
+    PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', 'focuslearner-transcripts')
+    PINECONE_DIMENSION = int(os.getenv('PINECONE_DIMENSION', '384'))  # For sentence-transformers all-MiniLM-L6-v2
+    PINECONE_METRIC = os.getenv('PINECONE_METRIC', 'cosine')
+    
+    # Embedding Configuration
+    EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL', 'sentence-transformers/all-MiniLM-L6-v2')
+    EMBEDDING_BATCH_SIZE = int(os.getenv('EMBEDDING_BATCH_SIZE', '32'))
+    CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '500'))  # Characters per chunk
+    CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', '50'))  # Overlap between chunks
+    
     # Security Configuration
     PASSWORD_MIN_LENGTH = 8
     PASSWORD_REQUIRE_UPPERCASE = True

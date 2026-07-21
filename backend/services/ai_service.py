@@ -361,17 +361,22 @@ class AIService:
              return {"analysis": "Incorrect answer. Review the basic concepts.", "remediation_focus": subject}
         return parsed
 
-    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, Any]] = None, video_id: Optional[str] = None) -> str:
+    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, Any]] = None, video_id: Optional[str] = None, timestamp: Optional[float] = None) -> Dict[str, Any]:
         """
         Main chat interface called by chat_routes.py.
         Handles video context, subject context, history, and RAG retrieval.
+        
+        Returns:
+            Dict with 'response' (str) and optional 'sources' (list of citations)
         """
         if history is None:
             history = []
         
+        sources = []
+        
         if video_id:
-            from services.vector_store import vector_store
-            if not vector_store.is_video_processed(video_id):
+            from services.vector_service import vector_service
+            if not vector_service.is_video_processed(video_id):
                 try:
                     from services.youtube_service import YouTubeService
                     YouTubeService().get_video_transcript(video_id)
@@ -379,7 +384,10 @@ class AIService:
                     print(f"Transcript load error in chat: {e}")
 
         if not self.api_key:
-            return self._get_fallback_chat_response(message, context, video_id)
+            return {
+                'response': self._get_fallback_chat_response(message, context, video_id),
+                'sources': sources
+            }
             
         system_instruction = (
             "You are FocusLearner AI, an encouraging and expert AI mentor assisting a student. "
@@ -390,10 +398,30 @@ class AIService:
             
         if video_id:
             try:
-                from services.vector_store import vector_store
-                relevant_chunks = vector_store.query_context(video_id, message)
-                if relevant_chunks and relevant_chunks[0]:
-                    system_instruction += f"\nVideo Transcript Excerpt:\n{relevant_chunks[0][:15000]}\n"
+                from services.vector_service import vector_service
+                relevant_chunks = vector_service.query_context(
+                    video_id, 
+                    message, 
+                    top_k=5,
+                    timestamp_filter=timestamp
+                )
+                if relevant_chunks:
+                    # Build context from top chunks
+                    context_text = "\n\n".join([
+                        f"[Timestamp: {chunk.get('timestamp', 0)}s]\n{chunk['text']}"
+                        for chunk in relevant_chunks[:3]
+                    ])
+                    system_instruction += f"\nRelevant Video Transcript Excerpts:\n{context_text}\n"
+                    
+                    # Collect sources for citation
+                    sources = [
+                        {
+                            'timestamp': chunk.get('timestamp', 0),
+                            'text': chunk['text'][:200] + '...' if len(chunk['text']) > 200 else chunk['text'],
+                            'score': chunk.get('score', 0)
+                        }
+                        for chunk in relevant_chunks[:3]
+                    ]
             except Exception as e:
                 print(f"RAG Error: {e}")
 
@@ -408,8 +436,15 @@ class AIService:
         
         resp = self._call_gemini(full_prompt)
         if not resp:
-            return self._get_fallback_chat_response(message, context, video_id)
-        return resp
+            return {
+                'response': self._get_fallback_chat_response(message, context, video_id),
+                'sources': sources
+            }
+        
+        return {
+            'response': resp,
+            'sources': sources
+        }
 
     def _get_fallback_chat_response(self, message: str, context: Optional[str] = None, video_id: Optional[str] = None) -> str:
         """Fallback response when API key is missing or offline"""
@@ -423,11 +458,11 @@ class AIService:
             return f"That is a great question{ctx_str}! To master this concept, break it down into core principles: 1) Identify given variables and constraints, 2) Apply the foundational formula or theorem, and 3) Verify your solution step-by-step against edge cases."
         return f"I hear your question about '{message[:40]}...'. When studying{ctx_str}, active recall and testing yourself on key definitions will reinforce neural retention! Let's tackle a practice challenge together."
 
-    def answer_question(self, video_id: str, message: str, history: List[Dict[str, str]] = None) -> str:
+    def answer_question(self, video_id: str, message: str, history: List[Dict[str, str]] = None, timestamp: Optional[float] = None) -> Dict[str, Any]:
         """
         Answer a student's question using video RAG context and chat history.
         """
-        return self.chat(message=message, context=None, history=history, video_id=video_id)
+        return self.chat(message=message, context=None, history=history, video_id=video_id, timestamp=timestamp)
 
     def _get_mock_quiz(self, subject, topic, count):
         """Fallback to high-quality topic-synchronized static quizzes if AI fails"""

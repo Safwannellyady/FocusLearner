@@ -1,13 +1,18 @@
 """
 FocusLearner Pro - Content Filtering Service
-Aggressive filtering system to remove distracting content
+Aggressive filtering system to remove distracting content with ML-based classification
 """
 
 import re
-from typing import Dict, List, Tuple
+import os
+from typing import Dict, List, Tuple, Optional
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+import pickle
+import numpy as np
 
 # Download required NLTK data safely without raising OSError or LookupError
 for nltk_pkg in ['punkt', 'punkt_tab', 'stopwords']:
@@ -54,10 +59,19 @@ class ContentFilter:
             self.stop_words = set(stopwords.words('english'))
         except Exception:
             self.stop_words = {'the', 'a', 'an', 'in', 'on', 'of', 'and', 'or', 'for', 'to', 'with', 'by', 'is', 'are', 'was', 'were'}
+        
+        # ML Model components
+        self.ml_model = None
+        self.vectorizer = None
+        self.model_path = 'backend/models/content_filter_model.pkl'
+        self.vectorizer_path = 'backend/models/content_filter_vectorizer.pkl'
+        
+        # Initialize ML model if available
+        self._load_ml_model()
     
     def filter_content(self, title: str, description: str = "", tags: List[str] = None, subject_context: str = None, topic_context: str = None) -> Tuple[bool, str]:
         """
-        Filter content based on title, description, and tags.
+        Filter content based on title, description, and tags using rule-based and ML classification.
         
         Returns:
             Tuple[bool, str]: (is_filtered, reason)
@@ -75,6 +89,12 @@ class ContentFilter:
             relevance_issue = self._check_relevance(combined_text, subject_context, topic_context)
             if relevance_issue:
                 return True, relevance_issue
+        
+        # ML-based classification if model is available
+        if self.ml_model and self.vectorizer:
+            ml_prediction = self._ml_classify(title, description, tags)
+            if ml_prediction['is_distracting'] and ml_prediction['confidence'] > 0.7:
+                return True, f"ML classification: {ml_prediction['reason']} (confidence: {ml_prediction['confidence']:.2f})"
         
         # Check for distraction keywords
         distraction_score = self._calculate_distraction_score(combined_text)
@@ -212,4 +232,164 @@ class ContentFilter:
                 filtered_videos.append(video)
         
         return filtered_videos
+    
+    def _load_ml_model(self):
+        """Load pre-trained ML model and vectorizer if available"""
+        try:
+            if os.path.exists(self.model_path) and os.path.exists(self.vectorizer_path):
+                with open(self.model_path, 'rb') as f:
+                    self.ml_model = pickle.load(f)
+                with open(self.vectorizer_path, 'rb') as f:
+                    self.vectorizer = pickle.load(f)
+                print("ML content filter model loaded successfully")
+        except Exception as e:
+            print(f"Could not load ML model: {e}")
+            self.ml_model = None
+            self.vectorizer = None
+    
+    def _ml_classify(self, title: str, description: str, tags: List[str]) -> Dict[str, Any]:
+        """
+        Classify content using ML model.
+        
+        Returns:
+            Dict with 'is_distracting', 'confidence', and 'reason'
+        """
+        try:
+            combined_text = f"{title} {description} {' '.join(tags)}"
+            
+            # Transform text using vectorizer
+            text_vector = self.vectorizer.transform([combined_text])
+            
+            # Predict
+            prediction = self.ml_model.predict(text_vector)[0]
+            probability = self.ml_model.predict_proba(text_vector)[0]
+            
+            # Get confidence score
+            confidence = max(probability)
+            
+            # Determine reason based on prediction
+            if prediction == 1:  # Assuming 1 = distracting
+                return {
+                    'is_distracting': True,
+                    'confidence': confidence,
+                    'reason': 'ML model classified as distracting'
+                }
+            else:
+                return {
+                    'is_distracting': False,
+                    'confidence': confidence,
+                    'reason': 'ML model classified as educational'
+                }
+                
+        except Exception as e:
+            print(f"ML classification error: {e}")
+            return {
+                'is_distracting': False,
+                'confidence': 0.0,
+                'reason': 'ML classification failed, using rule-based fallback'
+            }
+    
+    def train_model(self, training_data: List[Dict[str, Any]], labels: List[int]):
+        """
+        Train a new ML model for content filtering.
+        
+        Args:
+            training_data: List of dicts with 'title', 'description', 'tags'
+            labels: List of 0 (educational) or 1 (distracting)
+        """
+        try:
+            # Prepare training texts
+            texts = [
+                f"{item['title']} {item.get('description', '')} {' '.join(item.get('tags', []))}"
+                for item in training_data
+            ]
+            
+            # Create and fit vectorizer
+            self.vectorizer = TfidfVectorizer(
+                max_features=5000,
+                stop_words='english',
+                ngram_range=(1, 2)
+            )
+            X = self.vectorizer.fit_transform(texts)
+            
+            # Train model
+            self.ml_model = LogisticRegression(random_state=42, max_iter=1000)
+            self.ml_model.fit(X, labels)
+            
+            # Save models
+            os.makedirs('backend/models', exist_ok=True)
+            with open(self.model_path, 'wb') as f:
+                pickle.dump(self.ml_model, f)
+            with open(self.vectorizer_path, 'wb') as f:
+                pickle.dump(self.vectorizer, f)
+            
+            print("ML model trained and saved successfully")
+            
+        except Exception as e:
+            print(f"Error training ML model: {e}")
+    
+    def get_multi_label_classification(self, title: str, description: str = "", tags: List[str] = None) -> Dict[str, float]:
+        """
+        Get multi-label classification for content types.
+        
+        Returns:
+            Dict mapping content types to confidence scores
+        """
+        if tags is None:
+            tags = []
+        
+        combined_text = f"{title} {description} {' '.join(tags)}".lower()
+        
+        # Simple keyword-based multi-label classification
+        # In production, this would use a proper multi-label classifier
+        content_types = {
+            'tutorial': 0.0,
+            'lecture': 0.0,
+            'entertainment': 0.0,
+            'news': 0.0,
+            'review': 0.0,
+            'vlog': 0.0
+        }
+        
+        # Tutorial indicators
+        tutorial_keywords = ['tutorial', 'how to', 'guide', 'step by step', 'learn', 'course']
+        for kw in tutorial_keywords:
+            if kw in combined_text:
+                content_types['tutorial'] += 0.3
+        
+        # Lecture indicators
+        lecture_keywords = ['lecture', 'professor', 'class', 'university', 'college', 'seminar']
+        for kw in lecture_keywords:
+            if kw in combined_text:
+                content_types['lecture'] += 0.3
+        
+        # Entertainment indicators
+        entertainment_keywords = ['funny', 'comedy', 'prank', 'challenge', 'entertainment', 'vlog']
+        for kw in entertainment_keywords:
+            if kw in combined_text:
+                content_types['entertainment'] += 0.3
+        
+        # News indicators
+        news_keywords = ['news', 'breaking', 'update', 'report', 'coverage']
+        for kw in news_keywords:
+            if kw in combined_text:
+                content_types['news'] += 0.3
+        
+        # Review indicators
+        review_keywords = ['review', 'rating', 'opinion', 'critique', 'analysis']
+        for kw in review_keywords:
+            if kw in combined_text:
+                content_types['review'] += 0.3
+        
+        # Vlog indicators
+        vlog_keywords = ['vlog', 'day in my life', 'routine', 'lifestyle']
+        for kw in vlog_keywords:
+            if kw in combined_text:
+                content_types['vlog'] += 0.3
+        
+        # Normalize scores
+        for key in content_types:
+            content_types[key] = min(content_types[key], 1.0)
+        
+        return content_types
 

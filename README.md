@@ -32,8 +32,8 @@ To solve the core problem of digital distraction in education by converting the 
 
 - **Backend**: Python (Flask)
 - **Frontend**: React.js
-- **Database**: PostgreSQL + Vector DB (for RAG)
-- **AI/ML**: Google Cloud Vertex AI
+- **Database**: PostgreSQL + Vector DB (Pinecone for RAG)
+- **AI/ML**: Google Cloud Vertex AI, sentence-transformers, scikit-learn
 - **Deployment**: Google Cloud Run
 
 ## Project Structure
@@ -85,10 +85,13 @@ All core MVP features have been implemented:
 - **Gamified Learning**: KCL Challenge game module with progress tracking
 
 ### Phase 2: Full Platform (In Progress)
-- 🔄 Contextual AI Chatbot with RAG
-- 🔄 Vector Database integration
-- 🔄 Multi-source content aggregation (NPTEL, Udemy)
-- 🔄 Advanced ML-based content classification
+- ✅ Contextual AI Chatbot with RAG (Pinecone integration)
+- ✅ Vector Database integration (Pinecone with sentence-transformers)
+- ✅ Multi-source content aggregation (NPTEL, Udemy services)
+- ✅ Advanced ML-based content classification (scikit-learn)
+- ✅ Topic classification service with Learning Intent taxonomy
+- ✅ Timestamp-aware RAG retrieval for video context
+- ✅ Source citation support in AI responses
 
 
 
