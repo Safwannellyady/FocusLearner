@@ -28,7 +28,7 @@ import FocusArena from './components/FocusArena';
 import KnowledgeGraph from './components/common/KnowledgeGraph';
 import { FocusProvider } from './context/FocusContext';
 
-const GOOGLE_CLIENT_ID = '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
 
 const theme = createTheme({
   palette: {

@@ -14,7 +14,8 @@ import {
   Tab,
   CircularProgress,
   Dialog,
-  DialogContent
+  DialogContent,
+  TextField
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -30,6 +31,8 @@ const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic, gam
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [activeActivity, setActiveActivity] = useState(null); // The current AI activity object
+  const [customSubject, setCustomSubject] = useState('General');
+  const [customTopic, setCustomTopic] = useState('');
 
   // Dialog for Activity View
   const [activityOpen, setActivityOpen] = useState(false);
@@ -105,6 +108,9 @@ const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic, gam
           onChange={(e, val) => setActiveTab(val)}
           textColor="secondary"
           indicatorColor="secondary"
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{ '& .MuiTab-root': { color: 'rgba(255,255,255,0.6)' } }}
         >
           <Tab label="Challenges & Labs" icon={<AutoAwesomeIcon />} iconPosition="start" />
@@ -118,12 +124,12 @@ const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic, gam
           <Grid item xs={12} md={8}>
             <Typography variant="h5" color="white" gutterBottom mb={3}>choose Your Path</Typography>
             <Grid container spacing={3}>
-              {[propSubject ? `${propSubject}/${propTopic || 'Session Core'}` : null, 'CS/Algorithms', 'Science/Physics', 'Language/English'].filter(Boolean).map((subject, idx) => (
-                <Grid item xs={12} sm={6} key={subject}>
+              {propSubject ? (
+                <Grid item xs={12} sm={6}>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Card sx={{
-                      background: idx === 0 && propSubject ? 'linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(30,58,138,0.4) 100%)' : 'linear-gradient(135deg, rgba(30,30,50,0.9) 0%, rgba(20,20,30,0.9) 100%)',
-                      border: idx === 0 && propSubject ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                      background: 'linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(30,58,138,0.4) 100%)',
+                      border: '2px solid #38bdf8',
                       borderRadius: 3,
                       position: 'relative',
                       overflow: 'visible'
@@ -132,7 +138,7 @@ const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic, gam
                         position: 'absolute',
                         top: -10,
                         right: 20,
-                        background: idx === 0 && propSubject ? '#38bdf8' : '#a78bfa',
+                        background: '#38bdf8',
                         color: '#000',
                         fontWeight: 'bold',
                         px: 1.5,
@@ -140,25 +146,22 @@ const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic, gam
                         borderRadius: 1,
                         fontSize: '0.75rem'
                       }}>
-                        {idx === 0 && propSubject ? 'ACTIVE SESSION' : 'AI GENERATED'}
+                        ACTIVE SESSION
                       </Box>
                       <CardContent sx={{ p: 4 }}>
                         <Typography variant="h6" color="white" gutterBottom>
-                          {subject.includes('/') ? subject.split('/')[1] : subject} Challenge
+                          {propTopic || 'Session Core'} Challenge
                         </Typography>
                         <Typography variant="body2" color="text.secondary" mb={3}>
-                          {idx === 0 && propSubject ? `Personalized AI challenge synced with your active lesson: ${propTopic || propSubject}.` :
-                            subject.includes('CS') ? 'Solve coding problems with real-time testing.' :
-                            subject.includes('Science') ? 'Perform virtual experiments in a simulated lab.' :
-                              'Master vocabulary with interactive puzzles.'}
+                          Personalized AI challenge synced with your active lesson: {propTopic || propSubject}.
                         </Typography>
                         <Button
                           variant="contained"
                           fullWidth
-                          onClick={() => handleStartChallenge(idx === 0 && propSubject ? propSubject : subject, 'auto', idx === 0 && propSubject ? propTopic : 'General Practice')}
+                          onClick={() => handleStartChallenge(propSubject, 'auto', propTopic)}
                           disabled={loading}
                           sx={{
-                            background: idx === 0 && propSubject ? 'linear-gradient(90deg, #0284c7 0%, #2563eb 100%)' : 'linear-gradient(90deg, #7c3aed 0%, #6366f1 100%)',
+                            background: 'linear-gradient(90deg, #0284c7 0%, #2563eb 100%)',
                             textTransform: 'none',
                             py: 1.5
                           }}
@@ -169,7 +172,83 @@ const GameLab = ({ embedded = false, subject: propSubject, topic: propTopic, gam
                     </Card>
                   </motion.div>
                 </Grid>
-              ))}
+              ) : null}
+              
+              <Grid item xs={12} sm={propSubject ? 6 : 12}>
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                  <Card sx={{
+                    background: 'linear-gradient(135deg, rgba(30,30,50,0.9) 0%, rgba(20,20,30,0.9) 100%)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 3,
+                    position: 'relative',
+                    overflow: 'visible'
+                  }}>
+                    <Box sx={{
+                      position: 'absolute',
+                      top: -10,
+                      right: 20,
+                      background: '#a78bfa',
+                      color: '#000',
+                      fontWeight: 'bold',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: '0.75rem'
+                    }}>
+                      AI GENERATOR
+                    </Box>
+                    <CardContent sx={{ p: 4 }}>
+                      <Typography variant="h6" color="white" gutterBottom>
+                        Deep Learning Instance
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" mb={3}>
+                        Input any subject and topic. Our AI will analyze the concept and dynamically construct an interactive challenge.
+                      </Typography>
+                      
+                      <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2} mb={3}>
+                        <TextField 
+                          fullWidth
+                          size="small"
+                          label="Subject (e.g. Physics)"
+                          value={customSubject}
+                          onChange={(e) => setCustomSubject(e.target.value)}
+                          sx={{ 
+                            '& .MuiOutlinedInput-root': { color: 'white' },
+                            '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' }
+                          }}
+                        />
+                        <TextField 
+                          fullWidth
+                          size="small"
+                          label="Topic (e.g. Quantum Mechanics)"
+                          value={customTopic}
+                          onChange={(e) => setCustomTopic(e.target.value)}
+                          sx={{ 
+                            '& .MuiOutlinedInput-root': { color: 'white' },
+                            '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' }
+                          }}
+                        />
+                      </Box>
+
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={() => handleStartChallenge(customSubject, 'auto', customTopic)}
+                        disabled={loading || !customTopic}
+                        sx={{
+                          background: 'linear-gradient(90deg, #7c3aed 0%, #6366f1 100%)',
+                          textTransform: 'none',
+                          py: 1.5
+                        }}
+                      >
+                        {loading ? <CircularProgress size={24} color="inherit" /> : 'Generate AI Challenge'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
             </Grid>
           </Grid>
 

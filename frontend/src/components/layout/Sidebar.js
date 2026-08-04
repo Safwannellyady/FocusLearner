@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, List, ListItem, ListItemIcon, ListItemText, IconButton, Avatar } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemIcon, ListItemText, IconButton, Avatar, Drawer } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import SchoolIcon from '@mui/icons-material/School';
@@ -20,7 +20,7 @@ const navItems = [
     { text: 'Badges', icon: <WorkspacePremiumIcon />, path: '/badges' },
 ];
 
-const Sidebar = ({ open, setOpen }) => {
+const Sidebar = ({ open, setOpen, mobileOpen, handleDrawerToggle }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -29,21 +29,16 @@ const Sidebar = ({ open, setOpen }) => {
         navigate('/login');
     };
 
-    return (
+    const drawerContent = (
         <Box sx={{
             width: open ? 260 : 88,
             flexShrink: 0,
-            bgcolor: 'rgba(17, 24, 39, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+            bgcolor: 'transparent',
             display: 'flex',
             flexDirection: 'column',
-            height: '100vh',
+            height: '100%',
             transition: 'all 0.3s ease',
             overflowX: 'hidden',
-            boxShadow: '10px 0 30px -15px rgba(0, 0, 0, 0.5)',
-            zIndex: 1150
         }}>
             {/* Brand Logo Area */}
             <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', height: 76, borderBottom: '1px solid rgba(255, 255, 255, 0.08)', gap: open ? 2 : 0, justifyContent: open ? 'flex-start' : 'center' }}>
@@ -154,6 +149,51 @@ const Sidebar = ({ open, setOpen }) => {
                     </ListItem>
                 </List>
             </Box>
+        </Box>
+    );
+
+    return (
+        <Box component="nav" sx={{ width: { md: open ? 260 : 88 }, flexShrink: { md: 0 }, transition: 'width 0.3s ease' }}>
+            {/* Mobile temporary drawer */}
+            <Drawer
+                variant="temporary"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{ keepMounted: true }} // Better open performance on mobile.
+                sx={{
+                    display: { xs: 'block', md: 'none' },
+                    '& .MuiDrawer-paper': { 
+                        boxSizing: 'border-box', 
+                        width: 260, 
+                        bgcolor: 'rgba(17, 24, 39, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        borderRight: '1px solid rgba(255, 255, 255, 0.08)'
+                    },
+                }}
+            >
+                {/* On mobile, force 'open' state for the content so text is always visible */}
+                {React.cloneElement(drawerContent, { sx: { ...drawerContent.props.sx, width: 260 } })}
+            </Drawer>
+            
+            {/* Desktop permanent drawer */}
+            <Drawer
+                variant="permanent"
+                sx={{
+                    display: { xs: 'none', md: 'block' },
+                    '& .MuiDrawer-paper': { 
+                        boxSizing: 'border-box', 
+                        width: open ? 260 : 88, 
+                        bgcolor: 'rgba(17, 24, 39, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+                        transition: 'width 0.3s ease',
+                        overflowX: 'hidden'
+                    },
+                }}
+                open
+            >
+                {drawerContent}
+            </Drawer>
         </Box>
     );
 };

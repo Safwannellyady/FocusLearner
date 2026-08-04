@@ -1,11 +1,12 @@
 import React from 'react';
-import { Box, Typography, Button, Avatar, Tooltip } from '@mui/material';
+import { Box, Typography, Button, Avatar, Tooltip, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import MenuIcon from '@mui/icons-material/Menu';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useFocusTimer } from '../../context/FocusContext';
 
-const Navbar = () => {
+const Navbar = ({ handleDrawerToggle }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { timeLeft, timerActive, isStudying } = useFocusTimer();
@@ -44,22 +45,33 @@ const Navbar = () => {
             flexShrink: 0
         }}>
             {/* Brand / Logo Section */}
-            <Box onClick={() => navigate('/dashboard')} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}>
-                <Box sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
-                }}>
-                    <AutoAwesomeIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <IconButton
+                    color="inherit"
+                    aria-label="open drawer"
+                    edge="start"
+                    onClick={handleDrawerToggle}
+                    sx={{ mr: 1, display: { md: 'none' }, color: '#f8fafc' }}
+                >
+                    <MenuIcon />
+                </IconButton>
+                <Box onClick={() => navigate('/dashboard')} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}>
+                    <Box sx={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
+                    }}>
+                        <AutoAwesomeIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.02em', color: '#f8fafc', display: { xs: 'none', sm: 'block' } }}>
+                        FocusLearner <span style={{ color: '#6366f1', fontWeight: 900 }}>Academic</span>
+                    </Typography>
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.02em', color: '#f8fafc' }}>
-                    FocusLearner <span style={{ color: '#6366f1', fontWeight: 900 }}>Academic</span>
-                </Typography>
             </Box>
 
             {/* Center Navigation */}

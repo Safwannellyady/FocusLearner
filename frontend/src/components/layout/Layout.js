@@ -7,6 +7,7 @@ import CommandPalette from '../common/CommandPalette';
 
 const Layout = ({ children }) => {
     const [open, setOpen] = useState(true);
+    const [mobileOpen, setMobileOpen] = useState(false);
     const [commandOpen, setCommandOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -21,6 +22,10 @@ const Layout = ({ children }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
+    };
+
     return (
         <Box sx={{ 
             display: 'flex', 
@@ -29,9 +34,9 @@ const Layout = ({ children }) => {
             color: '#f8fafc', 
             overflow: 'hidden' 
         }}>
-            <Sidebar open={open} setOpen={setOpen} />
+            <Sidebar open={open} setOpen={setOpen} mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
             <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden' }}>
-                <Navbar />
+                <Navbar handleDrawerToggle={handleDrawerToggle} />
                 <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
                     {children}
                 </Box>
