@@ -1,0 +1,55 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+
+# Virtual environments (never copy into the image)
+venv/
+venv_new/
+env/
+.venv/
+.env/
+
+# Environment files (secrets — inject at runtime)
+.env
+.env.*
+
+# Database files (use a mounted volume or external DB in production)
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Test artifacts
+tests/
+pytest_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# IDE / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs (written to stdout/stderr in production)
+logs/
+*.log
+gemini_error.log
+
+# Migration scripts (run separately, not needed at runtime)
+migrate_*.py
+seed_*.py
+verify_api.py
+init_db.py
+
+# Git
+.git/
+.github/
+.gitignore

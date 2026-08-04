@@ -11,15 +11,19 @@ backend/.venv
 dist/
 build/
 
-# Environment variables
+# Environment variables — NEVER commit real secrets
+# .env.example is the only .env file that belongs in version control
 .env
 .env.local
 .env.*.local
+backend/.env
+frontend/.env
 
-# Database
+# Database files
 *.db
 *.sqlite
 *.sqlite3
+instance/
 
 # IDE
 .vscode/
@@ -42,8 +46,17 @@ frontend/yarn-error.log*
 # Logs
 *.log
 logs/
+gemini_error.log
 
 # OS
 .DS_Store
 Thumbs.db
 
+# Docker — ignore local override files but keep the main compose files
+docker-compose.override.yml
+
+# User uploads (runtime data — use a Docker volume, not git)
+uploads/
+
+# Python virtual environments
+backend/venv_new/

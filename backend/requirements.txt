@@ -1,24 +1,42 @@
+# Web framework & extensions
 Flask==3.0.0
 Flask-CORS==4.0.0
 Flask-SQLAlchemy==3.1.1
 Flask-JWT-Extended==4.6.0
-psycopg2-binary
+
+# Production WSGI server (used in Dockerfile CMD — required for Docker deployment)
+gunicorn==21.2.0
+
+# Database drivers
+psycopg2-binary==2.9.9
+
+# Environment & configuration
 python-dotenv==1.0.0
+
+# HTTP client
 requests==2.31.0
+
+# YouTube transcript extraction
 youtube-transcript-api==0.6.1
+
+# Google Cloud / AI
 google-cloud-aiplatform==1.38.1
-nltk==3.8.1
-scikit-learn
-PyJWT==2.8.0
+google-generativeai
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
-google-generativeai
 google-auth-httplib2==0.1.1
-pytest==7.4.0
-pinecone-client==2.2.4
+
+# NLP / ML
+nltk==3.8.1
+scikit-learn
 sentence-transformers==2.2.2
 numpy
 
+# Auth
+PyJWT==2.8.0
 
+# Vector database
+pinecone-client==2.2.4
 
-
+# Testing (excluded from Docker image via .dockerignore)
+pytest==7.4.0

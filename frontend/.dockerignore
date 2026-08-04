@@ -1,0 +1,34 @@
+# Never copy local installs into the image
+node_modules/
+
+# React build output (the builder stage creates a fresh one)
+build/
+
+# Environment files (inject REACT_APP_* at build time via --build-arg)
+.env
+.env.*
+.env.local
+.env.*.local
+
+# Test artifacts
+coverage/
+*.test.js
+*.spec.js
+
+# IDE / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+build_log.txt
+
+# Git
+.git/
+.github/
+.gitignore
