@@ -1,489 +1,349 @@
-/* ==========================================================================
-   FocusLearner Pro - Scholar Focus & Academic Mastery Studio
+﻿/* ==========================================================================
+   FocusLearner Pro — Global Design System
+   Minimal, premium, overflow-safe, maximum interaction
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
+/* ── Design Tokens ────────────────────────────────────────────────────────── */
 :root {
-  /* Core Scholar Slate & Academic Obsidian Palette */
-  --epic-bg-dark: #0b0f19;
-  --epic-bg-space: #0e1422;
-  --epic-bg-card: rgba(17, 24, 39, 0.85);
-  --epic-bg-card-hover: rgba(26, 35, 54, 0.95);
-  
-  /* Refined Academic & Focus Accents */
-  --neon-cyan: #6366f1; /* Academic Indigo */
-  --neon-blue: #3b82f6; /* Scholar Blue */
-  --neon-purple: #8b5cf6; /* Deep Violet */
-  --neon-magenta: #f59e0b; /* Warm Focus Amber / Gold */
-  --neon-emerald: #10b981; /* Success Green */
-  --neon-amber: #f59e0b;
-  
-  /* Academic Gradients */
-  --epic-gradient-primary: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
-  --epic-gradient-purple: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-  --epic-gradient-cyber: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --epic-gradient-sunset: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
-  --epic-gradient-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --epic-gradient-gold: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  --bg:           #080d16;
+  --bg-surface:   #0f1623;
+  --bg-card:      #131d2e;
+  --bg-hover:     #1a2540;
+  --border:       rgba(255,255,255,0.07);
+  --border-active:rgba(99,102,241,0.5);
 
-  /* Refined Glass Borders */
-  --glass-border-light: rgba(255, 255, 255, 0.1);
-  --glass-border-cyan: rgba(99, 102, 241, 0.45);
-  --glass-border-purple: rgba(139, 92, 246, 0.45);
-  
-  /* Subtle Academic Shadows */
-  --glow-cyan: 0 10px 25px -5px rgba(99, 102, 241, 0.3);
-  --glow-purple: 0 10px 25px -5px rgba(139, 92, 246, 0.3);
-  --glow-card-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
-  
-  /* Layout Dimensions */
-  --epic-radius-xl: 20px;
-  --epic-radius-lg: 16px;
-  --epic-radius-md: 12px;
-  --epic-radius-sm: 8px;
+  --indigo:    #6366f1;
+  --indigo-lt: #818cf8;
+  --blue:      #3b82f6;
+  --emerald:   #10b981;
+  --amber:     #f59e0b;
+  --rose:      #f43f5e;
+
+  --grad-primary: linear-gradient(135deg,#6366f1,#3b82f6);
+  --grad-emerald: linear-gradient(135deg,#10b981,#059669);
+  --grad-amber:   linear-gradient(135deg,#f59e0b,#d97706);
+
+  --text:     #f1f5f9;
+  --text-dim: #64748b;
+  --text-mid: #94a3b8;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md:  0 8px 24px rgba(0,0,0,0.5);
+  --shadow-lg:  0 16px 48px rgba(0,0,0,0.6);
+  --glow-indigo:0 0 20px rgba(99,102,241,0.25);
 }
 
-/* Global Smooth Scrolling Physics */
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 html {
+  height: 100%;
+  font-size: 16px;
   scroll-behavior: smooth;
-  scroll-padding-top: 86px;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100%;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--epic-bg-dark);
-  color: #f8fafc;
-  min-height: 100vh;
-  overflow-x: hidden;
-  position: relative;
+  /* NO overflow-x:hidden on body — it breaks position:sticky */
+  overflow-x: clip;       /* safe modern alternative */
 }
 
-/* Restore Standard Native Operating System Cursors */
-body, button, a, [role="button"], input, select, textarea, .epic-card {
-  cursor: auto;
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-button, a, [role="button"], .cursor-pointer, input[type="submit"], input[type="button"] {
-  cursor: pointer !important;
-}
-
-/* Calm Academic Background Orbs */
+/* ── Subtle ambient background ────────────────────────────────────────────── */
 body::before {
   content: '';
   position: fixed;
-  top: -20%;
-  left: -10%;
-  width: 60vw;
-  height: 60vw;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(59, 130, 246, 0.04) 40%, transparent 70%);
-  filter: blur(80px);
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 10%, rgba(99,102,241,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 90% 90%, rgba(245,158,11,0.05) 0%, transparent 70%);
+  pointer-events: none;
   z-index: 0;
-  animation: floatAurora 15s infinite alternate ease-in-out;
-  pointer-events: none;
 }
 
-body::after {
-  content: '';
-  position: fixed;
-  bottom: -20%;
-  right: -10%;
-  width: 60vw;
-  height: 60vw;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, rgba(139, 92, 246, 0.04) 40%, transparent 70%);
-  filter: blur(80px);
-  z-index: 0;
-  animation: floatAuroraReverse 18s infinite alternate ease-in-out;
-  pointer-events: none;
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(99,102,241,0.35); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.6); }
+
+/* ── Typography ───────────────────────────────────────────────────────────── */
+.font-display { font-family: 'Outfit', sans-serif !important; font-weight: 800 !important; letter-spacing: -0.03em !important; }
+.font-mono    { font-family: 'JetBrains Mono', monospace !important; }
+
+.text-gradient {
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-@keyframes floatAurora {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(8vw, 6vh) scale(1.15); }
-  100% { transform: translate(-5vw, 10vh) scale(0.95); }
-}
-
-@keyframes floatAuroraReverse {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-10vw, -8vh) scale(1.2); }
-  100% { transform: translate(6vw, -5vh) scale(0.9); }
-}
-
-/* Futuristic Dot Matrix Overlay */
-.epic-matrix-grid {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Content Container Wrapper */
-.epic-content-layer {
-  position: relative;
-  z-index: 2;
-}
-
-/* Custom Cyber Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #03040b;
-}
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3a0ca3, #4facfe);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #7209b7, #00f2fe);
-}
-
-/* ==========================================================================
-   Awwwards & FWA Tier Typography & Staggered Reveal Animations
-   ========================================================================== */
-
-.font-display-syne {
-  font-family: 'Syne', 'Outfit', sans-serif !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.04em !important;
-}
-
-.font-display-grotesk {
-  font-family: 'Space Grotesk', 'Outfit', sans-serif !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.03em !important;
-}
-
-/* Continuous Journey Section Connectors */
-.epic-journey-connector {
-  position: relative;
-  width: 2px;
-  height: 64px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-
-.epic-journey-connector::after {
-  content: '';
-  position: absolute;
-  top: -100%;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, transparent, #00f2fe, #f72585);
-  animation: flowDown 2.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-
-@keyframes flowDown {
-  0% { top: -100%; }
-  100% { top: 100%; }
-}
-
-/* ==========================================================================
-   Hyper-Glass Card with Shimmer Beam & Inner Glow
-   ========================================================================== */
-
-.epic-card {
-  background: var(--epic-bg-card) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: var(--epic-radius-xl) !important;
-  box-shadow: var(--glow-card-shadow), inset 0 1px 1px rgba(255, 255, 255, 0.18) !important;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   position: relative;
   overflow: hidden;
 }
 
-.epic-card:hover {
-  transform: translateY(-8px) scale(1.015);
-  border-color: rgba(0, 242, 254, 0.45) !important;
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 45px rgba(0, 242, 254, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+.card:hover {
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-md), var(--glow-indigo);
+  transform: translateY(-2px);
 }
 
-/* Shimmer Wave Across Card Surface */
-.epic-card::before {
+/* ── Stat Card ────────────────────────────────────────────────────────────── */
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: -150%;
-  width: 100%;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--grad-primary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.stat-card:hover {
+  border-color: var(--border-active);
+  box-shadow: var(--glow-indigo);
+  transform: translateY(-2px);
+}
+
+.stat-card:hover::before { opacity: 1; }
+
+/* ── Action Card (CTA tile) ───────────────────────────────────────────────── */
+.action-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s, background 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-active);
+  box-shadow: var(--glow-indigo);
+  transform: translateY(-3px);
+}
+
+.action-card:active { transform: translateY(-1px) scale(0.985); }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  padding: 0.6rem 1.25rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn:active { transform: scale(0.95); }
+
+.btn-primary {
+  background: var(--grad-primary);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(99,102,241,0.55);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-mid);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  background: rgba(99,102,241,0.1);
+  color: var(--indigo-lt);
+  border-color: var(--border-active);
+}
+
+/* ── Badges / Pills ───────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.badge-indigo  { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+.badge-emerald { background: rgba(16,185,129,0.15); color: #34d399;  border: 1px solid rgba(16,185,129,0.3); }
+.badge-amber   { background: rgba(245,158,11,0.15); color: #fbbf24;  border: 1px solid rgba(245,158,11,0.3); }
+.badge-rose    { background: rgba(244,63,94,0.15);  color: #fb7185;  border: 1px solid rgba(244,63,94,0.3);  }
+
+/* ── Pulse Dots ───────────────────────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0%,100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50%      { box-shadow: 0 0 0 5px transparent; opacity: 0.8; }
+}
+
+.pulse-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse-ring 2s ease infinite;
+}
+
+.pulse-dot-indigo  { background: var(--indigo);  color: var(--indigo); }
+.pulse-dot-emerald { background: var(--emerald); color: var(--emerald); }
+
+/* ── Progress Bar ─────────────────────────────────────────────────────────── */
+.progress-track {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), rgba(0, 242, 254, 0.15), transparent);
-  transform: skewX(-25deg);
-  transition: all 0.75s ease;
-  pointer-events: none;
-  z-index: 5;
+  border-radius: 100px;
+  background: var(--grad-primary);
+  transition: width 0.6s ease;
 }
 
-.epic-card:hover::before {
-  left: 200%;
-}
-
-/* Futuristic Cyber Borders & Corner Highlights */
-.epic-card-cyber {
-  background: linear-gradient(155deg, rgba(14, 18, 38, 0.9) 0%, rgba(26, 11, 46, 0.85) 100%) !important;
-  border: 1px solid rgba(157, 78, 221, 0.35) !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(157, 78, 221, 0.18) !important;
-}
-
-.epic-card-cyber:hover {
-  border-color: #f72585 !important;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 45px rgba(247, 37, 133, 0.3) !important;
-}
-
-/* Glowing Typography Shines */
-.epic-text-gradient-cyan {
-  background: var(--epic-gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 800;
-}
-
-.epic-text-gradient-cyber {
-  background: var(--epic-gradient-cyber);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 900;
-  background-size: 200% auto;
-  animation: shineText 4s linear infinite;
-}
-
-.epic-text-gradient-sunset {
-  background: var(--epic-gradient-sunset);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 800;
-}
-
-@keyframes shineText {
-  to { background-position: 200% center; }
-}
-
-/* ==========================================================================
-   PRO LEVEL BUTTONS: Click Physics, Shimmer Sweep & Shockwave Rings
-   ========================================================================== */
-
-.epic-btn-primary {
-  background: var(--epic-gradient-primary) !important;
-  color: #000000 !important;
-  font-weight: 800 !important;
-  font-family: 'Outfit', sans-serif !important;
-  letter-spacing: 0.03em !important;
-  padding: 14px 28px !important;
-  border-radius: var(--epic-radius-md) !important;
-  border: none !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 242, 254, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-  cursor: pointer;
-  position: relative !important;
-  overflow: hidden !important;
-  text-transform: none !important;
-  z-index: 1 !important;
-}
-
-/* Light Beam Sweep inside Button */
-.epic-btn-primary::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -120%;
-  width: 50px;
-  height: 200%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-  transform: rotate(35deg);
-  transition: all 0.65s ease;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.epic-btn-primary:hover::after {
-  left: 150%;
-}
-
-.epic-btn-primary:hover {
-  transform: translateY(-4px) scale(1.03) !important;
-  box-shadow: 0 18px 38px -5px rgba(0, 242, 254, 0.75), 0 0 25px rgba(79, 172, 254, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.9) !important;
-}
-
-/* 3D Physical Tactile Click Press */
-.epic-btn-primary:active {
-  transform: translateY(2px) scale(0.96) !important;
-  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.5), inset 0 3px 6px rgba(0, 0, 0, 0.3) !important;
-}
-
-.epic-btn-purple {
-  background: var(--epic-gradient-purple) !important;
-  color: #ffffff !important;
-  font-weight: 800 !important;
-  font-family: 'Outfit', sans-serif !important;
-  letter-spacing: 0.03em !important;
-  padding: 14px 28px !important;
-  border-radius: var(--epic-radius-md) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  box-shadow: 0 10px 25px -5px rgba(157, 78, 221, 0.45) !important;
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-  cursor: pointer;
-  position: relative !important;
-  overflow: hidden !important;
-  text-transform: none !important;
-  z-index: 1 !important;
-}
-
-.epic-btn-purple::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -120%;
-  width: 50px;
-  height: 200%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-  transform: rotate(35deg);
-  transition: all 0.65s ease;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.epic-btn-purple:hover::after {
-  left: 150%;
-}
-
-.epic-btn-purple:hover {
-  transform: translateY(-4px) scale(1.03) !important;
-  box-shadow: 0 18px 38px -5px rgba(157, 78, 221, 0.75), 0 0 25px rgba(247, 37, 133, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.5) !important;
-}
-
-/* 3D Physical Tactile Click Press */
-.epic-btn-purple:active {
-  transform: translateY(2px) scale(0.96) !important;
-  box-shadow: 0 4px 15px rgba(157, 78, 221, 0.5), inset 0 3px 6px rgba(0, 0, 0, 0.4) !important;
-}
-
-.epic-btn-outline {
-  background: rgba(255, 255, 255, 0.04) !important;
-  backdrop-filter: blur(10px) !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  font-family: 'Outfit', sans-serif !important;
-  padding: 12px 24px !important;
-  border-radius: var(--epic-radius-md) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-  text-transform: none !important;
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.epic-btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: var(--neon-cyan) !important;
-  color: var(--neon-cyan) !important;
-  box-shadow: 0 0 25px rgba(0, 242, 254, 0.35) !important;
-  transform: translateY(-3px) !important;
-}
-
-.epic-btn-outline:active {
-  transform: translateY(1px) scale(0.97) !important;
-  background: rgba(0, 242, 254, 0.15) !important;
-}
-
-/* Glowing Status Pills & Badges */
-.epic-badge-glow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 30px;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  color: #a5b4fc;
+/* ── Input ────────────────────────────────────────────────────────────────── */
+.input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+  font-size: 0.9rem;
+  padding: 0.65rem 1rem;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
 }
 
-.epic-badge-purple {
-  display: inline-flex;
+.input:focus {
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+/* ── Icon Container ───────────────────────────────────────────────────────── */
+.icon-box {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 30px;
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  color: #d8b4fe;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.78rem;
+  justify-content: center;
+  border-radius: var(--r-md);
+  flex-shrink: 0;
+}
+
+.icon-box-sm { width: 32px; height: 32px; border-radius: var(--r-sm); }
+.icon-box-md { width: 40px; height: 40px; }
+.icon-box-lg { width: 48px; height: 48px; border-radius: var(--r-lg); }
+
+/* ── Section Label ────────────────────────────────────────────────────────── */
+.section-label {
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
-.epic-badge-emerald {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 30px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #34d399;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+/* ── Divider ──────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
 }
 
-/* Pulsing Dots & HUD Rings */
-@keyframes pulseRing {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulseRingEmerald {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.pulse-dot-cyan {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #6366f1;
-  animation: pulseRing 2s infinite;
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-.pulse-dot-emerald {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #10b981;
-  animation: pulseRingEmerald 2s infinite;
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
 }
 
-/* Accessibility: Respect prefers-reduced-motion */
+.anim-fade-up     { animation: fade-up 0.4s ease both; }
+.anim-fade-in     { animation: fade-in 0.3s ease both; }
+.anim-slide-left  { animation: slide-in-left 0.35s ease both; }
+
+/* ── Accessibility ────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
+
+/* ── Utility ──────────────────────────────────────────────────────────────── */
+.truncate   { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-only    { position: absolute; width: 1px; height: 1px; clip: rect(0,0,0,0); overflow: hidden; }
+.cursor-ptr { cursor: pointer; }

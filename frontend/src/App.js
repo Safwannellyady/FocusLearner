@@ -33,55 +33,47 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '141636012206
 const theme = createTheme({
   palette: {
     mode: 'dark',
-    primary: {
-      main: '#6366f1', // Refined Academic Indigo
-    },
-    secondary: {
-      main: '#f59e0b', // Warm Scholar Amber / Gold
-    },
-    background: {
-      default: '#0b0f19', // Deep Scholar Slate
-      paper: '#111827',
-    },
-    text: {
-      primary: '#f8fafc',
-      secondary: '#94a3b8',
-    },
+    primary:    { main: '#6366f1' },
+    secondary:  { main: '#f59e0b' },
+    success:    { main: '#10b981' },
+    error:      { main: '#f43f5e' },
+    background: { default: '#080d16', paper: '#0f1623' },
+    text:       { primary: '#f1f5f9', secondary: '#64748b' },
   },
   typography: {
-    fontFamily: '"Plus Jakarta Sans", "Outfit", "Inter", sans-serif',
-    h1: { fontWeight: 800, fontFamily: '"Outfit", sans-serif' },
-    h2: { fontWeight: 800, fontFamily: '"Outfit", sans-serif' },
-    h3: { fontWeight: 700, fontFamily: '"Outfit", sans-serif' },
-    h4: { fontWeight: 700, fontFamily: '"Outfit", sans-serif' },
-    button: { textTransform: 'none', fontWeight: 600, fontFamily: '"Plus Jakarta Sans", sans-serif' },
+    fontFamily: '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
+    h1: { fontFamily: '"Outfit", sans-serif', fontWeight: 900, letterSpacing: '-0.04em' },
+    h2: { fontFamily: '"Outfit", sans-serif', fontWeight: 800, letterSpacing: '-0.03em' },
+    h3: { fontFamily: '"Outfit", sans-serif', fontWeight: 700, letterSpacing: '-0.02em' },
+    h4: { fontFamily: '"Outfit", sans-serif', fontWeight: 700 },
+    h5: { fontWeight: 700 },
+    h6: { fontWeight: 700 },
+    button: { textTransform: 'none', fontWeight: 600 },
   },
+  shape: { borderRadius: 12 },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        '*, *::before, *::after': { boxSizing: 'border-box' },
         body: {
-          backgroundColor: '#0b0f19',
-          color: '#f8fafc',
-          scrollbarColor: "#475569 #0b0f19",
-          "&::-webkit-scrollbar, & *::-webkit-scrollbar": {
-            backgroundColor: "#0b0f19",
-            width: '8px',
-          },
-          "&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
-            borderRadius: 8,
-            backgroundColor: "#475569",
-            minHeight: 24,
-          },
+          backgroundColor: '#080d16',
+          color: '#f1f5f9',
+          overflowX: 'clip',
+          '&::-webkit-scrollbar':       { width: '5px', height: '5px' },
+          '&::-webkit-scrollbar-track': { background: 'transparent' },
+          '&::-webkit-scrollbar-thumb': { background: 'rgba(99,102,241,0.35)', borderRadius: '10px' },
+          '& *::-webkit-scrollbar':       { width: '5px', height: '5px' },
+          '& *::-webkit-scrollbar-thumb': { background: 'rgba(99,102,241,0.35)', borderRadius: '10px' },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 20,
-          background: '#111827',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
+          background: '#131d2e',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 16,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
         },
       },
     },
@@ -89,14 +81,44 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          padding: '10px 24px',
           textTransform: 'none',
-          fontWeight: 600
+          fontWeight: 600,
+          fontFamily: '"Plus Jakarta Sans", sans-serif',
+        },
+        containedPrimary: {
+          background: 'linear-gradient(135deg,#6366f1,#3b82f6)',
+          boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
+          '&:hover': { boxShadow: '0 6px 20px rgba(99,102,241,0.5)' },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+          background: '#0f1623',
+          border: '1px solid rgba(255,255,255,0.07)',
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: { fontWeight: 700, fontFamily: '"Plus Jakarta Sans", sans-serif' },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          background: '#1a2540',
+          border: '1px solid rgba(255,255,255,0.1)',
+          fontSize: '0.75rem',
+          fontFamily: '"Plus Jakarta Sans", sans-serif',
         },
       },
     },
   },
 });
+
 
 function App() {
   return (

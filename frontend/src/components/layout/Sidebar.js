@@ -1,201 +1,214 @@
-import React from 'react';
-import { Box, Typography, List, ListItem, ListItemIcon, ListItemText, IconButton, Avatar, Drawer } from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import SchoolIcon from '@mui/icons-material/School';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-import LogoutIcon from '@mui/icons-material/Logout';
-import SettingsIcon from '@mui/icons-material/Settings';
-import MenuIcon from '@mui/icons-material/Menu';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import { useLocation, useNavigate } from 'react-router-dom';
+﻿import React from "react";
+import {
+  Box, Typography, Tooltip,
+  IconButton, Avatar, Drawer,
+} from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const navItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Create a Focus Session', icon: <MenuBookIcon />, path: '/courses' },
-    { text: 'My Focus Sessions', icon: <SchoolIcon />, path: '/my-courses' },
-    { text: 'Manage Focus Period', icon: <AssignmentIcon />, path: '/manage-focus' },
-    { text: 'Badges', icon: <WorkspacePremiumIcon />, path: '/badges' },
+import DashboardRoundedIcon      from "@mui/icons-material/DashboardRounded";
+import AutoStoriesIcon           from "@mui/icons-material/AutoStories";
+import SchoolRoundedIcon         from "@mui/icons-material/SchoolRounded";
+import TimerRoundedIcon          from "@mui/icons-material/TimerRounded";
+import EmojiEventsRoundedIcon    from "@mui/icons-material/EmojiEventsRounded";
+import SportsEsportsRoundedIcon  from "@mui/icons-material/SportsEsportsRounded";
+import ShowChartRoundedIcon      from "@mui/icons-material/ShowChartRounded";
+import SettingsRoundedIcon       from "@mui/icons-material/SettingsRounded";
+import LogoutRoundedIcon         from "@mui/icons-material/LogoutRounded";
+import ChevronLeftIcon           from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon          from "@mui/icons-material/ChevronRight";
+import AutoAwesomeIcon           from "@mui/icons-material/AutoAwesome";
+
+const NAV = [
+  { label: "Dashboard",    icon: DashboardRoundedIcon,     path: "/dashboard"    },
+  { label: "New Session",  icon: AutoStoriesIcon,          path: "/courses"      },
+  { label: "My Sessions",  icon: SchoolRoundedIcon,        path: "/my-courses"   },
+  { label: "Focus Timer",  icon: TimerRoundedIcon,         path: "/manage-focus" },
+  { label: "Game Lab",     icon: SportsEsportsRoundedIcon, path: "/games"        },
+  { label: "Analytics",    icon: ShowChartRoundedIcon,     path: "/analytics"    },
+  { label: "Badges",       icon: EmojiEventsRoundedIcon,   path: "/badges"       },
 ];
 
-const Sidebar = ({ open, setOpen, mobileOpen, handleDrawerToggle }) => {
-    const navigate = useNavigate();
-    const location = useLocation();
-
-    const handleLogout = () => {
-        localStorage.clear();
-        navigate('/login');
-    };
-
-    const drawerContent = (
+const NavItem = ({ item, open, active, onClick }) => {
+  const Icon = item.icon;
+  return (
+    <Tooltip title={open ? "" : item.label} placement="right" arrow>
+      <Box
+        onClick={onClick}
+        sx={{
+          display:        "flex",
+          alignItems:     "center",
+          gap:            open ? 1.25 : 0,
+          px:             open ? 1.5 : 0,
+          py:             0.75,
+          borderRadius:   "var(--r-md)",
+          cursor:         "pointer",
+          justifyContent: open ? "flex-start" : "center",
+          bgcolor:        active ? "rgba(99,102,241,0.13)" : "transparent",
+          border:         `1px solid ${active ? "rgba(99,102,241,0.32)" : "transparent"}`,
+          color:          active ? "#a5b4fc" : "var(--text-mid)",
+          transition:     "all 0.15s ease",
+          userSelect:     "none",
+          mb:             0.4,
+          "&:hover": {
+            bgcolor:   active ? "rgba(99,102,241,0.18)" : "rgba(255,255,255,0.05)",
+            color:     "#f1f5f9",
+            transform: "translateX(2px)",
+          },
+          "&:active": { transform: "scale(0.97)" },
+        }}
+      >
         <Box sx={{
-            width: open ? 260 : 88,
-            flexShrink: 0,
-            bgcolor: 'transparent',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            transition: 'all 0.3s ease',
-            overflowX: 'hidden',
+          width: 28, height: 28,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: "var(--r-sm)",
+          bgcolor: active ? "rgba(99,102,241,0.18)" : "transparent",
+          flexShrink: 0, transition: "background 0.15s",
         }}>
-            {/* Brand Logo Area */}
-            <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', height: 76, borderBottom: '1px solid rgba(255, 255, 255, 0.08)', gap: open ? 2 : 0, justifyContent: open ? 'flex-start' : 'center' }}>
-                <Box sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)'
-                }}>
-                    <AutoAwesomeIcon sx={{ color: '#ffffff', fontSize: 24 }} />
-                </Box>
-                {open && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#f8fafc', whiteSpace: 'nowrap', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>
-                            FocusLearner <span style={{ color: '#6366f1', fontWeight: 900 }}>Academic</span>
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem', fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 600 }}>
-                            STUDY & FOCUS STUDIO
-                        </Typography>
-                    </Box>
-                )}
-            </Box>
-
-            {/* Menu Label & Toggle */}
-            <Box sx={{ px: 3, pt: 3, pb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {open && <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '0.08em', fontSize: '0.75rem', textTransform: 'uppercase' }}>STUDY NAVIGATION</Typography>}
-                <IconButton size="small" onClick={() => setOpen(!open)} sx={{ mx: open ? 0 : 'auto', color: '#94a3b8', '&:hover': { color: '#6366f1', bgcolor: 'rgba(99, 102, 241, 0.1)' } }}>
-                    <MenuIcon fontSize="small" />
-                </IconButton>
-            </Box>
-
-            {/* Navigation List */}
-            <List sx={{ flexGrow: 1, px: 1.5 }}>
-                {navItems.map((item) => {
-                    const isActive = location.pathname.startsWith(item.path);
-                    return (
-                        <ListItem
-                            button
-                            key={item.text}
-                            onClick={() => navigate(item.path)}
-                            sx={{
-                                borderRadius: '12px',
-                                mb: 0.8,
-                                py: 1.2,
-                                bgcolor: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                                border: isActive ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent',
-                                color: isActive ? '#f8fafc' : '#94a3b8',
-                                '&:hover': { 
-                                    bgcolor: isActive ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.05)', 
-                                    color: '#f8fafc',
-                                    transform: 'translateX(3px)'
-                                },
-                                transition: 'all 0.2s ease',
-                                justifyContent: open ? 'flex-start' : 'center',
-                                px: open ? 2 : 1,
-                            }}
-                        >
-                            <ListItemIcon sx={{ minWidth: open ? 40 : 'auto', color: isActive ? '#6366f1' : 'inherit', justifyContent: 'center' }}>
-                                {React.cloneElement(item.icon, { fontSize: isActive && open ? "medium" : "small" })}
-                            </ListItemIcon>
-                            {open && <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.9rem', fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: isActive ? 700 : 500 }} />}
-                        </ListItem>
-                    );
-                })}
-            </List>
-
-            {/* Bottom Actions */}
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <List disablePadding>
-                    <ListItem 
-                        button 
-                        onClick={() => navigate('/preferences')} 
-                        sx={{ 
-                            borderRadius: '12px', 
-                            color: '#94a3b8', 
-                            mb: 0.8, 
-                            py: 1,
-                            px: open ? 2 : 1, 
-                            justifyContent: open ? 'flex-start' : 'center',
-                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        <ListItemIcon sx={{ minWidth: open ? 40 : 'auto', color: 'inherit', justifyContent: 'center' }}><SettingsIcon fontSize="small" /></ListItemIcon>
-                        {open && <ListItemText primary="Profile Settings" primaryTypographyProps={{ fontSize: '0.88rem', fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 500 }} />}
-                    </ListItem>
-
-                    <ListItem 
-                        button 
-                        onClick={handleLogout} 
-                        sx={{ 
-                            borderRadius: '12px', 
-                            color: '#ef4444', 
-                            py: 1,
-                            px: open ? 2 : 1, 
-                            justifyContent: open ? 'flex-start' : 'center',
-                            '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.12)', color: '#f87171' },
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        <ListItemIcon sx={{ minWidth: open ? 40 : 'auto', color: 'inherit', justifyContent: 'center' }}><LogoutIcon fontSize="small" /></ListItemIcon>
-                        {open && <ListItemText primary="Logout Session" primaryTypographyProps={{ fontSize: '0.88rem', fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 600 }} />}
-                    </ListItem>
-                </List>
-            </Box>
+          <Icon sx={{ fontSize: 17, color: active ? "#818cf8" : "inherit" }} />
         </Box>
-    );
+        {open && (
+          <Typography noWrap sx={{
+            fontFamily: "Plus Jakarta Sans, sans-serif",
+            fontWeight: active ? 700 : 500,
+            fontSize:   "0.845rem",
+            lineHeight: 1,
+            color: "inherit",
+          }}>
+            {item.label}
+          </Typography>
+        )}
+      </Box>
+    </Tooltip>
+  );
+};
 
-    return (
-        <Box component="nav" sx={{ width: { md: open ? 260 : 88 }, flexShrink: { md: 0 }, transition: 'width 0.3s ease' }}>
-            {/* Mobile temporary drawer */}
-            <Drawer
-                variant="temporary"
-                open={mobileOpen}
-                onClose={handleDrawerToggle}
-                ModalProps={{ keepMounted: true }} // Better open performance on mobile.
-                sx={{
-                    display: { xs: 'block', md: 'none' },
-                    '& .MuiDrawer-paper': { 
-                        boxSizing: 'border-box', 
-                        width: 260, 
-                        bgcolor: 'rgba(17, 24, 39, 0.95)',
-                        backdropFilter: 'blur(20px)',
-                        borderRight: '1px solid rgba(255, 255, 255, 0.08)'
-                    },
-                }}
-            >
-                {/* On mobile, force 'open' state for the content so text is always visible */}
-                {React.cloneElement(drawerContent, { sx: { ...drawerContent.props.sx, width: 260 } })}
-            </Drawer>
-            
-            {/* Desktop permanent drawer */}
-            <Drawer
-                variant="permanent"
-                sx={{
-                    display: { xs: 'none', md: 'block' },
-                    '& .MuiDrawer-paper': { 
-                        boxSizing: 'border-box', 
-                        width: open ? 260 : 88, 
-                        bgcolor: 'rgba(17, 24, 39, 0.95)',
-                        backdropFilter: 'blur(20px)',
-                        borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-                        transition: 'width 0.3s ease',
-                        overflowX: 'hidden'
-                    },
-                }}
-                open
-            >
-                {drawerContent}
-            </Drawer>
+const SidebarContent = ({ open, setOpen, navigate, location }) => {
+  const handleLogout = () => { localStorage.clear(); navigate("/login"); };
+  const userStr = localStorage.getItem("user");
+  let user = { username: "User" };
+  try { if (userStr) user = JSON.parse(userStr); } catch {}
+  const initials = (user?.full_name || user?.username || "FL").substring(0, 2).toUpperCase();
+
+  return (
+    <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Brand */}
+      <Box sx={{
+        display: "flex", alignItems: "center",
+        gap: open ? 1.5 : 0, justifyContent: open ? "flex-start" : "center",
+        px: 2, height: 60, borderBottom: "1px solid var(--border)", flexShrink: 0,
+      }}>
+        <Box sx={{
+          width: 34, height: 34, borderRadius: "var(--r-md)",
+          background: "var(--grad-primary)", display: "flex",
+          alignItems: "center", justifyContent: "center",
+          flexShrink: 0, boxShadow: "0 4px 12px rgba(99,102,241,0.28)",
+        }}>
+          <AutoAwesomeIcon sx={{ color: "#fff", fontSize: 16 }} />
         </Box>
-    );
+        {open && (
+          <Box sx={{ overflow: "hidden" }}>
+            <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.9rem", letterSpacing: "-0.02em", color: "#f1f5f9", lineHeight: 1.1 }}>
+              Focus<span style={{ color: "var(--indigo)" }}>Learner</span>
+            </Typography>
+            <Typography sx={{ fontSize: "0.58rem", color: "var(--text-dim)", fontWeight: 600, letterSpacing: "0.1em" }}>
+              ACADEMIC STUDIO
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Toggle */}
+      <Box sx={{ display: "flex", justifyContent: open ? "flex-end" : "center", px: 1.5, pt: 1.25, pb: 0.5 }}>
+        <IconButton
+          size="small" onClick={() => setOpen(!open)}
+          sx={{ color: "var(--text-dim)", borderRadius: "var(--r-sm)", width: 26, height: 26, "&:hover": { bgcolor: "rgba(255,255,255,0.07)", color: "#f1f5f9" } }}
+        >
+          {open ? <ChevronLeftIcon sx={{ fontSize: 16 }} /> : <ChevronRightIcon sx={{ fontSize: 16 }} />}
+        </IconButton>
+      </Box>
+
+      {/* Nav items */}
+      <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", px: 1.25, py: 0.5 }}>
+        {open && (
+          <Typography sx={{ fontSize: "0.6rem", fontWeight: 700, color: "var(--text-dim)", letterSpacing: "0.1em", textTransform: "uppercase", px: 1.5, pb: 0.75, pt: 0.25 }}>
+            Navigation
+          </Typography>
+        )}
+        {NAV.map(item => (
+          <NavItem
+            key={item.path}
+            item={item}
+            open={open}
+            active={location.pathname === item.path || (item.path !== "/dashboard" && location.pathname.startsWith(item.path))}
+            onClick={() => navigate(item.path)}
+          />
+        ))}
+      </Box>
+
+      {/* Footer */}
+      <Box sx={{ px: 1.25, py: 1.25, borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 0.5 }}>
+        {open ? (
+          <Box
+            onClick={() => navigate("/preferences")}
+            sx={{ display: "flex", alignItems: "center", gap: 1.25, px: 1.5, py: 0.75, borderRadius: "var(--r-md)", cursor: "pointer", mb: 0.5, "&:hover": { bgcolor: "rgba(255,255,255,0.05)" } }}
+          >
+            <Avatar sx={{ width: 28, height: 28, fontSize: "0.65rem", fontWeight: 700, background: "var(--grad-primary)", flexShrink: 0 }}>
+              {initials}
+            </Avatar>
+            <Box sx={{ overflow: "hidden", flex: 1 }}>
+              <Typography sx={{ fontSize: "0.78rem", fontWeight: 600, color: "#f1f5f9" }} noWrap>
+                {user?.full_name || user?.username}
+              </Typography>
+              <Typography sx={{ fontSize: "0.65rem", color: "var(--text-dim)" }} noWrap>
+                Settings
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+          <Tooltip title="Settings" placement="right">
+            <Avatar onClick={() => navigate("/preferences")} sx={{ width: 28, height: 28, fontSize: "0.65rem", cursor: "pointer", background: "var(--grad-primary)", mx: "auto", mb: 0.5 }}>
+              {initials}
+            </Avatar>
+          </Tooltip>
+        )}
+
+        <Tooltip title={open ? "" : "Logout"} placement="right">
+          <Box
+            onClick={handleLogout}
+            sx={{
+              display: "flex", alignItems: "center", gap: open ? 1.25 : 0,
+              px: open ? 1.5 : 0, py: 0.75, borderRadius: "var(--r-md)",
+              cursor: "pointer", justifyContent: open ? "flex-start" : "center",
+              color: "rgba(244,63,94,0.6)", transition: "all 0.15s",
+              "&:hover": { bgcolor: "rgba(244,63,94,0.09)", color: "#fb7185" },
+            }}
+          >
+            <Box sx={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <LogoutRoundedIcon sx={{ fontSize: 16 }} />
+            </Box>
+            {open && <Typography sx={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 600, fontSize: "0.815rem", color: "inherit" }}>Logout</Typography>}
+          </Box>
+        </Tooltip>
+      </Box>
+    </Box>
+  );
+};
+
+const Sidebar = ({ open, setOpen, mobileOpen, onMobileClose, width }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const paperSx = { width, bgcolor: "var(--bg-surface)", borderRight: "1px solid var(--border)", overflowX: "hidden", overflowY: "hidden", transition: "width 0.25s ease", boxSizing: "border-box" };
+
+  return (
+    <>
+      <Drawer variant="temporary" open={mobileOpen} onClose={onMobileClose} ModalProps={{ keepMounted: true }} sx={{ display: { xs: "block", md: "none" }, "& .MuiDrawer-paper": { ...paperSx, width: 240 } }}>
+        <SidebarContent open={true} setOpen={setOpen} navigate={navigate} location={location} />
+      </Drawer>
+      <Drawer variant="permanent" sx={{ display: { xs: "none", md: "block" }, width, flexShrink: 0, "& .MuiDrawer-paper": paperSx }} open>
+        <SidebarContent open={open} setOpen={setOpen} navigate={navigate} location={location} />
+      </Drawer>
+    </>
+  );
 };
 
 export default Sidebar;
