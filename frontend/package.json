@@ -9,7 +9,7 @@
     "@mui/icons-material": "^5.18.0",
     "@mui/material": "^5.18.0",
     "@react-oauth/google": "^0.11.1",
-    "axios": "^1.6.2",
+    "axios": "^1.18.0",
     "baseline-browser-mapping": "^2.10.43",
     "caniuse-lite": "^1.0.30001805",
     "framer-motion": "^12.23.26",
@@ -25,6 +25,11 @@
     "@types/react-dom": "^18.2.17",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5"
+  },
+  "overrides": {
+    "lodash": "^4.18.0",
+    "rollup": "^2.80.0",
+    "shell-quote": "^1.9.0"
   },
   "scripts": {
     "start": "react-scripts start",

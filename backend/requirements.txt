@@ -5,7 +5,7 @@ Flask-SQLAlchemy==3.1.1
 Flask-JWT-Extended==4.6.0
 
 # Production WSGI server (used in Dockerfile CMD — required for Docker deployment)
-gunicorn==21.2.0
+gunicorn==22.0.0
 
 # Database drivers
 psycopg2-binary==2.9.9
@@ -27,7 +27,7 @@ google-auth-oauthlib==1.1.0
 google-auth-httplib2==0.1.1
 
 # NLP / ML
-nltk==3.8.1
+nltk>=3.10.0
 scikit-learn
 sentence-transformers==2.2.2
 numpy
