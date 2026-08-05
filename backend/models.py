@@ -718,6 +718,10 @@ class RoomMessage(db.Model):
             'username': self.room.participants[0].user.username if self.room and self.room.participants else f"User {self.user_id}",
             'message': self.message,
             'is_review_note': self.is_review_note,
+            'created_at': self.created_at.isoformat()
+        }
+
+
 class SupportTicket(db.Model):
     """User support & bug report ticket model"""
     __tablename__ = 'support_tickets'

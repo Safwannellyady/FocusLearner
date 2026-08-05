@@ -2,6 +2,7 @@
 FocusLearner Pro - Learning Loop Service
 Manages the strict pedagogical flow: Understand -> Apply -> Fail -> Retry -> Master
 """
+import json
 from models import db, LearningLoopState, LearningIntent, LearningStage
 from datetime import datetime
 
