@@ -182,6 +182,7 @@ export const chatAPI = {
 // Analytics API
 export const analyticsAPI = {
   getSummary: () => api.get('/focus/analytics/summary'),
+  getStats: () => api.get('/focus/analytics/summary'),
   getHealth: () => api.get('/analytics/health'),
 };
 

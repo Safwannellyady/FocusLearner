@@ -169,12 +169,9 @@ const SubjectBreakdown = ({ data }) => {
 };
 
 /* ── Heatmap (last 30 days) ─────────────────────────────────────────────────── */
-const Heatmap = () => {
-  // Generate 30 fake day values for demo
-  const days = Array.from({ length: 30 }, (_, i) => {
-    const v = Math.random();
-    return v < 0.2 ? 0 : v < 0.5 ? 1 : v < 0.75 ? 2 : 3;
-  });
+const Heatmap = ({ daysData }) => {
+  // Use provided daysData or default to 30 zero-activity days
+  const days = daysData && daysData.length === 30 ? daysData : Array.from({ length: 30 }, () => 0);
   const intensities = ["rgba(255,255,255,0.04)", "rgba(99,102,241,0.25)", "rgba(99,102,241,0.55)", "var(--indigo)"];
 
   return (
@@ -196,7 +193,7 @@ const Heatmap = () => {
               title={`Day ${i + 1}: Level ${v}`}
               sx={{
                 width: "100%", aspectRatio: "1", borderRadius: "4px",
-                bgcolor: intensities[v],
+                bgcolor: intensities[v] || intensities[0],
                 boxShadow: v === 3 ? "0 0 6px rgba(99,102,241,0.5)" : "none",
                 transition: "all 0.15s",
                 "&:hover": { transform: "scale(1.2)", cursor: "default" },
@@ -219,17 +216,53 @@ const Heatmap = () => {
 
 /* ══ AnalyticsDashboard (main) ════════════════════════════════════════════════ */
 const AnalyticsDashboard = () => {
-  const [stats,   setStats]   = useState(null);
-  const [weekly,  setWeekly]  = useState(DEMO_WEEKLY);
-  const [loading, setLoading] = useState(true);
+  const [stats,    setStats]    = useState({ total_minutes: 0, total_sessions: 0, xp: 0, streak: 0, avg_per_day: 0, completed: 0 });
+  const [weekly,   setWeekly]   = useState([
+    { day: "Mon", min: 0 }, { day: "Tue", min: 0 }, { day: "Wed", min: 0 },
+    { day: "Thu", min: 0 }, { day: "Fri", min: 0 }, { day: "Sat", min: 0 }, { day: "Sun", min: 0 }
+  ]);
+  const [subjects, setSubjects] = useState([]);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await analyticsAPI.getStats();
-        setStats(res?.data || DEMO_STATS);
-      } catch {
-        setStats(DEMO_STATS);
+        const res = await analyticsAPI.getSummary();
+        if (res?.data) {
+          const d = res.data;
+          const totMin = Math.round((d.total_hours || 0) * 60);
+          setStats({
+            total_minutes: totMin,
+            total_sessions: d.total_sessions || 0,
+            xp: d.total_xp || 0,
+            streak: d.streak_days || 0,
+            completed: d.total_sessions || 0,
+            avg_per_day: d.total_sessions > 0 ? Math.round(totMin / 7) : 0,
+          });
+
+          if (Array.isArray(d.trends) && d.trends.length > 0) {
+            const formattedTrends = d.trends.slice(-7).map(item => {
+              const dateObj = new Date(item.date);
+              const dayName = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dateObj.getDay()];
+              return { day: dayName, min: Math.round(item.minutes || 0) };
+            });
+            setWeekly(formattedTrends);
+          }
+
+          if (Array.isArray(d.distribution) && d.distribution.length > 0) {
+            const colors = ["#6366f1", "#ec4899", "#a78bfa", "#10b981", "#3b82f6"];
+            const formattedSubj = d.distribution.map((item, idx) => ({
+              name: item.name || "General",
+              min: item.value * 30, // proxy minutes per session
+              color: colors[idx % colors.length]
+            }));
+            setSubjects(formattedSubj);
+          } else {
+            setSubjects([]);
+          }
+        }
+      } catch (err) {
+        console.error("Analytics load error:", err);
       } finally {
         setLoading(false);
       }
@@ -243,7 +276,7 @@ const AnalyticsDashboard = () => {
     </Box>
   );
 
-  const s = stats || DEMO_STATS;
+  const s = stats;
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 900, mx: "auto" }}>
@@ -271,11 +304,22 @@ const AnalyticsDashboard = () => {
       {/* Charts row */}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2.5, mb: 2.5 }}>
         <WeeklyChart data={weekly} />
-        <SubjectBreakdown data={DEMO_SUBJECTS} />
+        {subjects.length > 0 ? (
+          <SubjectBreakdown data={subjects} />
+        ) : (
+          <Box sx={{ bgcolor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", p: 2.5, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: 200 }}>
+            <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "0.95rem", color: "#f1f5f9", mb: 0.5 }}>
+              Subject Breakdown
+            </Typography>
+            <Typography sx={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
+              No subject activity recorded yet. Start a focus session to see your breakdown!
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       {/* Heatmap full width */}
-      <Heatmap />
+      <Heatmap daysData={Array.from({ length: 30 }, () => 0)} />
     </Box>
   );
 };

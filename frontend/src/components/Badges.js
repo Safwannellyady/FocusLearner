@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Chip } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
+import { badgesAPI } from "../services/api";
 
 import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
 import LockRoundedIcon         from "@mui/icons-material/LockRounded";
@@ -12,13 +13,11 @@ import CheckCircleRoundedIcon  from "@mui/icons-material/CheckCircleRounded";
 
 /* ── Badge definitions ──────────────────────────────────────────────────────── */
 const BADGES = [
-  // Earned (demo)
-  { id: "first-session",  emoji: "🚀", name: "Launchpad",        desc: "Completed your very first focus session",  earned: true,  date: "2026-07-28", xp: 50,  freebie: { type: "xp",     label: "+100 Bonus XP",              detail: "Added to your XP total immediately" } },
-  { id: "streak-3",       emoji: "🔥", name: "Heat Seeker",      desc: "Maintained a 3-day study streak",           earned: true,  date: "2026-07-31", xp: 75,  freebie: { type: "theme",  label: "Cyber Theme Unlocked",        detail: "Now available in Settings → Appearance" } },
-  { id: "hour-club",      emoji: "⏱️", name: "Hour Club",        desc: "Accumulated 1 full hour of focused study", earned: true,  date: "2026-08-02", xp: 100, freebie: { type: "xp",     label: "+200 Bonus XP",              detail: "Added to your XP total" } },
-  { id: "five-sessions",  emoji: "⚡", name: "Spark Five",       desc: "Completed 5 focus sessions",                earned: true,  date: "2026-08-03", xp: 120, freebie: { type: "break",  label: "+2 min Break Time",          detail: "Session break time extended by 2 min" } },
-  { id: "deep-diver",     emoji: "🌊", name: "Deep Diver",       desc: "Finished a 60-minute deep focus session",  earned: true,  date: "2026-08-04", xp: 150, freebie: { type: "avatar", label: "Ocean Avatar Border",        detail: "Unlocked in your profile settings" } },
-  // Locked
+  { id: "first-session",  emoji: "🚀", name: "Launchpad",        desc: "Completed your very first focus session",  earned: false, xp: 50,  freebie: { type: "xp",     label: "+100 Bonus XP",              detail: "Added to your XP total immediately" } },
+  { id: "streak-3",       emoji: "🔥", name: "Heat Seeker",      desc: "Maintained a 3-day study streak",           earned: false, xp: 75,  freebie: { type: "theme",  label: "Cyber Theme Unlocked",        detail: "Now available in Settings → Appearance" } },
+  { id: "hour-club",      emoji: "⏱️", name: "Hour Club",        desc: "Accumulated 1 full hour of focused study", earned: false, xp: 100, freebie: { type: "xp",     label: "+200 Bonus XP",              detail: "Added to your XP total" } },
+  { id: "five-sessions",  emoji: "⚡", name: "Spark Five",       desc: "Completed 5 focus sessions",                earned: false, xp: 120, freebie: { type: "break",  label: "+2 min Break Time",          detail: "Session break time extended by 2 min" } },
+  { id: "deep-diver",     emoji: "🌊", name: "Deep Diver",       desc: "Finished a 60-minute deep focus session",  earned: false, xp: 150, freebie: { type: "avatar", label: "Ocean Avatar Border",        detail: "Unlocked in your profile settings" } },
   { id: "streak-7",       emoji: "🏅", name: "Week Warrior",     desc: "Maintain a 7-day streak",                  earned: false, xp: 200, freebie: { type: "theme",  label: "Matrix Theme Unlocked",      detail: "Available in Settings → Appearance" } },
   { id: "subject-master", emoji: "📚", name: "Subject Master",   desc: "Study 5 different subjects",               earned: false, xp: 175, freebie: { type: "xp",     label: "+300 Bonus XP",              detail: "" } },
   { id: "night-owl",      emoji: "🦉", name: "Night Owl",        desc: "Complete a session after 10 PM",           earned: false, xp: 80,  freebie: { type: "game",   label: "Exclusive Prompt Pack",      detail: "New prompts unlocked in Game Lab" } },
@@ -248,19 +247,42 @@ const BadgeCard = ({ badge, index, onClaim }) => {
 
 /* ══ Badges (main) ════════════════════════════════════════════════════════════ */
 const Badges = () => {
+  const [badgesList,  setBadgesList]  = useState(BADGES);
   const [filter,      setFilter]      = useState("All");
   const [claimBadge,  setClaimBadge]  = useState(null);
   const [claimed,     setClaimed]     = useState([]);
 
+  useEffect(() => {
+    const fetchBadges = async () => {
+      try {
+        const res = await badgesAPI.getBadges();
+        if (res?.data?.badges && Array.isArray(res.data.badges)) {
+          const apiBadges = res.data.badges;
+          const updated = BADGES.map(b => {
+            const match = apiBadges.find(ab => ab.name.toLowerCase() === b.name.toLowerCase() || ab.id === b.id);
+            if (match && match.earned) {
+              return { ...b, earned: true, date: match.earned_at ? match.earned_at.split('T')[0] : "Recently" };
+            }
+            return b;
+          });
+          setBadgesList(updated);
+        }
+      } catch (err) {
+        console.error("Failed to load badges:", err);
+      }
+    };
+    fetchBadges();
+  }, []);
+
   const FILTERS = ["All", "Earned", "Locked"];
 
-  const visible = BADGES.filter(b => {
+  const visible = badgesList.filter(b => {
     if (filter === "Earned") return b.earned;
     if (filter === "Locked") return !b.earned;
     return true;
   });
 
-  const earned = BADGES.filter(b => b.earned);
+  const earned = badgesList.filter(b => b.earned);
   const totalXP = earned.reduce((acc, b) => acc + b.xp, 0);
 
   const handleClaim = (badge) => {

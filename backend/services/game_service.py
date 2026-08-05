@@ -384,25 +384,21 @@ class GameService:
             } for r in results]
             
         else:
-            # Global XP Leaderboard (Legacy GameProgress)
-            query = db.session.query(GameProgress, User.username)\
-                .join(User)
-            # filter by requested module; default to 'all_activities' if none specified
-            module_filter = module_id if module_id else 'all_activities'
-            query = query.filter(GameProgress.game_module == module_filter)
-
-            if subject:
-                query = query.filter(GameProgress.subject_focus == subject)
-
-            results = query.order_by(GameProgress.mastery_points.desc())\
-                .limit(limit)\
-                .all()
-
-            return [{
-                'username': r[1],
-                'level': r[0].level,
-                'score': r[0].mastery_points,
-                'metric': 'XP',
-                'subject': r[0].subject_focus,
-                'id': r[0].user_id
-            } for r in results]
+            # Global XP Leaderboard for all active users
+            from models import ActivityResult
+            users = User.query.filter_by(is_active=True).all()
+            leaderboard = []
+            for u in users:
+                act_xp = db.session.query(func.sum(ActivityResult.xp_earned)).filter_by(user_id=u.id).scalar() or 0
+                gp_xp = db.session.query(func.sum(GameProgress.mastery_points)).filter_by(user_id=u.id).scalar() or 0
+                total_xp = int(act_xp + gp_xp)
+                leaderboard.append({
+                    'id': u.id,
+                    'username': u.username,
+                    'user_name': u.username,
+                    'score': total_xp,
+                    'level': int(total_xp / 100) + 1,
+                    'metric': 'XP'
+                })
+            leaderboard.sort(key=lambda x: x['score'], reverse=True)
+            return leaderboard[:limit]

@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { TAXONOMY } from "../data/taxonomy";
-import { focusAPI } from "../services/api";
+import { focusAPI, lectureAPI } from "../services/api";
 
 // Icons
 import ArrowForwardRoundedIcon  from "@mui/icons-material/ArrowForwardRounded";
@@ -497,16 +497,51 @@ const CreateFocusSession = () => {
   const handleStart = async () => {
     setError(""); setLoading(true);
     try {
+      const ytId = data.youtubeId || (data.youtubeUrl ? extractYouTubeId(data.youtubeUrl) : null);
+      
+      // Save session/lecture to backend database
+      let createdLecture = null;
+      try {
+        const lecturePayload = {
+          title: `${data.subjectName}: ${data.topic}`,
+          subject: data.subjectName,
+          topic: data.topic,
+          description: `Focus session on ${data.topic}`,
+          video_ids: ytId ? [ytId] : [],
+        };
+        const lecRes = await lectureAPI.create(lecturePayload);
+        createdLecture = lecRes?.data?.lecture;
+      } catch (lecErr) {
+        console.error("Failed to persist lecture to DB:", lecErr);
+      }
+
+      let finalVideoId = ytId;
+      if (!finalVideoId && createdLecture?.video_ids) {
+        let vIds = createdLecture.video_ids;
+        if (typeof vIds === 'string') {
+          try { vIds = JSON.parse(vIds); } catch {}
+        }
+        if (Array.isArray(vIds) && vIds.length > 0) {
+          finalVideoId = vIds[0];
+        }
+      }
+
       const payload = {
         subject_focus: data.subjectName,
+        subjectName: data.subjectName,
         topic: data.topic,
-        youtube_url: data.youtubeUrl || null,
+        youtube_url: data.youtubeUrl || (finalVideoId ? `https://www.youtube.com/watch?v=${finalVideoId}` : null),
+        youtubeId: finalVideoId || "",
+        youtube_id: finalVideoId || "",
         study_minutes: data.totalMin,
         focus_minutes: data.focusMin,
         break_minutes: data.breakMin,
         focus_mode: data.focusMode,
         features: data.features,
+        lectureId: createdLecture?.id,
+        files: data.files || []
       };
+
       const res = await focusAPI.lock(data.subjectName);
       localStorage.setItem("activeSession", JSON.stringify({ ...payload, sessionId: res?.data?.session_id }));
       navigate("/focus");

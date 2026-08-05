@@ -278,7 +278,7 @@ const ManageFocus = () => {
       <Box sx={{ display: "flex", gap: 1.25 }}>
         <StatCard icon={TimerRoundedIcon}       label="Focus Time"  value={`${Math.floor(totalFocusSec / 60)}m`} color="var(--indigo-lt)" />
         <StatCard icon={CheckCircleRoundedIcon} label="Sessions"    value={sessionCnt}                           color="var(--emerald)"  />
-        <StatCard icon={LocalFireDepartmentRoundedIcon} label="Streak"  value="🔥 —"                            color="var(--amber)"    />
+        <StatCard icon={LocalFireDepartmentRoundedIcon} label="Streak"  value="🔥 0d"                           color="var(--amber)"    />
         <StatCard icon={BoltRoundedIcon}        label="XP Today"    value={sessionCnt * 30}                      color="var(--amber)"    />
       </Box>
     </Box>

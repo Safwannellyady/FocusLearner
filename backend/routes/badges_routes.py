@@ -1,13 +1,15 @@
 from flask import Blueprint, jsonify, request
 from models import db, Badge, UserBadge, User
+from utils.auth import token_required
 from datetime import datetime
 
 badges_routes = Blueprint('badges_routes', __name__, url_prefix='/api/badges')
 
 @badges_routes.route('', methods=['GET'])
+@token_required
 def get_badges():
     try:
-        user_id = request.args.get('user_id', 1, type=int)
+        user_id = getattr(request, 'current_user_id', 1)
         
         # Make sure default badges exist
         if Badge.query.count() == 0:

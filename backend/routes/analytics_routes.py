@@ -42,15 +42,9 @@ def get_learning_health():
         # 1 violation drops score by 10 points
         focus_score = max(0, 100 - (avg_violations * 10))
     else:
-        focus_score = 100 # Default if no activity
+        focus_score = 0 # Default 0 if no activity
         
     # 3. RESILIENCE
-    # Check loops where user failed (REMEDIATE) then Mastered
-    # This is hard to calculate efficiently without complex query. 
-    # Approx: (Successful Retries / Total Failures)
-    # Using UserTopicMastery success_rate is simpler but different meaning.
-    # Let's use simple accuracy for now as proxy, or 'attempts' from LoopState.
-    
     loop_states = LearningLoopState.query.filter_by(user_id=user_id).all()
     persistence_points = 0
     total_loops = 0
@@ -66,7 +60,7 @@ def get_learning_health():
         resilience_score = 70 + (persistence_points * 5) # Base 70
         resilience_score = min(100, max(0, resilience_score))
     else:
-        resilience_score = 80 # Default
+        resilience_score = 0 # Default 0 if no activity
         
     # 4. STABILITY
     # Avg proficiency of started topics
@@ -78,7 +72,8 @@ def get_learning_health():
         stability_score = 0
         
     # Health Signal
-    avg_health = (consistency_score + focus_score + resilience_score + stability_score) / 4
+    has_activity = (recent_activity_count > 0 or len(recent_results) > 0 or total_loops > 0 or len(mastery_records) > 0)
+    avg_health = (consistency_score + focus_score + resilience_score + stability_score) / 4 if has_activity else 0.0
     
     return jsonify({
         'overall_health': round(avg_health, 1),
@@ -89,7 +84,7 @@ def get_learning_health():
             'stability': round(stability_score, 1)
         },
         'insights': [
-            "Keep your focus streak alive!" if focus_score > 90 else "Try to minimize tab switching.",
-            "Great consistency!" if consistency_score > 80 else "Try to practice daily."
+            "Start your first focus session to build your streak!" if not has_activity else ("Keep your focus streak alive!" if focus_score > 90 else "Try to minimize tab switching."),
+            "Complete activities to track your learning progress." if not has_activity else ("Great consistency!" if consistency_score > 80 else "Try to practice daily.")
         ]
     }), 200
