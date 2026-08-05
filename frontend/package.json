@@ -28,7 +28,8 @@
   },
   "overrides": {
     "lodash": "^4.18.0",
-    "rollup": "^2.80.0"
+    "rollup": "^2.80.0",
+    "shell-quote": "^1.9.0"
   },
   "scripts": {
     "start": "react-scripts start",
