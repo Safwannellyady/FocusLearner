@@ -67,6 +67,7 @@ from routes.badges_routes import badges_routes
 from routes.material_routes import material_routes
 from routes.srs_routes import srs_routes
 from routes.room_routes import room_routes
+from routes.support_routes import support_routes
 
 app.register_blueprint(focus_routes)
 app.register_blueprint(content_routes)
@@ -81,6 +82,7 @@ app.register_blueprint(badges_routes)
 app.register_blueprint(material_routes)
 app.register_blueprint(srs_routes)
 app.register_blueprint(room_routes)
+app.register_blueprint(support_routes, url_prefix='/api/support')
 
 # Error handlers
 @app.errorhandler(404)

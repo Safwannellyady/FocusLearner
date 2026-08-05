@@ -718,7 +718,31 @@ class RoomMessage(db.Model):
             'username': self.room.participants[0].user.username if self.room and self.room.participants else f"User {self.user_id}",
             'message': self.message,
             'is_review_note': self.is_review_note,
-            'created_at': self.created_at.isoformat()
+class SupportTicket(db.Model):
+    """User support & bug report ticket model"""
+    __tablename__ = 'support_tickets'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_code = db.Column(db.String(16), unique=True, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    category = db.Column(db.String(32), nullable=False)
+    subject = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    system_info = db.Column(db.JSON, nullable=True)
+    status = db.Column(db.String(20), default="open", nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'ticket_code': self.ticket_code,
+            'user_id': self.user_id,
+            'category': self.category,
+            'subject': self.subject,
+            'message': self.message,
+            'system_info': self.system_info,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
 
