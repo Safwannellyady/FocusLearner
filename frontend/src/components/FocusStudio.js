@@ -23,6 +23,16 @@ import AttachFileRoundedIcon    from "@mui/icons-material/AttachFileRounded";
 import RefreshRoundedIcon       from "@mui/icons-material/RefreshRounded";
 import OpenInNewRoundedIcon     from "@mui/icons-material/OpenInNewRounded";
 import CheckCircleRoundedIcon   from "@mui/icons-material/CheckCircleRounded";
+import { focusAPI } from "../services/api";
+
+const extractYouTubeId = (url) => {
+  if (!url) return "";
+  const str = String(url).trim();
+  const m = str.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  if (/^[A-Za-z0-9_-]{11}$/.test(str)) return str;
+  return "";
+};
 
 /* ── Timer helpers ─────────────────────────────────────────────────────────── */
 const fmtTime = (s) =>
@@ -489,6 +499,26 @@ const FocusStudio = () => {
     catch { return {}; }
   })();
 
+  const initialVid = extractYouTubeId(session.youtubeId) || extractYouTubeId(session.youtube_id) || extractYouTubeId(session.youtube_url);
+  const [videoId, setVideoId] = useState(initialVid || "");
+
+  useEffect(() => {
+    const currentClean = extractYouTubeId(videoId);
+    if (!currentClean) {
+      const query = session.topic || session.subject_focus || session.subjectName || "Fluid Dynamics";
+      focusAPI.getContent(query)
+        .then(res => {
+          const results = res?.data?.results || res?.data?.videos || [];
+          if (results.length > 0) {
+            const rawVid = results[0].video_id || results[0].id || results[0].url || "";
+            const vid = extractYouTubeId(rawVid);
+            if (vid) setVideoId(vid);
+          }
+        })
+        .catch(err => console.error("Video search fallback error:", err));
+    }
+  }, [videoId, session.topic, session.subject_focus, session.subjectName]);
+
   /* Timer state */
   const [phase,     setPhase]    = useState("focus");   // focus | break
   const [remaining, setRemaining] = useState((session.focus_minutes || 25) * 60);
@@ -643,9 +673,9 @@ const FocusStudio = () => {
 
         {/* TOP — Video panel */}
         <Box sx={{ height: `${topPct}%`, flexShrink: 0, bgcolor: "#000", position: "relative", overflow: "hidden" }}>
-          {session.youtube_url && session.youtubeId ? (
+          {extractYouTubeId(videoId) ? (
             <iframe
-              src={`https://www.youtube.com/embed/${session.youtubeId}?autoplay=0&rel=0`}
+              src={`https://www.youtube.com/embed/${extractYouTubeId(videoId)}?autoplay=1&rel=0`}
               style={{ width: "100%", height: "100%", border: "none" }}
               allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen

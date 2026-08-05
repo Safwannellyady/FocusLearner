@@ -254,9 +254,9 @@ const Dashboard = () => {
         <Grid container spacing={2} sx={{ mb: 3 }}>
           {[
             { icon: LocalFireDepartmentIcon, label: "Day Streak",    value: stats?.streak_days ?? user?.streak_days ?? 0, accent: "var(--amber)",   sub: "🔥" },
-            { icon: TimerRoundedIcon,        label: "Hours Studied",  value: stats?.total_hours  ?? "—",                  accent: "var(--indigo)"  },
-            { icon: TrendingUpIcon,          label: "Sessions Done",  value: stats?.total_sessions ?? "—",                accent: "var(--emerald)" },
-            { icon: BoltIcon,               label: "XP Earned",      value: stats?.total_xp ?? "—",                      accent: "var(--amber)",   sub: "+12 today" },
+            { icon: TimerRoundedIcon,        label: "Hours Studied",  value: stats?.total_hours != null ? `${stats.total_hours}h` : "0h", accent: "var(--indigo)" },
+            { icon: TrendingUpIcon,          label: "Sessions Done",  value: stats?.total_sessions ?? 0,                accent: "var(--emerald)" },
+            { icon: BoltIcon,               label: "XP Earned",      value: stats?.total_xp ?? 0,                      accent: "var(--amber)",   sub: stats?.today_xp > 0 ? `+${stats.today_xp} today` : undefined },
           ].map((s) => (
             <Grid item xs={6} md={3} key={s.label}>
               <StatCard {...s} />

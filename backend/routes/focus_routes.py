@@ -179,10 +179,16 @@ def get_analytics_summary():
     try:
         trends = analytics_service.get_weekly_focus_trends(user_id)
         distribution = analytics_service.get_subject_distribution(user_id)
+        totals = analytics_service.get_user_totals(user_id)
         
         return jsonify({
             'trends': trends,
-            'distribution': distribution
+            'distribution': distribution,
+            'streak_days': totals['streak_days'],
+            'total_hours': totals['total_hours'],
+            'total_sessions': totals['total_sessions'],
+            'total_xp': totals['total_xp'],
+            'today_xp': totals['today_xp']
         }), 200
     except Exception as e:
         print(f"Analytics Error: {e}")

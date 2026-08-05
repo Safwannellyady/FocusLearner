@@ -230,12 +230,26 @@ const MyCourses = () => {
 
   useEffect(() => {
     const load = async () => {
+      let currentUser = null;
       try {
-        const res = await lectureAPI.getLectures();
+        const userStr = localStorage.getItem("user");
+        if (userStr) currentUser = JSON.parse(userStr);
+      } catch {}
+
+      const isChappu = currentUser?.username === "Chappu8535";
+
+      try {
+        const res = await lectureAPI.getAll ? await lectureAPI.getAll() : await lectureAPI.getLectures();
         const data = res?.data?.lectures || res?.data || [];
-        setSessions(Array.isArray(data) && data.length > 0 ? data : DEMO);
+        if (Array.isArray(data) && data.length > 0) {
+          setSessions(data);
+        } else if (isChappu) {
+          setSessions(DEMO);
+        } else {
+          setSessions([]);
+        }
       } catch {
-        setSessions(DEMO);
+        setSessions(isChappu ? DEMO : []);
       } finally {
         setLoading(false);
       }
@@ -244,11 +258,23 @@ const MyCourses = () => {
   }, []);
 
   const handleResume = (session) => {
+    let videoId = session.youtube_id || session.youtubeId;
+    if (!videoId && Array.isArray(session.video_ids) && session.video_ids.length > 0) {
+      videoId = session.video_ids[0];
+    }
+    if (!videoId && typeof session.video_ids === 'string') {
+      try {
+        const parsed = JSON.parse(session.video_ids);
+        if (Array.isArray(parsed) && parsed.length > 0) videoId = parsed[0];
+      } catch {}
+    }
     localStorage.setItem("activeSession", JSON.stringify({
       subject_focus: session.subject,
-      topic: session.topic,
-      youtube_url: session.youtube_url || "",
-      youtubeId: session.youtube_id || "",
+      subjectName: session.subject,
+      topic: session.topic || session.title,
+      youtube_url: session.youtube_url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : ""),
+      youtubeId: videoId || "",
+      youtube_id: videoId || "",
       focus_minutes: 25,
       break_minutes: 5,
     }));

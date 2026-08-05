@@ -65,10 +65,10 @@ const DashboardNew = () => {
 
       {/* Stats Grid */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }, gap: 3, mb: 6 }}>
-        <StatCard title="Total Focus Sessions" value={courses.length > 0 ? courses.length : "1"} icon={<MenuBookIcon />} color="#3b82f6" />
+        <StatCard title="Total Focus Sessions" value={courses.length} icon={<MenuBookIcon />} color="#3b82f6" />
         <StatCard
           title="Total Time Spent"
-          value="2h 45m"
+          value="0h 0m"
           icon={<AccessTimeIcon />}
           color="#3b82f6"
           action={
@@ -84,9 +84,9 @@ const DashboardNew = () => {
             </select>
           }
         />
-        <StatCard title="Active Sessions" value={courses.length > 0 ? courses.length : "1"} icon={<SchoolIcon />} color="#3b82f6" />
+        <StatCard title="Active Sessions" value={courses.length} icon={<SchoolIcon />} color="#3b82f6" />
         <StatCard title="Completed Sessions" value="0" icon={<CheckCircleOutlineIcon />} color="#3b82f6" />
-        <StatCard title="Intelligent Score" value="85/100" icon={<AutoGraphIcon />} color="#10b981" />
+        <StatCard title="Intelligent Score" value="0/100" icon={<AutoGraphIcon />} color="#10b981" />
       </Box>
 
       {/* My Enrollments & Applications layout container */}
@@ -95,10 +95,10 @@ const DashboardNew = () => {
         <Box mb={4}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a' }}>My Enrollments</Typography>
-            <Button variant="text" size="small" sx={{ color: '#2563eb', fontWeight: 600 }}>View All</Button>
+            <Button variant="text" size="small" onClick={() => navigate('/my-courses')} sx={{ color: '#2563eb', fontWeight: 600 }}>View All</Button>
           </Box>
           <Grid container spacing={3}>
-            {courses.length > 0 ? courses.slice(0, 1).map((course) => (
+            {courses.length > 0 ? courses.map((course) => (
               <Grid item xs={12} sm={6} md={4} key={course.id}>
                 <Card sx={{ borderRadius: 3, border: '1px solid #e2e8f0', boxShadow: 'none' }}>
                   <CardContent sx={{ p: 3 }}>
@@ -106,7 +106,7 @@ const DashboardNew = () => {
                       {course.title}
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
-                      Enrolled: N/A
+                      Enrolled: {course.created_at ? new Date(course.created_at).toLocaleDateString() : 'N/A'}
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Chip label="Enrolled" size="small" sx={{ bgcolor: '#dcfce7', color: '#166534', fontWeight: 600, borderRadius: 1 }} />
@@ -118,23 +118,15 @@ const DashboardNew = () => {
                 </Card>
               </Grid>
             )) : (
-              <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ borderRadius: 3, border: '1px solid #e2e8f0', boxShadow: 'none' }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', mb: 2, minHeight: 48 }}>
-                      FocusLearner Demo Course: AI & Adaptive Learning
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
-                      Enrolled: N/A
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Chip label="Enrolled" size="small" sx={{ bgcolor: '#dcfce7', color: '#166534', fontWeight: 600, borderRadius: 1 }} />
-                      <Button variant="outlined" size="small" onClick={() => navigate('/my-courses')} sx={{ borderColor: '#e2e8f0', color: '#0f172a', borderRadius: 2 }}>
-                        View
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
+              <Grid item xs={12}>
+                <Box sx={{ p: 4, textAlign: 'center', bgcolor: '#f8fafc', borderRadius: 3, border: '1px dashed #cbd5e1' }}>
+                  <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 600, mb: 1 }}>
+                    No enrolled sessions found
+                  </Typography>
+                  <Button variant="contained" size="small" onClick={() => navigate('/courses')} sx={{ bgcolor: '#2563eb', fontWeight: 600 }}>
+                    Start New Focus Session
+                  </Button>
+                </Box>
               </Grid>
             )}
           </Grid>

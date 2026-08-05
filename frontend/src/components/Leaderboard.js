@@ -24,19 +24,32 @@ const Leaderboard = ({ moduleId = 'global' }) => {
 
     const loadLeaderboard = async () => {
         setLoading(true);
+        let currentUser = null;
         try {
-            // Fetch leaderboard for specific module or global
+            const uStr = localStorage.getItem('user');
+            if (uStr) currentUser = JSON.parse(uStr);
+        } catch {}
+        const currentName = currentUser?.username || currentUser?.full_name || 'Learner';
+
+        try {
             const response = await gameAPI.getLeaderboard(moduleId);
-            setLeaders(response.data.leaderboard || []);
+            let board = response?.data?.leaderboard || [];
+            
+            // Check if current user is in leaderboard, else include them
+            if (currentUser && !board.some(p => (p.user_name || p.username) === currentName)) {
+                board.push({
+                    user_name: currentName,
+                    username: currentName,
+                    score: 0,
+                    level: 1,
+                    metric: 'XP'
+                });
+            }
+            setLeaders(board);
         } catch (error) {
             console.error("Error loading leaderboard:", error);
-            // Fallback mock data if backend is empty/erroring for demo
             setLeaders([
-                { user_name: 'CodeMaster_99', score: 2500, avatar: 'top' },
-                { user_name: 'NeuralNet_Ninja', score: 2350, avatar: '' },
-                { user_name: 'Quantum_Queen', score: 2100, avatar: '' },
-                { user_name: 'Focus_Fanatic', score: 1800, avatar: '' },
-                { user_name: 'Study_Buddy', score: 1500, avatar: '' },
+                { user_name: currentName, username: currentName, score: 0, level: 1 }
             ]);
         } finally {
             setLoading(false);
@@ -92,26 +105,26 @@ const Leaderboard = ({ moduleId = 'global' }) => {
                                 </Box>
                                 <ListItemAvatar>
                                     <Avatar sx={{
-                                        bgcolor: getRandomColor(player.user_name),
+                                        bgcolor: getRandomColor(player.user_name || player.username || 'User'),
                                         border: `2px solid ${getTrophyColor(index)}`
                                     }}>
-                                        {player.user_name?.[0]?.toUpperCase()}
+                                        {(player.user_name || player.username || 'U')[0]?.toUpperCase()}
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={
                                         <Typography fontWeight="500" color="white">
-                                            {player.user_name}
+                                            {player.user_name || player.username}
                                         </Typography>
                                     }
                                     secondary={
                                         <Typography variant="caption" color="rgba(255,255,255,0.5)">
-                                            Level {Math.floor(player.score / 500) + 1} • Master
+                                            Level {player.level || Math.floor((player.score || 0) / 100) + 1} • {player.metric || 'XP'}
                                         </Typography>
                                     }
                                 />
                                 <Typography variant="h6" color="#a78bfa" fontWeight="bold">
-                                    {player.score.toLocaleString()} XP
+                                    {(player.score || 0).toLocaleString()} XP
                                 </Typography>
                             </ListItem>
                             {index < leaders.length - 1 && <Divider variant="inset" component="li" sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />}

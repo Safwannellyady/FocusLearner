@@ -45,12 +45,14 @@ class YouTubeService:
             'part': 'snippet',
             'q': refined_query,
             'type': 'video',
+            'videoEmbeddable': 'true',
+            'videoSyndicated': 'true',
             'maxResults': max_results * 2,  # Get more to filter
             'key': self.api_key,
             'videoCategoryId': '27',  # Education category
             'order': 'relevance'
         }
-        
+
         try:
             response = requests.get(f"{self.base_url}/search", params=params)
             response.raise_for_status()
@@ -107,13 +109,11 @@ class YouTubeService:
     def _get_mock_videos(self, query: str, subject_focus: str, max_results: int) -> List[Dict]:
         """Return smart mock video data for development/testing"""
         
-        # Curated list of REAL educational videos (safe for all ages)
-        # Using specific IDs to ensure the player actually loads content
         fallback_videos = {
             "default": [
-                ("Lofi Girl: Beats to Relax/Study To", "jfKfPfyJRdk", "Lofi Girl"),
-                ("Pomodoro Timer 25min", "mXh0QT4e_cM", "Study Timer"),
-                ("Focus Music for Deep Work", "WPni755-Krg", "Quiet Quest"),
+                ("Study Less Study Smart", "p60rN9JEapg", "Marty Lobdell"),
+                ("The Power of Habit", "W1eYn4vY9Og", "TED-Ed"),
+                ("Climate Change 101 with Bill Nye", "EtW2rrLHs08", "National Geographic"),
             ],
             "CS": [
                 ("Intro to Computer Science - Crash Course", "tpIctyqH29Q", "CrashCourse"),
@@ -131,11 +131,11 @@ class YouTubeService:
                 ("Kirchhoff's Laws Explained", "NB4FSE52bbY", "The Organic Chemistry Tutor"),
             ],
             "English": [
-                ("Basic Enlish Grammar: Have, Has, Had", "Mx8f11Xm-ss", "English Lessons with Adam (engVid)"), # Extremely stable
+                ("Basic English Grammar: Have, Has, Had", "Mx8f11Xm-ss", "English Lessons with Adam (engVid)"),
                 ("8 Parts of Speech in English", "juHiil2C2lE", "Khan Academy"), 
                 ("Common Grammar Mistakes", "L9A18_xfgsU", "English with Lucy"), 
             ],
-            "Language": [ # Fallback alias for English/Language
+            "Language": [
                  ("How to learn any language in 6 months", "d0yGdNEWdn0", "TEDx Talks"),
                  ("The benefits of a bilingual brain", "MMmOLN5zBLY", "TED-Ed"),
                  ("Language Learning Techniques", "l7J9l6r1Zq4", "Polyglot Progress"),
@@ -150,33 +150,33 @@ class YouTubeService:
                  ("Chemical Bonding", "yADrWdNTfgg", "Professor Dave Explains"),
                  ("Intro to Chemistry", "Rd4a1X3B61w", "Tyler DeWitt"),
             ],
-            # Better default than music
-            "default": [
-                ("Climate Change 101 with Bill Nye", "EtW2rrLHs08", "National Geographic"),
-                ("The Power of Habit", "W1eYn4vY9Og", "TED-Ed"),
-                ("Study Less Study Smart", "p60rN9JEapg", "Marty Lobdell"),
-            ],
             "Cyber": [
-                ("Cyber Security Full Course", "inWWhN5EWM4", "Simplilearn"),
                 ("Ethical Hacking 101", "fNzpcB7iRx8", "freeCodeCamp"),
                 ("What is Cyber Security?", "bPVaOlJ6ln0", "IBM Technology"),
+                ("Ethical Hacking Full Course", "3Kq1MIfTWCE", "freeCodeCamp"),
+            ],
+            "Finance": [
+                ("Introduction to Investment Banking", "v84Bst1sV98", "Wall Street Prep"),
+                ("Introduction to Finance", "WEDIj9JBTC8", "Khan Academy"),
+                ("Banking System Explained", "fTTGALaRZoc", "TED-Ed"),
+            ],
+            "Mechanical": [
+                ("Fluid Mechanics & Dynamics", "clVw109g0Z8", "Real Engineering"),
+                ("Bernoulli's Principle Explained", "8A2n9kK2E1M", "Learn Engineering"),
+                ("Intro to Fluid Mechanics", "b5SqYu2LwA8", "CrashCourse Physics"),
             ],
         }
 
-        # Determine category for better suggestions
-        # Determine category for better suggestions
         category = "default"
         subject_lower = subject_focus.lower()
         
-        # Check specific subjects first
-        # Fix: "cs" matches "mathematics", so matches on "cs" usually need word boundaries or explicit list
         if any(x in subject_lower for x in ["computer science", "algorithm", "computer", "web", "coding"]) or subject_lower == "cs" or " cs " in subject_lower:
             category = "CS"
         elif any(x in subject_lower for x in ["math", "algebra", "calculus", "geometry"]):
             category = "Math"
         elif any(x in subject_lower for x in ["ece", "circuit", "electronics", "electrical"]):
             category = "ECE"
-        elif any(x in subject_lower for x in ["eng", "lang", "grammar"]): # English/Language
+        elif any(x in subject_lower for x in ["eng", "lang", "grammar"]):
             category = "English"
         elif "phys" in subject_lower:
             category = "Physics"
@@ -184,6 +184,10 @@ class YouTubeService:
             category = "Chemistry"
         elif any(x in subject_lower for x in ["cyber", "security", "hacking", "ethical"]):
             category = "Cyber"
+        elif any(x in subject_lower for x in ["bank", "finance", "invest", "econ", "stock"]):
+            category = "Finance"
+        elif any(x in subject_lower for x in ["mech", "aero", "fluid", "thermo", "engineering"]):
+            category = "Mechanical"
             
         selected_videos = fallback_videos.get(category, fallback_videos["default"])
         
