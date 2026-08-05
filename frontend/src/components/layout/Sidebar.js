@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   Box, Typography, Tooltip,
   IconButton, Avatar, Drawer,
@@ -20,7 +20,6 @@ import AutoAwesomeIcon           from "@mui/icons-material/AutoAwesome";
 
 const NAV = [
   { label: "Dashboard",    icon: DashboardRoundedIcon,     path: "/dashboard"    },
-  { label: "New Session",  icon: AutoStoriesIcon,          path: "/courses"      },
   { label: "My Sessions",  icon: SchoolRoundedIcon,        path: "/my-courses"   },
   { label: "Focus Timer",  icon: TimerRoundedIcon,         path: "/manage-focus" },
   { label: "Game Lab",     icon: SportsEsportsRoundedIcon, path: "/games"        },

@@ -1,383 +1,400 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-    Container, Typography, Box, Card, Button, Chip, IconButton, LinearProgress,
-    Menu, MenuItem, ListItemIcon, ListItemText, Snackbar, Alert
-} from '@mui/material';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { lectureAPI } from '../services/api';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Box, Typography, Chip, LinearProgress, CircularProgress } from "@mui/material";
+import { motion, AnimatePresence } from "framer-motion";
+import { lectureAPI, focusAPI } from "../services/api";
 
-const demoSessions = [
-    {
-        id: 1,
-        title: "AI & Adaptive Learning Systems",
-        subject: "Computer Science",
-        progress: 45,
-        status: "In Progress",
-        starred: true
-    },
-    {
-        id: 2,
-        title: "Cognitive Neurobiology & Memory",
-        subject: "Neuroscience",
-        progress: 80,
-        status: "Active Focus",
-        starred: false
-    },
-    {
-        id: 3,
-        title: "Quantum Algorithms & Cryptography",
-        subject: "Physics & CS",
-        progress: 15,
-        status: "In Progress",
-        starred: false
-    },
-    {
-        id: 4,
-        title: "Organic Chemistry Molecular Dynamics",
-        subject: "Chemistry",
-        progress: 0,
-        status: "Not Started",
-        starred: true
-    }
+// Icons
+import SearchRoundedIcon        from "@mui/icons-material/SearchRounded";
+import PlayArrowRoundedIcon     from "@mui/icons-material/PlayArrowRounded";
+import BoltRoundedIcon          from "@mui/icons-material/BoltRounded";
+import AccessTimeRoundedIcon    from "@mui/icons-material/AccessTimeRounded";
+import EmojiEventsRoundedIcon   from "@mui/icons-material/EmojiEventsRounded";
+import AutoAwesomeRoundedIcon   from "@mui/icons-material/AutoAwesomeRounded";
+
+
+/* ── Fallback demo data ────────────────────────────────────────────────────── */
+const DEMO = [
+  { id: 1, title: "AI & Adaptive Learning Systems",     subject: "Computer Science", topic: "Machine Learning",   duration: 45, xp: 120, progress: 45, status: "in_progress", date: "2026-08-03" },
+  { id: 2, title: "Cognitive Neurobiology & Memory",    subject: "Neurosciences",    topic: "Neuroplasticity",     duration: 60, xp: 180, progress: 80, status: "active",      date: "2026-08-04" },
+  { id: 3, title: "Quantum Algorithms & Cryptography",  subject: "Physics",          topic: "Quantum Mechanics",   duration: 30, xp: 75,  progress: 15, status: "in_progress", date: "2026-08-02" },
+  { id: 4, title: "Organic Reaction Mechanisms",        subject: "Chemistry",        topic: "Organic Chemistry",   duration: 90, xp: 240, progress: 0,  status: "not_started", date: "2026-08-01" },
+  { id: 5, title: "DeFi Protocols & Smart Contracts",   subject: "Financial Tech",   topic: "Smart Contracts",     duration: 25, xp: 60,  progress: 100,status: "completed",   date: "2026-07-30" },
+  { id: 6, title: "Reinforcement Learning Deep Dive",   subject: "Data Science & AI",topic: "Deep Learning",       duration: 50, xp: 140, progress: 62, status: "in_progress", date: "2026-08-03" },
 ];
 
-const MyCourses = () => {
-    const navigate = useNavigate();
-    const [courses, setCourses] = useState([]);
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [selectedCourse, setSelectedCourse] = useState(null);
-    const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
-    const [starredIds, setStarredIds] = useState([1, 4]);
+const SUBJECT_COLORS = {
+  "Computer Science": "#6366f1", "Neurosciences": "#a78bfa", "Physics": "#3b82f6",
+  "Chemistry": "#10b981", "Financial Tech": "#f59e0b", "Data Science & AI": "#ec4899",
+  "Biology": "#34d399", "Mathematics": "#fbbf24", "Management": "#fb923c",
+};
+const subjectColor = (s) => SUBJECT_COLORS[s] || "#6366f1";
 
-    useEffect(() => {
-        loadCourses();
-    }, []);
+const STATUS_META = {
+  active:       { label: "Active Focus", color: "#10b981", bg: "rgba(16,185,129,0.12)" },
+  in_progress:  { label: "In Progress",  color: "#6366f1", bg: "rgba(99,102,241,0.12)" },
+  completed:    { label: "Completed",    color: "#fbbf24", bg: "rgba(245,158,11,0.12)" },
+  not_started:  { label: "Not Started",  color: "#64748b", bg: "rgba(100,116,139,0.1)" },
+};
 
-    const loadCourses = async () => {
-        try {
-            const res = await lectureAPI.getAll();
-            const loaded = res.data?.lectures || [];
-            setCourses(loaded.length > 0 ? loaded : demoSessions);
-        } catch (err) {
-            console.error('Error loading sessions, fallback to demo:', err);
-            setCourses(demoSessions);
-        }
-    };
+const SUBJECTS_FILTER = ["All", ...Object.keys(SUBJECT_COLORS), "Neurosciences", "Financial Tech", "Data Science & AI"];
+const SORT_OPTIONS    = ["Recent", "Longest", "Most XP", "Progress"];
 
-    const handleMenuOpen = (e, course) => {
-        e.stopPropagation();
-        setAnchorEl(e.currentTarget);
-        setSelectedCourse(course);
-    };
+/* ── Session card ──────────────────────────────────────────────────────────── */
+const SessionCard = ({ session, index, onResume }) => {
+  const [hovered, setHovered] = useState(false);
+  const color  = subjectColor(session.subject);
+  const status = STATUS_META[session.status] || STATUS_META.in_progress;
+  const xp     = session.xp || Math.round((session.duration || 30) * 2.5);
 
-    const handleMenuClose = (e) => {
-        if (e && e.stopPropagation) e.stopPropagation();
-        setAnchorEl(null);
-        setSelectedCourse(null);
-    };
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.065, duration: 0.38, ease: "easeOut" }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      whileHover={{ y: -6, transition: { duration: 0.2 } }}
+      style={{ cursor: "pointer" }}
+    >
+      <Box
+        sx={{
+          position: "relative", overflow: "hidden",
+          bgcolor: "var(--bg-card)", border: `1px solid ${hovered ? `${color}44` : "var(--border)"}`,
+          borderRadius: "var(--r-lg)",
+          boxShadow: hovered ? `0 16px 40px rgba(0,0,0,0.4), 0 0 0 1px ${color}22` : "0 2px 12px rgba(0,0,0,0.2)",
+          transition: "all 0.25s ease",
+        }}
+      >
+        {/* Shimmer sweep on hover */}
+        <AnimatePresence>
+          {hovered && (
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: "200%" }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.55, ease: "easeInOut" }}
+              style={{
+                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                background: "linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%)",
+                pointerEvents: "none", zIndex: 1,
+              }}
+            />
+          )}
+        </AnimatePresence>
 
-    const handleAction = (e, actionType) => {
-        if (e && e.stopPropagation) e.stopPropagation();
-        if (!selectedCourse) return;
+        {/* Coloured left border */}
+        <Box sx={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, bgcolor: color, borderRadius: "4px 0 0 4px", opacity: hovered ? 1 : 0.4, transition: "opacity 0.25s" }} />
 
-        if (actionType === 'edit') {
-            setNotification({ open: true, message: `Editing parameters for "${selectedCourse.title || selectedCourse.topic}"`, severity: 'info' });
-        } else if (actionType === 'delete') {
-            setCourses(prev => prev.filter(c => c.id !== selectedCourse.id));
-            setNotification({ open: true, message: `Session deleted successfully.`, severity: 'warning' });
-        } else if (actionType === 'reset') {
-            setCourses(prev => prev.map(c => c.id === selectedCourse.id ? { ...c, progress: 0, status: 'Not Started' } : c));
-            setNotification({ open: true, message: `Progress reset for "${selectedCourse.title || selectedCourse.topic}"`, severity: 'success' });
-        }
-        handleMenuClose(e);
-    };
-
-    const toggleStar = (e, id) => {
-        e.stopPropagation();
-        setStarredIds(prev =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
-
-    return (
-        <Container maxWidth="xl" sx={{ mt: 5, mb: 8 }}>
-            {/* Header */}
-            <Box mb={5} display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} gap={2}>
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 0.8 }}>
-                        My Focus Sessions
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: '#94a3b8', fontSize: '1.02rem' }}>
-                        Track your progress and continue learning across your active study modules
-                    </Typography>
-                </Box>
-                <Button
-                    variant="contained"
-                    onClick={() => navigate('/courses')}
-                    sx={{
-                        bgcolor: '#6366f1',
-                        color: '#ffffff',
-                        px: 3.5,
-                        py: 1.4,
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        '&:hover': { bgcolor: '#4f46e5' }
-                    }}
-                >
-                    + Create Focus Session
-                </Button>
+        <Box sx={{ p: 2, pl: 2.5 }}>
+          {/* Row 1: subject + status + date */}
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
+              <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color, letterSpacing: "0.04em" }}>
+                {session.subject}
+              </Typography>
             </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <Box sx={{ px: 0.9, py: 0.2, borderRadius: "100px", bgcolor: status.bg, border: `1px solid ${status.color}33` }}>
+                <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: status.color }}>{status.label}</Typography>
+              </Box>
+              <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>
+                {session.date || ""}
+              </Typography>
+            </Box>
+          </Box>
 
-            {/* Grid Container with Bounded Cards (max-width: 380px) */}
+          {/* Row 2: title */}
+          <Typography sx={{
+            fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem",
+            color: "#f1f5f9", lineHeight: 1.25, mb: 0.6,
+            transition: "color 0.2s",
+          }}>
+            {session.title}
+          </Typography>
+
+          {/* Row 3: topic chip */}
+          {session.topic && (
+            <Chip
+              label={session.topic} size="small"
+              sx={{
+                mb: 1.25, fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 600,
+                fontSize: "0.68rem", height: 20,
+                bgcolor: `${color}18`, color, border: `1px solid ${color}33`,
+              }}
+            />
+          )}
+
+          {/* Row 4: stats */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+              <AccessTimeRoundedIcon sx={{ fontSize: 13, color: "var(--text-dim)" }} />
+              <Typography sx={{ fontSize: "0.75rem", color: "var(--text-dim)", fontWeight: 600 }}>
+                {session.duration || 30} min
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+              <BoltRoundedIcon sx={{ fontSize: 13, color: "#fbbf24" }} />
+              <Typography sx={{ fontSize: "0.75rem", color: "#fbbf24", fontWeight: 700 }}>
+                +{xp} XP
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Row 5: progress bar */}
+          <Box sx={{ mb: 1.75 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.4 }}>
+              <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)", fontWeight: 600 }}>Progress</Typography>
+              <Typography sx={{ fontSize: "0.68rem", color, fontWeight: 700 }}>{session.progress || 0}%</Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={session.progress || 0}
+              sx={{
+                height: 4, borderRadius: 4,
+                bgcolor: "rgba(255,255,255,0.06)",
+                "& .MuiLinearProgress-bar": { bgcolor: color, borderRadius: 4 },
+              }}
+            />
+          </Box>
+
+          {/* Row 6: Resume button */}
+          <motion.div whileTap={{ scale: 0.97 }}>
             <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 380px))',
-                    gap: 3.5,
-                    justifyContent: 'start'
-                }}
+              onClick={() => onResume(session)}
+              sx={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75,
+                py: 0.9, borderRadius: "var(--r-md)", cursor: "pointer",
+                bgcolor: hovered ? color : "rgba(255,255,255,0.04)",
+                border: `1px solid ${hovered ? color : "rgba(255,255,255,0.08)"}`,
+                transition: "all 0.25s",
+                position: "relative", overflow: "hidden",
+              }}
             >
-                {courses.map((course, idx) => {
-                    const isStarred = starredIds.includes(course.id || idx);
-                    const progressVal = course.progress ?? (idx % 3 === 0 ? 45 : idx % 3 === 1 ? 80 : 0);
-                    const statusVal = course.status || (progressVal > 0 ? "In Progress" : "Not Started");
-
-                    return (
-                        <Card
-                            key={course.id || idx}
-                            onClick={() => navigate(course.id ? `/lecture/${course.id}` : '/lecture/1')}
-                            sx={{
-                                position: 'relative',
-                                maxWidth: '380px',
-                                width: '100%',
-                                borderRadius: '12px',
-                                background: '#111827',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
-                                boxShadow: '0 10px 25px -10px rgba(0, 0, 0, 0.5)',
-                                cursor: 'pointer',
-                                transition: 'all 0.25s ease-in-out',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                overflow: 'hidden',
-                                '&:hover': {
-                                    transform: 'scale(1.01)',
-                                    background: '#1e293b',
-                                    borderColor: 'rgba(99, 102, 241, 0.45)',
-                                    boxShadow: '0 16px 32px -12px rgba(99, 102, 241, 0.3)'
-                                }
-                            }}
-                        >
-                            {/* Card Top Banner / Image Area */}
-                            <Box sx={{
-                                height: 140,
-                                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%)',
-                                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                position: 'relative',
-                                p: 2
-                            }}>
-                                {/* Top Left Status Chip */}
-                                <Chip
-                                    label={statusVal}
-                                    size="small"
-                                    sx={{
-                                        position: 'absolute',
-                                        top: 14,
-                                        left: 14,
-                                        bgcolor: statusVal === 'Active Focus' ? 'rgba(99, 102, 241, 0.25)' : statusVal === 'In Progress' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                                        color: statusVal === 'Active Focus' ? '#a5b4fc' : statusVal === 'In Progress' ? '#6ee7b7' : '#cbd5e1',
-                                        border: `1px solid ${statusVal === 'Active Focus' ? '#6366f1' : statusVal === 'In Progress' ? '#10b981' : 'rgba(255, 255, 255, 0.2)'}`,
-                                        fontWeight: 600,
-                                        fontSize: '0.75rem',
-                                        borderRadius: '8px'
-                                    }}
-                                />
-
-                                {/* Top Right Star Button (Isolated Click) */}
-                                <IconButton
-                                    size="small"
-                                    onClick={(e) => toggleStar(e, course.id || idx)}
-                                    sx={{
-                                        position: 'absolute',
-                                        top: 10,
-                                        right: 10,
-                                        color: isStarred ? '#f59e0b' : 'rgba(255, 255, 255, 0.4)',
-                                        '&:hover': { color: '#f59e0b', bgcolor: 'rgba(245, 158, 11, 0.15)' }
-                                    }}
-                                >
-                                    {isStarred ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
-                                </IconButton>
-
-                                {/* Center Icon */}
-                                <Box sx={{
-                                    width: 56,
-                                    height: 56,
-                                    borderRadius: '14px',
-                                    bgcolor: 'rgba(15, 23, 42, 0.7)',
-                                    border: '1px solid rgba(99, 102, 241, 0.3)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
-                                }}>
-                                    <MenuBookIcon sx={{ fontSize: 30, color: '#818cf8' }} />
-                                </Box>
-                            </Box>
-
-                            {/* Card Body */}
-                            <Box sx={{ p: 3, pb: 6, display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                                <Typography
-                                    variant="h6"
-                                    sx={{
-                                        fontWeight: 700,
-                                        fontFamily: 'Outfit, sans-serif',
-                                        color: '#ffffff',
-                                        lineHeight: 1.35,
-                                        mb: 0.8,
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden',
-                                        height: '44px'
-                                    }}
-                                >
-                                    {course.title || course.topic || "FocusLearner Study Module"}
-                                </Typography>
-
-                                <Typography variant="caption" sx={{ color: '#818cf8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 3 }}>
-                                    {course.subject || "Academic Curriculum"}
-                                </Typography>
-
-                                {/* Progress Section */}
-                                <Box sx={{ mt: 'auto', pt: 1 }}>
-                                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                                        <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
-                                            Study Completion
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                                            {progressVal}%
-                                        </Typography>
-                                    </Box>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={progressVal}
-                                        sx={{
-                                            height: 6,
-                                            borderRadius: 3,
-                                            bgcolor: 'rgba(255, 255, 255, 0.08)',
-                                            '& .MuiLinearProgress-bar': {
-                                                bgcolor: progressVal > 70 ? '#10b981' : progressVal > 30 ? '#6366f1' : '#f59e0b',
-                                                borderRadius: 3
-                                            }
-                                        }}
-                                    />
-                                </Box>
-
-                                {/* Bottom Left Action Shortcut */}
-                                <Box sx={{ mt: 2.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography variant="caption" sx={{ color: '#a5b4fc', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                        <PlayArrowIcon sx={{ fontSize: 16 }} /> {progressVal > 0 ? 'Resume Session' : 'Start Session'}
-                                    </Typography>
-                                </Box>
-                            </Box>
-
-                            {/* Three-Dots Menu Button placed absolutely at bottom: 12px; right: 12px; */}
-                            <IconButton
-                                size="small"
-                                onClick={(e) => handleMenuOpen(e, course)}
-                                sx={{
-                                    position: 'absolute',
-                                    bottom: 12,
-                                    right: 12,
-                                    color: '#94a3b8',
-                                    bgcolor: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                                    '&:hover': {
-                                        bgcolor: 'rgba(99, 102, 241, 0.2)',
-                                        color: '#ffffff',
-                                        borderColor: 'rgba(99, 102, 241, 0.5)'
-                                    }
-                                }}
-                            >
-                                <MoreVertIcon fontSize="small" />
-                            </IconButton>
-                        </Card>
-                    );
-                })}
+              <PlayArrowRoundedIcon sx={{ fontSize: 16, color: hovered ? "#fff" : "var(--text-mid)" }} />
+              <Typography sx={{
+                fontSize: "0.82rem", fontWeight: 700,
+                fontFamily: "Plus Jakarta Sans, sans-serif",
+                color: hovered ? "#fff" : "var(--text-mid)",
+              }}>
+                {session.status === "completed" ? "Review" : "Resume"} →
+              </Typography>
             </Box>
+          </motion.div>
+        </Box>
+      </Box>
+    </motion.div>
+  );
+};
 
-            {/* Isolated Actions Dropdown Menu */}
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                onClick={(e) => e.stopPropagation()}
-                PaperProps={{
-                    sx: {
-                        bgcolor: '#1e293b',
-                        color: '#f8fafc',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        borderRadius: '12px',
-                        boxShadow: '0 15px 35px -10px rgba(0,0,0,0.6)',
-                        minWidth: 180,
-                        py: 0.5
-                    }
-                }}
-            >
-                <MenuItem onClick={(e) => handleAction(e, 'edit')} sx={{ py: 1.2, px: 2, '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.15)' } }}>
-                    <ListItemIcon sx={{ color: '#818cf8', minWidth: '32px !important' }}>
-                        <EditIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Edit Session" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }} />
-                </MenuItem>
-                <MenuItem onClick={(e) => handleAction(e, 'reset')} sx={{ py: 1.2, px: 2, '&:hover': { bgcolor: 'rgba(245, 158, 11, 0.15)' } }}>
-                    <ListItemIcon sx={{ color: '#f59e0b', minWidth: '32px !important' }}>
-                        <RestartAltIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Reset Progress" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }} />
-                </MenuItem>
-                <MenuItem onClick={(e) => handleAction(e, 'delete')} sx={{ py: 1.2, px: 2, color: '#f87171', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}>
-                    <ListItemIcon sx={{ color: '#f87171', minWidth: '32px !important' }}>
-                        <DeleteIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Delete Session" primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 600 }} />
-                </MenuItem>
-            </Menu>
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+const EmptyState = ({ onNew }) => (
+  <Box sx={{ textAlign: "center", py: 8 }}>
+    <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+      <AutoAwesomeRoundedIcon sx={{ fontSize: 52, color: "rgba(99,102,241,0.25)", mb: 2 }} />
+    </motion.div>
+    <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "#f1f5f9", mb: 0.75 }}>
+      No sessions yet
+    </Typography>
+    <Typography sx={{ color: "var(--text-dim)", fontSize: "0.87rem", mb: 3 }}>
+      Start your first focus session and build your streak.
+    </Typography>
+    <Box
+      onClick={onNew}
+      sx={{
+        display: "inline-flex", alignItems: "center", gap: 0.75, px: 2.5, py: 1.1,
+        borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer",
+        boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
+        "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+        transition: "all 0.2s",
+      }}
+    >
+      <BoltRoundedIcon sx={{ fontSize: 17, color: "#fff" }} />
+      <Typography sx={{ fontWeight: 700, color: "#fff", fontSize: "0.9rem", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+        Start First Session
+      </Typography>
+    </Box>
+  </Box>
+);
 
-            {/* Notification Feedback */}
-            <Snackbar
-                open={notification.open}
-                autoHideDuration={4000}
-                onClose={() => setNotification({ ...notification, open: false })}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert
-                    onClose={() => setNotification({ ...notification, open: false })}
-                    severity={notification.severity}
-                    sx={{
-                        bgcolor: '#1e293b',
-                        color: '#ffffff',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
-                        borderRadius: '10px',
-                        fontWeight: 600,
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
-                    }}
-                >
-                    {notification.message}
-                </Alert>
-            </Snackbar>
-        </Container>
-    );
+/* ══ MyCourses ════════════════════════════════════════════════════════════════ */
+const MyCourses = () => {
+  const navigate = useNavigate();
+  const [sessions,    setSessions]    = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [search,      setSearch]      = useState("");
+  const [filterSubj,  setFilterSubj]  = useState("All");
+  const [sortBy,      setSortBy]      = useState("Recent");
+  const [filterOpen,  setFilterOpen]  = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await lectureAPI.getLectures();
+        const data = res?.data?.lectures || res?.data || [];
+        setSessions(Array.isArray(data) && data.length > 0 ? data : DEMO);
+      } catch {
+        setSessions(DEMO);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleResume = (session) => {
+    localStorage.setItem("activeSession", JSON.stringify({
+      subject_focus: session.subject,
+      topic: session.topic,
+      youtube_url: session.youtube_url || "",
+      youtubeId: session.youtube_id || "",
+      focus_minutes: 25,
+      break_minutes: 5,
+    }));
+    navigate("/focus");
+  };
+
+  // Filter + sort
+  const visible = sessions
+    .filter(s => {
+      const q = search.toLowerCase();
+      const matchSearch = !q || s.title?.toLowerCase().includes(q) || s.subject?.toLowerCase().includes(q) || s.topic?.toLowerCase().includes(q);
+      const matchSubj   = filterSubj === "All" || s.subject === filterSubj;
+      return matchSearch && matchSubj;
+    })
+    .sort((a, b) => {
+      if (sortBy === "Recent")   return new Date(b.date || 0) - new Date(a.date || 0);
+      if (sortBy === "Longest")  return (b.duration || 0) - (a.duration || 0);
+      if (sortBy === "Most XP")  return (b.xp || 0) - (a.xp || 0);
+      if (sortBy === "Progress") return (b.progress || 0) - (a.progress || 0);
+      return 0;
+    });
+
+  // Unique subjects in current data
+  const uniqueSubjects = ["All", ...new Set(sessions.map(s => s.subject).filter(Boolean))];
+
+  return (
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: "auto" }}>
+
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: { xs: "1.5rem", md: "1.9rem" }, color: "#f1f5f9", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+          My Sessions
+        </Typography>
+        <Typography sx={{ color: "var(--text-dim)", fontSize: "0.85rem", mt: 0.5 }}>
+          {sessions.length} session{sessions.length !== 1 ? "s" : ""} · {sessions.filter(s => s.status === "completed").length} completed
+        </Typography>
+      </Box>
+
+      {/* Search + filter bar */}
+      <Box sx={{ display: "flex", gap: 1, mb: 2.5, flexWrap: "wrap" }}>
+        {/* Search */}
+        <Box sx={{ position: "relative", flex: 1, minWidth: 200 }}>
+          <SearchRoundedIcon sx={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 17, color: "var(--text-dim)" }} />
+          <Box
+            component="input"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search sessions, subjects, topics…"
+            sx={{
+              width: "100%", pl: "38px", pr: 2, py: 1,
+              bgcolor: "var(--bg-card)", border: "1px solid var(--border)",
+              borderRadius: "var(--r-md)", color: "#f1f5f9",
+              fontSize: "0.88rem", fontFamily: "Plus Jakarta Sans, sans-serif",
+              outline: "none", "&:focus": { borderColor: "rgba(99,102,241,0.5)" }, transition: "all 0.15s",
+            }}
+          />
+        </Box>
+
+        {/* Sort */}
+        <Box sx={{ position: "relative" }}>
+          <Box
+            component="select"
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            sx={{
+              px: 1.5, py: 1, bgcolor: "var(--bg-card)", border: "1px solid var(--border)",
+              borderRadius: "var(--r-md)", color: "var(--text-mid)",
+              fontSize: "0.85rem", fontFamily: "Plus Jakarta Sans, sans-serif",
+              outline: "none", cursor: "pointer",
+              "&:focus": { borderColor: "rgba(99,102,241,0.5)" },
+            }}
+          >
+            {SORT_OPTIONS.map(o => <option key={o} value={o} style={{ background: "#0f1623" }}>{o}</option>)}
+          </Box>
+        </Box>
+
+        {/* New session button */}
+        <Box
+          onClick={() => navigate("/courses")}
+          sx={{
+            display: "flex", alignItems: "center", gap: 0.6, px: 1.5, py: 1,
+            borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer",
+            boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
+            "&:hover": { boxShadow: "0 6px 20px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+            transition: "all 0.18s",
+          }}
+        >
+          <BoltRoundedIcon sx={{ fontSize: 16, color: "#fff" }} />
+          <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", fontFamily: "Plus Jakarta Sans, sans-serif" }}>New Session</Typography>
+        </Box>
+      </Box>
+
+      {/* Subject filter chips */}
+      <Box sx={{ display: "flex", gap: 0.75, mb: 3, flexWrap: "wrap" }}>
+        {uniqueSubjects.map(s => (
+          <Chip
+            key={s} label={s} size="small"
+            onClick={() => setFilterSubj(s)}
+            sx={{
+              fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 600, fontSize: "0.75rem",
+              cursor: "pointer",
+              bgcolor: filterSubj === s ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.05)",
+              border: `1px solid ${filterSubj === s ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.1)"}`,
+              color: filterSubj === s ? "#a5b4fc" : "var(--text-dim)",
+              "&:hover": { bgcolor: "rgba(99,102,241,0.1)" },
+            }}
+          />
+        ))}
+      </Box>
+
+      {/* Content */}
+      {loading ? (
+        <Box sx={{ textAlign: "center", py: 8 }}>
+          <CircularProgress size={36} sx={{ color: "var(--indigo)" }} />
+          <Typography sx={{ mt: 2, color: "var(--text-dim)", fontSize: "0.85rem" }}>Loading sessions…</Typography>
+        </Box>
+      ) : visible.length === 0 ? (
+        search || filterSubj !== "All"
+          ? (
+            <Box sx={{ textAlign: "center", py: 6 }}>
+              <Typography sx={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>
+                No sessions match your filters.
+              </Typography>
+            </Box>
+          )
+          : <EmptyState onNew={() => navigate("/courses")} />
+      ) : (
+        <Box sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" },
+          gap: 2,
+        }}>
+          <AnimatePresence>
+            {visible.map((session, i) => (
+              <SessionCard
+                key={session.id || i}
+                session={session}
+                index={i}
+                onResume={handleResume}
+              />
+            ))}
+          </AnimatePresence>
+        </Box>
+      )}
+    </Box>
+  );
 };
 
 export default MyCourses;

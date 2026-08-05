@@ -1,14 +1,13 @@
-﻿import React, { useState, useRef, useEffect } from "react";
-import { Box, Typography, Avatar, Tooltip, IconButton } from "@mui/material";
+import React, { useState, useRef, useEffect } from "react";
+import { Box, Typography, Avatar, Tooltip, IconButton, Slider } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useFocusTimer } from "../../context/FocusContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 import MenuRoundedIcon          from "@mui/icons-material/MenuRounded";
 import SearchRoundedIcon        from "@mui/icons-material/SearchRounded";
 import FlashOnRoundedIcon       from "@mui/icons-material/FlashOnRounded";
 import KeyboardArrowDownIcon    from "@mui/icons-material/KeyboardArrowDown";
-import DashboardRoundedIcon     from "@mui/icons-material/DashboardRounded";
-import AutoStoriesIcon          from "@mui/icons-material/AutoStories";
 import TimerRoundedIcon         from "@mui/icons-material/TimerRounded";
 import SportsEsportsRoundedIcon from "@mui/icons-material/SportsEsportsRounded";
 import ShowChartRoundedIcon     from "@mui/icons-material/ShowChartRounded";
@@ -16,8 +15,11 @@ import EmojiEventsRoundedIcon   from "@mui/icons-material/EmojiEventsRounded";
 import TrendingUpRoundedIcon    from "@mui/icons-material/TrendingUpRounded";
 import SettingsRoundedIcon      from "@mui/icons-material/SettingsRounded";
 import LogoutRoundedIcon        from "@mui/icons-material/LogoutRounded";
-import PersonRoundedIcon        from "@mui/icons-material/PersonRounded";
 import HubRoundedIcon           from "@mui/icons-material/HubRounded";
+import PlayArrowRoundedIcon     from "@mui/icons-material/PlayArrowRounded";
+import PauseRoundedIcon         from "@mui/icons-material/PauseRounded";
+import StopRoundedIcon          from "@mui/icons-material/StopRounded";
+import AutoStoriesIcon          from "@mui/icons-material/AutoStories";
 
 /* ── Route → page title ─────────────────────────────────────────────────── */
 const PAGE_TITLES = {
@@ -29,8 +31,8 @@ const PAGE_TITLES = {
 
 /* ── Primary nav links (always visible in center) ───────────────────────── */
 const PRIMARY_LINKS = [
-  { label: "Dashboard", path: "/dashboard" },
-  { label: "New Session", path: "/courses"  },
+  { label: "Dashboard",   path: "/dashboard" },
+  { label: "My Sessions", path: "/my-courses" },
 ];
 
 /* ── "More" dropdown items ──────────────────────────────────────────────── */
@@ -52,7 +54,7 @@ const fmt = (s) =>
   `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
 /* ── Generic floating dropdown panel ───────────────────────────────────── */
-const DropdownPanel = ({ children, onClose }) => {
+const DropdownPanel = ({ children, onClose, right = false }) => {
   const ref = useRef(null);
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
@@ -61,29 +63,148 @@ const DropdownPanel = ({ children, onClose }) => {
   }, [onClose]);
 
   return (
-    <Box
-      ref={ref}
-      sx={{
-        position:    "absolute",
-        top:         "calc(100% + 8px)",
-        left:        "50%",
-        transform:   "translateX(-50%)",
-        minWidth:    190,
-        bgcolor:     "var(--bg-card)",
-        border:      "1px solid var(--border)",
-        borderRadius:"var(--r-lg)",
-        boxShadow:   "0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
-        py:          0.75,
-        zIndex:      1300,
-        backdropFilter: "blur(20px)",
-        overflow:    "hidden",
-        animation:   "fade-up 0.15s ease both",
-      }}
-    >
+    <Box ref={ref} sx={{
+      position: "absolute", top: "calc(100% + 8px)",
+      ...(right ? { right: 0 } : { left: "50%", transform: "translateX(-50%)" }),
+      minWidth: 190,
+      bgcolor: "var(--bg-card)", border: "1px solid var(--border)",
+      borderRadius: "var(--r-lg)",
+      boxShadow: "0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+      py: 0.75, zIndex: 1300, backdropFilter: "blur(20px)", overflow: "hidden",
+    }}>
       {children}
     </Box>
   );
 };
+
+/* ── Quick Focus inline panel ───────────────────────────────────────────── */
+const QuickFocusPanel = ({ onClose }) => {
+
+  const ref = useRef(null);
+  const [phase,     setPhase]    = useState("idle");   // idle | focus | break
+  const [studyMin,  setStudyMin] = useState(25);
+  const [breakMin,  setBreakMin] = useState(5);
+  const [remaining, setRemaining]= useState(25 * 60);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  const start = () => {
+    setPhase("focus");
+    setRemaining(studyMin * 60);
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setRemaining(r => {
+        if (r <= 1) {
+          // switch phase
+          setPhase(p => {
+            const next = p === "focus" ? "break" : "focus";
+            setRemaining(next === "focus" ? studyMin * 60 : breakMin * 60);
+            return next;
+          });
+          return 0;
+        }
+        return r - 1;
+      });
+    }, 1000);
+  };
+
+  const pause  = () => clearInterval(intervalRef.current);
+  const stop   = () => { clearInterval(intervalRef.current); setPhase("idle"); setRemaining(studyMin * 60); };
+  useEffect(() => () => clearInterval(intervalRef.current), []);
+
+  const total   = phase === "break" ? breakMin * 60 : studyMin * 60;
+  const pct     = phase === "idle"  ? 0 : ((total - remaining) / total) * 100;
+  const accent  = phase === "break" ? "#10b981" : "#6366f1";
+
+  return (
+    <Box ref={ref} sx={{
+      position: "absolute", top: "calc(100% + 10px)", right: 0,
+      width: 280, bgcolor: "var(--bg-card)",
+      border: "1px solid var(--border)", borderRadius: "var(--r-lg)",
+      boxShadow: "0 20px 50px rgba(0,0,0,0.6)", zIndex: 1300,
+      backdropFilter: "blur(24px)", overflow: "hidden",
+    }}>
+      {/* Accent top bar */}
+      <Box sx={{ height: 3, background: `linear-gradient(90deg,${accent},transparent)`, transition: "background 0.4s" }} />
+
+      <Box sx={{ p: 2.5 }}>
+        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.9rem", color: "#f1f5f9", mb: 0.4 }}>
+          ⚡ Quick Focus
+        </Typography>
+        <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", mb: 2.5 }}>
+          {phase === "idle" ? "Configure and start your session" : phase === "focus" ? "Focus phase — stay locked in" : "Break phase — rest your mind"}
+        </Typography>
+
+        {/* Big timer */}
+        <Box sx={{ textAlign: "center", mb: 2.5 }}>
+          <Typography sx={{ fontFamily: "JetBrains Mono, monospace", fontSize: "3rem", fontWeight: 800, color: accent, lineHeight: 1, letterSpacing: "-0.02em", transition: "color 0.4s" }}>
+            {fmt(phase === "idle" ? studyMin * 60 : remaining)}
+          </Typography>
+          {phase !== "idle" && (
+            <Box sx={{ mt: 1.5, height: 4, bgcolor: "rgba(255,255,255,0.07)", borderRadius: 4, overflow: "hidden" }}>
+              <Box sx={{ height: "100%", width: `${pct}%`, bgcolor: accent, borderRadius: 4, transition: "width 1s linear, background 0.4s" }} />
+            </Box>
+          )}
+          {phase !== "idle" && (
+            <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: accent, mt: 0.75, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              {phase === "focus" ? "FOCUS" : "BREAK"}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Duration sliders (only in idle) */}
+        {phase === "idle" && (
+          <Box sx={{ mb: 2.5 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+              <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", fontWeight: 600 }}>Study</Typography>
+              <Typography sx={{ fontSize: "0.72rem", color: "var(--indigo-lt)", fontWeight: 700 }}>{studyMin} min</Typography>
+            </Box>
+            <Slider size="small" min={5} max={90} step={5} value={studyMin} onChange={(_, v) => { setStudyMin(v); setRemaining(v * 60); }}
+              sx={{ color: "var(--indigo)", "& .MuiSlider-thumb": { width: 12, height: 12 }, "& .MuiSlider-rail": { bgcolor: "rgba(255,255,255,0.08)" } }}
+            />
+            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1, mb: 0.5 }}>
+              <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", fontWeight: 600 }}>Break</Typography>
+              <Typography sx={{ fontSize: "0.72rem", color: "var(--emerald)", fontWeight: 700 }}>{breakMin} min</Typography>
+            </Box>
+            <Slider size="small" min={1} max={30} step={1} value={breakMin} onChange={(_, v) => setBreakMin(v)}
+              sx={{ color: "var(--emerald)", "& .MuiSlider-thumb": { width: 12, height: 12 }, "& .MuiSlider-rail": { bgcolor: "rgba(255,255,255,0.08)" } }}
+            />
+          </Box>
+        )}
+
+        {/* Controls */}
+        <Box sx={{ display: "flex", gap: 1 }}>
+          {phase === "idle" ? (
+            <Box onClick={start} sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75, py: 1, borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer", boxShadow: "0 4px 14px rgba(99,102,241,0.35)", "&:hover": { boxShadow: "0 6px 20px rgba(99,102,241,0.5)", transform: "translateY(-1px)" }, transition: "all 0.15s" }}>
+              <PlayArrowRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
+              <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", fontFamily: "Plus Jakarta Sans, sans-serif" }}>Start Session</Typography>
+            </Box>
+          ) : (
+            <>
+              <Box onClick={pause} sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, py: 0.85, borderRadius: "var(--r-md)", bgcolor: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)", cursor: "pointer", "&:hover": { bgcolor: "rgba(99,102,241,0.2)" }, transition: "all 0.15s" }}>
+                <PauseRoundedIcon sx={{ fontSize: 17, color: "var(--indigo-lt)" }} />
+                <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--indigo-lt)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>Pause</Typography>
+              </Box>
+              <Box onClick={start} sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, py: 0.85, borderRadius: "var(--r-md)", bgcolor: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.25)", cursor: "pointer", "&:hover": { bgcolor: "rgba(16,185,129,0.2)" }, transition: "all 0.15s" }}>
+                <PlayArrowRoundedIcon sx={{ fontSize: 17, color: "var(--emerald)" }} />
+                <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--emerald)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>Resume</Typography>
+              </Box>
+              <Box onClick={stop} sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: 38, borderRadius: "var(--r-md)", bgcolor: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.2)", cursor: "pointer", "&:hover": { bgcolor: "rgba(244,63,94,0.18)" }, transition: "all 0.15s" }}>
+                <StopRoundedIcon sx={{ fontSize: 17, color: "var(--rose)" }} />
+              </Box>
+            </>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
 
 /* ── Dropdown menu item ─────────────────────────────────────────────────── */
 const DropItem = ({ icon: Icon, label, active, onClick, danger }) => (
@@ -116,8 +237,9 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
   const location  = useLocation();
   const { timeLeft, isStudying, timerActive } = useFocusTimer();
 
-  const [moreOpen,    setMoreOpen]    = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [moreOpen,       setMoreOpen]       = useState(false);
+  const [profileOpen,    setProfileOpen]    = useState(false);
+  const [quickFocusOpen, setQuickFocusOpen] = useState(false);
 
   const pageTitle = PAGE_TITLES[location.pathname] || "FocusLearner";
 
@@ -282,15 +404,26 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
           </Box>
         </Tooltip>
 
-        {/* Focus studio quick launch */}
-        <Tooltip title="Quick focus session">
-          <IconButton
-            size="small" onClick={() => goTo("/focus")}
-            sx={{ color: "var(--indigo-lt)", bgcolor: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)", width: 32, height: 32, borderRadius: "var(--r-sm)", "&:hover": { bgcolor: "rgba(99,102,241,0.22)", borderColor: "rgba(99,102,241,0.5)" } }}
-          >
-            <FlashOnRoundedIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-        </Tooltip>
+        {/* Focus quick-launch — inline panel */}
+        <Box sx={{ position: "relative" }}>
+          <Tooltip title="Quick focus session">
+            <IconButton
+              size="small"
+              onClick={() => { setQuickFocusOpen(p => !p); setMoreOpen(false); setProfileOpen(false); }}
+              sx={{
+                color: quickFocusOpen ? "#fff" : "var(--indigo-lt)",
+                bgcolor: quickFocusOpen ? "var(--indigo)" : "rgba(99,102,241,0.12)",
+                border: "1px solid rgba(99,102,241,0.25)",
+                width: 32, height: 32, borderRadius: "var(--r-sm)",
+                transition: "all 0.15s",
+                "&:hover": { bgcolor: "rgba(99,102,241,0.22)", borderColor: "rgba(99,102,241,0.5)" },
+              }}
+            >
+              <FlashOnRoundedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          </Tooltip>
+          {quickFocusOpen && <QuickFocusPanel onClose={() => setQuickFocusOpen(false)} />}
+        </Box>
 
         {/* Avatar + profile dropdown */}
         <Box sx={{ position: "relative" }}>

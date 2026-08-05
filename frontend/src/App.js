@@ -10,7 +10,8 @@ import Dashboard from './components/Dashboard';
 import LectureDetail from './components/LectureDetail';
 import Preferences from './components/Preferences';
 import ProtectedRoute from './components/ProtectedRoute';
-import FocusLock from './components/FocusLock';
+import FocusStudio from './components/FocusStudio';
+
 import VideoPlayer from './components/VideoPlayer';
 import GameLab from './components/GameLab';
 import KCLChallenge from './components/games/KCLChallenge';
@@ -207,11 +208,12 @@ function App() {
               <Route path="/focus" element={
                 <ProtectedRoute>
                   <Layout>
-                    <FocusLock />
+                    <FocusStudio />
                   </Layout>
                 </ProtectedRoute>
               }
               />
+
               <Route path="/player" element={
                 <ProtectedRoute>
                   <Layout>

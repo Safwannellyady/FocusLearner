@@ -44,7 +44,21 @@ def validate_username(username: str) -> tuple[bool, str]:
     return True, ''
 
 
+
+@auth_routes.route('/check-username', methods=['GET'])
+def check_username():
+    """Check if a username is available (SQL-injection safe via ORM + regex pre-filter)"""
+    username = request.args.get('username', '').strip()
+    # Validate format first — rejects anything non-alphanumeric before touching DB
+    valid, err = validate_username(username)
+    if not valid:
+        return jsonify({'available': False, 'reason': err}), 200
+    exists = User.query.filter_by(username=username).first() is not None
+    return jsonify({'available': not exists}), 200
+
+
 @auth_routes.route('/register', methods=['POST'])
+
 def register():
     """Register a new user with comprehensive validation"""
     try:

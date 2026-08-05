@@ -141,6 +141,10 @@ export const authAPI = {
 
   changePassword: (oldPassword, newPassword) =>
     api.post('/auth/change-password', { old_password: oldPassword, new_password: newPassword }),
+
+  checkUsername: (username) =>
+    api.get('/auth/check-username', { params: { username } }),
+
 };
 
 // Preferences API

@@ -1,504 +1,628 @@
-import React, { useState } from 'react';
-import { 
-    Box, Typography, Container, Paper, TextField, Button, CircularProgress, 
-    Alert, Grid, Chip, InputAdornment, Card, CardActionArea, Divider 
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import SearchIcon from '@mui/icons-material/Search';
-import ScienceIcon from '@mui/icons-material/Science';
-import CodeIcon from '@mui/icons-material/Code';
-import SecurityIcon from '@mui/icons-material/Security';
-import CalculateIcon from '@mui/icons-material/Calculate';
-import BiotechIcon from '@mui/icons-material/Biotech';
-import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
-import PublicIcon from '@mui/icons-material/Public';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import YouTubeIcon from '@mui/icons-material/YouTube';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { lectureAPI } from '../services/api';
+import React, { useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Box, Typography, Grid, Chip, Button, CircularProgress,
+  Slider, Switch, FormControlLabel, Alert, LinearProgress,
+} from "@mui/material";
+import { motion, AnimatePresence } from "framer-motion";
+import { TAXONOMY } from "../data/taxonomy";
+import { focusAPI } from "../services/api";
 
-// Curated Fields / Domains with icon & pre-mapped Subjects
-const FIELDS_DATA = [
-    {
-        id: 'coding',
-        name: 'Computer Science & Coding',
-        icon: <CodeIcon sx={{ fontSize: 28, color: '#00f2fe' }} />,
-        description: 'Algorithms, Web & Mobile Dev, System Architecture, Compilers',
-        subjects: ['Python Programming', 'JavaScript & React Dev', 'C++ & Systems Architecture', 'Rust & Memory Safety', 'SQL & Database Design', 'Data Structures & Algorithms']
-    },
-    {
-        id: 'cybersecurity',
-        name: 'Cybersecurity & Network Defense',
-        icon: <SecurityIcon sx={{ fontSize: 28, color: '#ff4b2b' }} />,
-        description: 'Ethical Hacking, Linux CLI, Network Forensics, Cryptography',
-        subjects: ['Penetration Testing & Kali Linux', 'Network Defense & Nmap/Wireshark', 'Web App Security (OWASP Top 10)', 'Applied Cryptography & SSL', 'Digital Forensics & Incident Response', 'Linux Kernel Exploitation']
-    },
-    {
-        id: 'physics',
-        name: 'Physics & Mechanical Simulation',
-        icon: <ScienceIcon sx={{ fontSize: 28, color: '#a78bfa' }} />,
-        description: 'Kinematics, Thermodynamics, Electromagnetism, Quantum Mechanics',
-        subjects: ['Classical Mechanics & Kinematics', 'Electromagnetism & Circuit Boards', 'Quantum Computing Fundamentals', 'Thermodynamics & Statistical Physics', 'Astrophysics & Orbital Gravitation', 'Wave Mechanics & Optics']
-    },
-    {
-        id: 'chemistry',
-        name: 'Chemistry & Molecular Dynamics',
-        icon: <BiotechIcon sx={{ fontSize: 28, color: '#34d399' }} />,
-        description: 'Organic Reactions, Acid-Base Titration, Molarity & Bonds',
-        subjects: ['Organic Chemistry Reactions', 'Acid-Base Titration & pH Dynamics', 'Inorganic & Coordination Chemistry', 'Biochemistry & Enzymes', 'Physical Chemistry & Enthalpy', 'Polymer Synthesis & Materials']
-    },
-    {
-        id: 'mathematics',
-        name: 'Mathematics & Data Science',
-        icon: <CalculateIcon sx={{ fontSize: 28, color: '#38bdf8' }} />,
-        description: 'Calculus, Linear Algebra, Machine Learning Math, Statistics',
-        subjects: ['Linear Algebra & Matrices', 'Multivariable Calculus & Differential Eqs', 'Probability & Inferential Statistics', 'Deep Learning Neural Math', 'Discrete Mathematics & Graph Theory', 'Optimization & Game Theory']
-    },
-    {
-        id: 'engineering',
-        name: 'Engineering & Robotics',
-        icon: <PrecisionManufacturingIcon sx={{ fontSize: 28, color: '#facc15' }} />,
-        description: 'Mechatronics, Control Systems, Embedded C, Circuit Design',
-        subjects: ['Mechatronics & Embedded Systems', 'Control Theory & PID Loops', 'Digital Logic & FPGA Design', 'Aerodynamics & Fluid Dynamics', 'Structural Mechanics & Finite Elements', 'Power Electronics & Inverters']
-    },
-    {
-        id: 'biology',
-        name: 'Biology & Genetics',
-        icon: <BiotechIcon sx={{ fontSize: 28, color: '#f472b6' }} />,
-        description: 'Cellular Biology, CRISPR Genetics, Neurobiology, Physiology',
-        subjects: ['Molecular & Cellular Biology', 'Genetics & CRISPR Editing', 'Neurobiology & Synaptic Transmission', 'Human Anatomy & Physiology', 'Microbiology & Immunology', 'Evolutionary Genomics']
-    },
-    {
-        id: 'humanities',
-        name: 'General & Humanities',
-        icon: <PublicIcon sx={{ fontSize: 28, color: '#fb923c' }} />,
-        description: 'World History, Philosophy, Economics, Linguistics, Cognitive Psychology',
-        subjects: ['Macro & Microeconomics', 'World History & Geopolitics', 'Cognitive Psychology & Memory', 'Philosophy of Mind & Logic', 'Linguistics & Natural Language', 'International Relations']
-    }
-];
+// Icons
+import ArrowForwardRoundedIcon  from "@mui/icons-material/ArrowForwardRounded";
+import ArrowBackRoundedIcon     from "@mui/icons-material/ArrowBackRounded";
+import SearchRoundedIcon        from "@mui/icons-material/SearchRounded";
+import LinkRoundedIcon          from "@mui/icons-material/LinkRounded";
+import UploadFileRoundedIcon    from "@mui/icons-material/UploadFileRounded";
+import CheckCircleRoundedIcon   from "@mui/icons-material/CheckCircleRounded";
+import PlayArrowRoundedIcon     from "@mui/icons-material/PlayArrowRounded";
+import SportsEsportsRoundedIcon from "@mui/icons-material/SportsEsportsRounded";
+import SmartToyRoundedIcon      from "@mui/icons-material/SmartToyRounded";
+import NoteAltRoundedIcon       from "@mui/icons-material/NoteAltRounded";
+import ManageSearchRoundedIcon  from "@mui/icons-material/ManageSearchRounded";
+import SummarizeRoundedIcon     from "@mui/icons-material/SummarizeRounded";
+import LockRoundedIcon          from "@mui/icons-material/LockRounded";
+import BoltRoundedIcon          from "@mui/icons-material/BoltRounded";
+import CloseRoundedIcon         from "@mui/icons-material/CloseRounded";
+import AttachFileRoundedIcon    from "@mui/icons-material/AttachFileRounded";
 
-// Curated Topics for specific subjects
-const TOPICS_MAP = {
-    'Python Programming': ['Asyncio & Concurrency', 'Object-Oriented Design Patterns', 'REST API with FastAPI/Django', 'Pandas & Data Manipulation'],
-    'JavaScript & React Dev': ['React Hooks & State Management', 'Next.js SSR & Server Actions', 'TypeScript Advanced Generics', 'Performance Optimization & Memoization'],
-    'Penetration Testing & Kali Linux': ['Privilege Escalation Techniques', 'Linux Terminal Navigation & Bash Scripting', 'Metasploit & Payload Execution', 'Active Directory Lateral Movement'],
-    'Network Defense & Nmap/Wireshark': ['TCP/IP 3-Way Handshake & Packet Analysis', 'Nmap Stealth Port Scanning (`-sS -p-`)', 'Wireshark Filter Expressions for PCAP', 'Firewall Rule Configuration & IDS/IPS'],
-    'Classical Mechanics & Kinematics': ['2D Projectile Motion & Trajectory Calculation', 'Newtonian Laws of Motion & Friction', 'Conservation of Momentum & Collisions', 'Rotational Inertia & Torque Dynamics'],
-    'Electromagnetism & Circuit Boards': ['Ohm`s Law & Kirchhoff`s Circuit Rules', 'Capacitor RC Time Constants & Charging', 'Magnetic Fields & Faraday`s Induction', 'RLC AC Resonance & Impedance'],
-    'Organic Chemistry Reactions': ['SN1 vs SN2 Nucleophilic Substitution', 'E1 vs E2 Elimination Mechanism', 'Aromatic Electrophilic Substitution', 'Stereochemistry & Optical Isomerism'],
-    'Acid-Base Titration & pH Dynamics': ['Henderson-Hasselbalch Buffer Equation', 'Strong vs Weak Acid Titration Curves', 'Equivalence Point Calculation & Indicators', 'Chemical Equilibrium & Le Chatelier`s Principle'],
-    'Linear Algebra & Matrices': ['Eigenvalues, Eigenvectors & Diagonalization', 'Singular Value Decomposition (SVD)', 'Gram-Schmidt Orthogonalization & QR', 'Vector Spaces & Linear Transformations']
+/* ── helpers ──────────────────────────────────────────────────────────────── */
+const extractYouTubeId = (url) => {
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
 };
 
-const CreateFocusSession = () => {
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+/* ── Step indicator ───────────────────────────────────────────────────────── */
+const StepDot = ({ n, label, active, done }) => (
+  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
+    <Box sx={{
+      width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+      bgcolor: done ? "var(--emerald)" : active ? "var(--indigo)" : "rgba(255,255,255,0.06)",
+      border: `2px solid ${done ? "var(--emerald)" : active ? "var(--indigo)" : "rgba(255,255,255,0.1)"}`,
+      transition: "all 0.3s", fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 800, fontSize: "0.8rem",
+      color: done || active ? "#fff" : "var(--text-dim)",
+    }}>
+      {done ? <CheckCircleRoundedIcon sx={{ fontSize: 16 }} /> : n}
+    </Box>
+    <Typography sx={{ fontSize: "0.65rem", fontWeight: 600, color: active ? "#f1f5f9" : "var(--text-dim)", letterSpacing: "0.04em" }}>
+      {label}
+    </Typography>
+  </Box>
+);
 
-    // Multi-tier selection state
-    const [fieldSearch, setFieldSearch] = useState('');
-    const [selectedField, setSelectedField] = useState(FIELDS_DATA[0]);
-    const [subjectSearch, setSubjectSearch] = useState('');
-    const [selectedSubject, setSelectedSubject] = useState(FIELDS_DATA[0].subjects[0]);
-    const [topicSearch, setTopicSearch] = useState('');
-    const [selectedTopic, setSelectedTopic] = useState(TOPICS_MAP['Python Programming']?.[0] || 'Core Module Architecture');
+const StepBar = ({ step }) => (
+  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0, mb: 4 }}>
+    {[["1","Subject"],["2","Resources"],["3","Configure"]].map(([n, label], i) => (
+      <React.Fragment key={n}>
+        <StepDot n={n} label={label} active={step === i} done={step > i} />
+        {i < 2 && (
+          <Box sx={{ width: { xs: 40, sm: 80 }, height: 2, bgcolor: step > i ? "var(--emerald)" : "rgba(255,255,255,0.08)", transition: "background 0.4s", mx: 1, borderRadius: 2 }} />
+        )}
+      </React.Fragment>
+    ))}
+  </Box>
+);
 
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [youtubeUrl, setYoutubeUrl] = useState('');
+/* ── Toggle feature row ───────────────────────────────────────────────────── */
+const FeatureToggle = ({ icon: Icon, label, desc, checked, onChange, accent = "var(--indigo)" }) => (
+  <Box onClick={onChange} sx={{
+    display: "flex", alignItems: "center", gap: 1.5,
+    p: "12px 16px", borderRadius: "var(--r-md)", cursor: "pointer",
+    bgcolor: checked ? `${accent}11` : "rgba(255,255,255,0.03)",
+    border: `1px solid ${checked ? `${accent}44` : "rgba(255,255,255,0.07)"}`,
+    transition: "all 0.18s", userSelect: "none",
+    "&:hover": { bgcolor: checked ? `${accent}1a` : "rgba(255,255,255,0.05)" },
+  }}>
+    <Box sx={{ width: 36, height: 36, borderRadius: "var(--r-sm)", bgcolor: checked ? `${accent}22` : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <Icon sx={{ fontSize: 18, color: checked ? accent : "var(--text-dim)" }} />
+    </Box>
+    <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: checked ? "#f1f5f9" : "var(--text-mid)" }}>{label}</Typography>
+      <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>{desc}</Typography>
+    </Box>
+    <Box sx={{
+      width: 36, height: 20, borderRadius: "100px", position: "relative", flexShrink: 0,
+      bgcolor: checked ? accent : "rgba(255,255,255,0.1)", transition: "background 0.2s",
+    }}>
+      <Box sx={{
+        position: "absolute", top: 2, left: checked ? 18 : 2, width: 16, height: 16,
+        borderRadius: "50%", bgcolor: "#fff", transition: "left 0.2s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+      }} />
+    </Box>
+  </Box>
+);
 
-    const extractVideoId = (url) => {
-        if (!url) return null;
-        const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    };
+/* ══ STEP 1 — Subject & Topic ════════════════════════════════════════════════ */
+const Step1 = ({ data, setData }) => {
+  const [search, setSearch] = useState("");
+  const [openSector, setOpenSector] = useState(null);
 
-    // Filter fields via search bar
-    const filteredFields = FIELDS_DATA.filter(f => 
-        f.name.toLowerCase().includes(fieldSearch.toLowerCase()) ||
-        f.description.toLowerCase().includes(fieldSearch.toLowerCase()) ||
-        f.subjects.some(s => s.toLowerCase().includes(fieldSearch.toLowerCase()))
-    );
+  const filtered = TAXONOMY.map(sec => ({
+    ...sec,
+    subjects: sec.subjects.filter(sub =>
+      !search || sub.name.toLowerCase().includes(search.toLowerCase()) ||
+      sub.topics.some(t => t.toLowerCase().includes(search.toLowerCase()))
+    ),
+  })).filter(sec => sec.subjects.length > 0);
 
-    // Filter subjects inside chosen field
-    const currentSubjects = selectedField ? selectedField.subjects : [];
-    const filteredSubjects = currentSubjects.filter(s => 
-        s.toLowerCase().includes(subjectSearch.toLowerCase())
-    );
+  const selectedSubject = TAXONOMY.flatMap(s => s.subjects).find(s => s.id === data.subjectId);
 
-    // Filter topics inside chosen subject
-    const currentTopics = TOPICS_MAP[selectedSubject] || [
-        `${selectedSubject} Fundamentals`,
-        `Advanced ${selectedSubject} & Best Practices`,
-        `Practical Simulation & Problem Solving in ${selectedSubject}`,
-        `Real-World Case Studies & Debugging`
-    ];
-    const filteredTopics = currentTopics.filter(t => 
-        t.toLowerCase().includes(topicSearch.toLowerCase())
-    );
+  return (
+    <Box>
+      <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.3rem", color: "#f1f5f9", mb: 0.5 }}>
+        What are you studying?
+      </Typography>
+      <Typography sx={{ color: "var(--text-dim)", fontSize: "0.84rem", mb: 2.5 }}>
+        Select a sector, subject, and specific micro-topic.
+      </Typography>
 
-    const handleSelectField = (field) => {
-        setSelectedField(field);
-        const firstSubject = field.subjects[0];
-        setSelectedSubject(firstSubject);
-        const firstTopic = (TOPICS_MAP[firstSubject] || [`${firstSubject} Core Principles`])[0];
-        setSelectedTopic(firstTopic);
-        if (!title.trim() || title.includes('Master')) {
-            setTitle(`Mastering ${firstSubject}: ${firstTopic}`);
-        }
-    };
+      {/* Search */}
+      <Box sx={{ position: "relative", mb: 2.5 }}>
+        <SearchRoundedIcon sx={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 18, color: "var(--text-dim)" }} />
+        <Box
+          component="input"
+          placeholder="Search subjects or topics…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          sx={{
+            width: "100%", pl: "40px", pr: 2, py: 1.25,
+            bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+            borderRadius: "var(--r-md)", color: "#f1f5f9",
+            fontSize: "0.9rem", fontFamily: "Plus Jakarta Sans, sans-serif",
+            outline: "none", "&:focus": { borderColor: "rgba(99,102,241,0.5)", boxShadow: "0 0 0 3px rgba(99,102,241,0.1)" },
+            transition: "all 0.15s",
+          }}
+        />
+      </Box>
 
-    const handleSelectSubject = (subj) => {
-        setSelectedSubject(subj);
-        const firstTopic = (TOPICS_MAP[subj] || [`${subj} Core Principles`])[0];
-        setSelectedTopic(firstTopic);
-        setTitle(`Mastering ${subj}: ${firstTopic}`);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-        
-        const finalSubject = selectedSubject || 'General Study';
-        const finalTopic = selectedTopic || 'Core Module';
-        const finalTitle = title.trim() || `${finalSubject}: ${finalTopic}`;
-
-        let videoIds = [];
-        if (youtubeUrl.trim()) {
-            const extractedId = extractVideoId(youtubeUrl);
-            if (!extractedId) {
-                setError("Invalid YouTube URL. Please provide a valid link.");
-                return;
-            }
-            videoIds.push(extractedId);
-        }
-
-        setLoading(true);
-        try {
-            const payload = {
-                title: finalTitle,
-                subject: finalSubject,
-                topic: finalTopic,
-                description: description || `Deep learning focus curriculum on ${finalSubject} (${finalTopic}) with AI Virtual Lab & synced vault.`,
-                video_ids: videoIds
-            };
-            const response = await lectureAPI.create(payload);
-            
-            if (response.data && response.data.lecture) {
-                 navigate(`/lecture/${response.data.lecture.id}`);
-            } else {
-                 setError("Error creating session.");
-            }
-        } catch (err) {
-            setError(err.response?.data?.error || "An error occurred while creating the session.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
-            {/* Header */}
-            <Box mb={4} className="epic-card" p={4} sx={{ borderRadius: '24px !important' }}>
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <AutoAwesomeIcon sx={{ fontSize: 34, color: '#00f2fe' }} />
-                    <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff' }}>
-                        Create Deep-Learned Focus Studio
-                    </Typography>
-                </Box>
-                <Typography variant="body1" sx={{ color: '#94a3b8', maxWidth: 880, lineHeight: 1.6 }}>
-                    Select your exact domain field, study subject, and specialized topic. Our AI engine deep-learns your selection to instantly launch interactive virtual labs (Coding Compiler, Kali Linux Terminal, Physics Simulators, or Molecular Labs), gamified arenas, and synchronized study vault access.
-                </Typography>
+      {/* Sector → Subject accordion */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 340, overflowY: "auto", pr: 0.5 }}>
+        {filtered.map(sec => (
+          <Box key={sec.id}>
+            <Box
+              onClick={() => setOpenSector(openSector === sec.id ? null : sec.id)}
+              sx={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                px: 1.5, py: 1, borderRadius: "var(--r-md)", cursor: "pointer",
+                bgcolor: "rgba(255,255,255,0.03)", border: "1px solid var(--border)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.06)" },
+              }}
+            >
+              <Typography sx={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text-mid)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                {sec.sector}
+              </Typography>
+              <Typography sx={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>
+                {openSector === sec.id ? "▲" : "▼"}
+              </Typography>
             </Box>
-            
-            {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '16px' }}>{error}</Alert>}
-            
-            <Grid container spacing={4}>
-                {/* Left Column: Multi-Tier Field -> Subject -> Topic Selection */}
-                <Grid item xs={12} lg={7}>
-                    <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important', mb: 4 }}>
-                        <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff" mb={2} display="flex" alignItems="center" gap={1}>
-                            <span style={{ color: '#00f2fe' }}>1.</span> Select Study Domain / Field
+
+            <AnimatePresence>
+              {(openSector === sec.id || search) && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <Box sx={{ pt: 0.75, pl: 1, display: "flex", flexDirection: "column", gap: 0.75 }}>
+                    {sec.subjects.map(sub => (
+                      <Box
+                        key={sub.id}
+                        onClick={() => setData(d => ({ ...d, subjectId: sub.id, subjectName: sub.name, topic: "" }))}
+                        sx={{
+                          px: 1.5, py: 1, borderRadius: "var(--r-md)", cursor: "pointer",
+                          bgcolor: data.subjectId === sub.id ? "rgba(99,102,241,0.13)" : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${data.subjectId === sub.id ? "rgba(99,102,241,0.35)" : "transparent"}`,
+                          transition: "all 0.15s", "&:hover": { bgcolor: "rgba(99,102,241,0.08)" },
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: data.subjectId === sub.id ? "#a5b4fc" : "#f1f5f9" }}>
+                          {sub.name}
                         </Typography>
-                        
-                        <TextField
-                            placeholder="Filter domains (e.g., Coding, Cybersecurity, Physics, Chemistry, Math...)"
-                            variant="outlined"
-                            fullWidth
-                            size="small"
-                            value={fieldSearch}
-                            onChange={(e) => setFieldSearch(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon sx={{ color: '#00f2fe' }} />
-                                    </InputAdornment>
-                                ),
-                                sx: { bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', color: '#ffffff', mb: 2.5 }
-                            }}
-                        />
+                      </Box>
+                    ))}
+                  </Box>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Box>
+        ))}
+      </Box>
 
-                        <Grid container spacing={2}>
-                            {filteredFields.map((field) => {
-                                const isSelected = selectedField?.id === field.id;
-                                return (
-                                    <Grid item xs={12} sm={6} key={field.id}>
-                                        <Card 
-                                            onClick={() => handleSelectField(field)}
-                                            sx={{
-                                                bgcolor: isSelected ? 'rgba(0, 242, 254, 0.14)' : 'rgba(255, 255, 255, 0.03)',
-                                                border: isSelected ? '2px solid #00f2fe' : '1px solid rgba(255, 255, 255, 0.08)',
-                                                borderRadius: '16px',
-                                                transition: 'all 0.3s ease',
-                                                cursor: 'pointer',
-                                                '&:hover': {
-                                                    transform: 'translateY(-2px)',
-                                                    borderColor: '#00f2fe',
-                                                    bgcolor: 'rgba(0, 242, 254, 0.08)'
-                                                }
-                                            }}
-                                        >
-                                            <CardActionArea sx={{ p: 2.2 }}>
-                                                <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-                                                    {field.icon}
-                                                    <Typography variant="subtitle1" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff">
-                                                        {field.name}
-                                                    </Typography>
-                                                    {isSelected && <CheckCircleIcon sx={{ ml: 'auto', color: '#00f2fe', fontSize: 20 }} />}
-                                                </Box>
-                                                <Typography variant="caption" color="#94a3b8" sx={{ display: 'block', lineHeight: 1.4 }}>
-                                                    {field.description}
-                                                </Typography>
-                                            </CardActionArea>
-                                        </Card>
-                                    </Grid>
-                                );
-                            })}
-                        </Grid>
-                    </Box>
+      {/* Micro-topic chips */}
+      {selectedSubject && (
+        <Box sx={{ mt: 2.5 }}>
+          <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-dim)", letterSpacing: "0.08em", textTransform: "uppercase", mb: 1 }}>
+            {selectedSubject.name} — Select Micro-Topic
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+            {selectedSubject.topics.map(t => (
+              <Chip
+                key={t} label={t} size="small"
+                onClick={() => setData(d => ({ ...d, topic: t }))}
+                sx={{
+                  fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 600, fontSize: "0.75rem",
+                  cursor: "pointer",
+                  bgcolor: data.topic === t ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${data.topic === t ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.1)"}`,
+                  color: data.topic === t ? "#a5b4fc" : "var(--text-mid)",
+                  "&:hover": { bgcolor: "rgba(99,102,241,0.12)" },
+                }}
+              />
+            ))}
+          </Box>
 
-                    {/* Step 2: Exact Subject Selection inside Field */}
-                    {selectedField && (
-                        <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important', mb: 4 }}>
-                            <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff" mb={2} display="flex" alignItems="center" gap={1}>
-                                <span style={{ color: '#00f2fe' }}>2.</span> Choose Exact Subject in {selectedField.name}
-                            </Typography>
+          {/* Custom topic input */}
+          <Box
+            component="input"
+            placeholder="Or type a custom topic…"
+            value={selectedSubject.topics.includes(data.topic) ? "" : data.topic}
+            onChange={e => setData(d => ({ ...d, topic: e.target.value }))}
+            sx={{
+              mt: 1.5, width: "100%", px: 2, py: 1,
+              bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+              borderRadius: "var(--r-md)", color: "#f1f5f9",
+              fontSize: "0.88rem", fontFamily: "Plus Jakarta Sans, sans-serif",
+              outline: "none", "&:focus": { borderColor: "rgba(99,102,241,0.5)" }, transition: "all 0.15s",
+            }}
+          />
+        </Box>
+      )}
+    </Box>
+  );
+};
 
-                            <TextField
-                                placeholder={`Filter subjects or type custom subject...`}
-                                variant="outlined"
-                                fullWidth
-                                size="small"
-                                value={subjectSearch}
-                                onChange={(e) => {
-                                    setSubjectSearch(e.target.value);
-                                    if (e.target.value.trim()) setSelectedSubject(e.target.value);
-                                }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon sx={{ color: '#34d399' }} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: { bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', color: '#ffffff', mb: 2.5 }
-                                }}
-                            />
+/* ══ STEP 2 — Resources ══════════════════════════════════════════════════════ */
+const Step2 = ({ data, setData }) => {
+  const [ytError,   setYtError]   = useState("");
+  const fileRef = useRef(null);
 
-                            <Box display="flex" flexWrap="wrap" gap={1.5}>
-                                {filteredSubjects.map((subj) => {
-                                    const isSubjSelected = selectedSubject === subj;
-                                    return (
-                                        <Chip
-                                            key={subj}
-                                            label={subj}
-                                            onClick={() => handleSelectSubject(subj)}
-                                            icon={isSubjSelected ? <CheckCircleIcon style={{ color: '#ffffff' }} /> : null}
-                                            sx={{
-                                                py: 2.2,
-                                                px: 1.5,
-                                                borderRadius: '14px',
-                                                fontWeight: 700,
-                                                fontFamily: 'Outfit, sans-serif',
-                                                fontSize: '0.92rem',
-                                                bgcolor: isSubjSelected ? '#2563eb' : 'rgba(255, 255, 255, 0.06)',
-                                                color: '#ffffff',
-                                                border: isSubjSelected ? '1px solid #60a5fa' : '1px solid rgba(255, 255, 255, 0.12)',
-                                                transition: 'all 0.2s ease',
-                                                '&:hover': {
-                                                    bgcolor: isSubjSelected ? '#1d4ed8' : 'rgba(255, 255, 255, 0.12)',
-                                                    transform: 'scale(1.02)'
-                                                }
-                                            }}
-                                        />
-                                    );
-                                })}
-                            </Box>
-                        </Box>
-                    )}
+  const handleYtUrl = (val) => {
+    setData(d => ({ ...d, youtubeUrl: val, youtubeId: extractYouTubeId(val) || "" }));
+    setYtError(val && !extractYouTubeId(val) ? "Paste a valid YouTube URL (e.g. youtube.com/watch?v=…)" : "");
+  };
 
-                    {/* Step 3: Specific Topic Filter */}
-                    {selectedSubject && (
-                        <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important' }}>
-                            <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff" mb={2} display="flex" alignItems="center" gap={1}>
-                                <span style={{ color: '#00f2fe' }}>3.</span> Select or Filter Specific Topic
-                            </Typography>
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    const files = [...(e.dataTransfer?.files || e.target?.files || [])];
+    setData(d => ({ ...d, files: [...(d.files || []), ...files] }));
+  };
 
-                            <TextField
-                                placeholder={`Search topics inside ${selectedSubject}...`}
-                                variant="outlined"
-                                fullWidth
-                                size="small"
-                                value={topicSearch}
-                                onChange={(e) => {
-                                    setTopicSearch(e.target.value);
-                                    if (e.target.value.trim()) setSelectedTopic(e.target.value);
-                                }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon sx={{ color: '#a78bfa' }} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: { bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', color: '#ffffff', mb: 2.5 }
-                                }}
-                            />
+  const removeFile = (name) => setData(d => ({ ...d, files: (d.files || []).filter(f => f.name !== name) }));
 
-                            <Box display="flex" flexWrap="wrap" gap={1.5}>
-                                {filteredTopics.map((topic) => {
-                                    const isTopicSelected = selectedTopic === topic;
-                                    return (
-                                        <Chip
-                                            key={topic}
-                                            label={topic}
-                                            onClick={() => {
-                                                setSelectedTopic(topic);
-                                                setTitle(`Mastering ${selectedSubject}: ${topic}`);
-                                            }}
-                                            sx={{
-                                                py: 2.2,
-                                                px: 1.5,
-                                                borderRadius: '14px',
-                                                fontWeight: 700,
-                                                fontFamily: 'Outfit, sans-serif',
-                                                fontSize: '0.9rem',
-                                                bgcolor: isTopicSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.06)',
-                                                color: '#ffffff',
-                                                border: isTopicSelected ? '1px solid #c4b5fd' : '1px solid rgba(255, 255, 255, 0.12)',
-                                                transition: 'all 0.2s ease',
-                                                '&:hover': {
-                                                    bgcolor: isTopicSelected ? '#6d28d9' : 'rgba(255, 255, 255, 0.12)',
-                                                    transform: 'scale(1.02)'
-                                                }
-                                            }}
-                                        />
-                                    );
-                                })}
-                            </Box>
-                        </Box>
-                    )}
-                </Grid>
+  return (
+    <Box>
+      <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.3rem", color: "#f1f5f9", mb: 0.5 }}>
+        Add your resources
+      </Typography>
+      <Typography sx={{ color: "var(--text-dim)", fontSize: "0.84rem", mb: 2.5 }}>
+        Attach a video, upload notes, or enable web search.
+      </Typography>
 
-                {/* Right Column: Deep-Learned Configuration & Launch */}
-                <Grid item xs={12} lg={5}>
-                    <Paper className="epic-card" sx={{ p: 4, borderRadius: '24px !important', position: 'sticky', top: 90 }}>
-                        <Typography variant="h5" fontWeight="900" fontFamily="Outfit, sans-serif" color="#ffffff" mb={3} display="flex" alignItems="center" gap={1.2}>
-                            <span className="pulse-dot-cyan" /> Studio Configuration & AI Lab Prep
-                        </Typography>
+      {/* YouTube URL */}
+      <Box sx={{ mb: 2 }}>
+        <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-dim)", letterSpacing: "0.08em", textTransform: "uppercase", mb: 0.75 }}>
+          YouTube Video
+        </Typography>
+        <Box sx={{ position: "relative" }}>
+          <LinkRoundedIcon sx={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 18, color: "var(--text-dim)" }} />
+          <Box
+            component="input"
+            placeholder="Paste YouTube URL…"
+            value={data.youtubeUrl || ""}
+            onChange={e => handleYtUrl(e.target.value)}
+            sx={{
+              width: "100%", pl: "40px", pr: 2, py: 1.25,
+              bgcolor: "rgba(255,255,255,0.04)", border: `1px solid ${ytError ? "rgba(244,63,94,0.5)" : "var(--border)"}`,
+              borderRadius: "var(--r-md)", color: "#f1f5f9",
+              fontSize: "0.9rem", fontFamily: "Plus Jakarta Sans, sans-serif",
+              outline: "none", "&:focus": { borderColor: "rgba(99,102,241,0.5)" }, transition: "all 0.15s",
+            }}
+          />
+        </Box>
+        {ytError && <Typography sx={{ fontSize: "0.7rem", color: "var(--rose)", mt: 0.5, ml: 0.5 }}>{ytError}</Typography>}
+      </Box>
 
-                        <form onSubmit={handleSubmit}>
-                            <Box display="flex" flexDirection="column" gap={3}>
-                                <TextField 
-                                    label="Session Studio Title" 
-                                    variant="outlined" 
-                                    fullWidth 
-                                    required 
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    InputProps={{
-                                        sx: { bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', color: '#ffffff' }
-                                    }}
-                                    InputLabelProps={{ sx: { color: '#94a3b8' } }}
-                                />
+      {/* YouTube preview */}
+      {data.youtubeId && (
+        <Box sx={{ mb: 2.5, borderRadius: "var(--r-lg)", overflow: "hidden", border: "1px solid var(--border)", aspectRatio: "16/9", bgcolor: "#000" }}>
+          <iframe
+            src={`https://www.youtube.com/embed/${data.youtubeId}`}
+            style={{ width: "100%", height: "100%", border: "none" }}
+            allow="accelerometer; autoplay; encrypted-media"
+            title="Preview"
+          />
+        </Box>
+      )}
 
-                                <Box sx={{ p: 2.5, borderRadius: '16px', bgcolor: 'rgba(0, 242, 254, 0.06)', border: '1px solid rgba(0, 242, 254, 0.25)' }}>
-                                    <Typography variant="subtitle2" fontWeight="800" color="#00f2fe" mb={1.5} display="flex" alignItems="center" gap={1}>
-                                        <ScienceIcon fontSize="small" /> AI Virtual Lab Configuration Preview
-                                    </Typography>
-                                    <Typography variant="body2" color="#e2e8f0" sx={{ mb: 1 }}>
-                                        <strong>Domain:</strong> {selectedField?.name || 'General Study'}
-                                    </Typography>
-                                    <Typography variant="body2" color="#e2e8f0" sx={{ mb: 1 }}>
-                                        <strong>Active Subject:</strong> {selectedSubject}
-                                    </Typography>
-                                    <Typography variant="body2" color="#00f2fe" fontWeight="700">
-                                        <strong>Deep-Learned Topic:</strong> {selectedTopic}
-                                    </Typography>
-                                    <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.1)' }} />
-                                    <Typography variant="caption" color="#94a3b8" sx={{ display: 'block', lineHeight: 1.5 }}>
-                                        ⚡ Launching this studio will prepare: <br />
-                                        • Interactive Virtual Lab sandbox ({selectedField?.id === 'coding' ? 'Multi-language Compiler' : selectedField?.id === 'cybersecurity' ? 'Kali Linux CLI Simulator' : selectedField?.id === 'physics' ? 'Real-time Physics Canvas' : selectedField?.id === 'chemistry' ? 'pH Titration & Bond Simulator' : 'OS Simulator'}).<br />
-                                        • Deep-learned AI Mentor Chat & Neural Quiz generator.<br />
-                                        • Synced Workspace Vault with Wikipedia query processing.
-                                    </Typography>
-                                </Box>
+      {/* File upload drop zone */}
+      <Box sx={{ mb: 2 }}>
+        <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-dim)", letterSpacing: "0.08em", textTransform: "uppercase", mb: 0.75 }}>
+          Study Materials
+        </Typography>
+        <Box
+          onDrop={handleFileDrop}
+          onDragOver={e => e.preventDefault()}
+          onClick={() => fileRef.current?.click()}
+          sx={{
+            border: "2px dashed rgba(99,102,241,0.25)", borderRadius: "var(--r-lg)",
+            p: 3, textAlign: "center", cursor: "pointer", transition: "all 0.18s",
+            bgcolor: "rgba(99,102,241,0.04)",
+            "&:hover": { borderColor: "rgba(99,102,241,0.5)", bgcolor: "rgba(99,102,241,0.08)" },
+          }}
+        >
+          <UploadFileRoundedIcon sx={{ fontSize: 28, color: "var(--indigo-lt)", mb: 0.75 }} />
+          <Typography sx={{ fontSize: "0.84rem", fontWeight: 600, color: "var(--text-mid)" }}>
+            Drop PDF or notes here
+          </Typography>
+          <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", mt: 0.25 }}>
+            or click to browse
+          </Typography>
+          <input ref={fileRef} type="file" multiple accept=".pdf,.txt,.docx,.md" hidden onChange={handleFileDrop} />
+        </Box>
 
-                                <Box sx={{ p: 2.5, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                                     <Typography variant="subtitle2" color="#ffffff" mb={1} fontWeight="700" display="flex" alignItems="center" gap={1}>
-                                        <YouTubeIcon sx={{ color: '#ff0000' }} /> Target Video URL (Optional)
-                                     </Typography>
-                                     <Typography variant="caption" color="#94a3b8" display="block" mb={2}>
-                                        Provide a direct YouTube lecture URL. If blank, our deep learning engine auto-fetches top academic lectures for {selectedSubject}.
-                                     </Typography>
-                                     <TextField 
-                                        placeholder="https://www.youtube.com/watch?v=..." 
-                                        variant="outlined" 
-                                        fullWidth 
-                                        size="small"
-                                        value={youtubeUrl}
-                                        onChange={(e) => setYoutubeUrl(e.target.value)}
-                                        InputProps={{
-                                            sx: { bgcolor: 'rgba(255, 255, 255, 0.06)', borderRadius: '10px', color: '#ffffff' }
-                                        }}
-                                    />
-                                </Box>
+        {/* Attached files list */}
+        {(data.files || []).length > 0 && (
+          <Box sx={{ mt: 1.25, display: "flex", flexDirection: "column", gap: 0.6 }}>
+            {(data.files || []).map(f => (
+              <Box key={f.name} sx={{ display: "flex", alignItems: "center", gap: 1, px: 1.5, py: 0.75, bgcolor: "rgba(255,255,255,0.04)", borderRadius: "var(--r-md)", border: "1px solid var(--border)" }}>
+                <AttachFileRoundedIcon sx={{ fontSize: 15, color: "var(--indigo-lt)" }} />
+                <Typography sx={{ fontSize: "0.78rem", color: "var(--text-mid)", flex: 1 }} noWrap>{f.name}</Typography>
+                <Box onClick={() => removeFile(f.name)} sx={{ cursor: "pointer", color: "var(--text-dim)", "&:hover": { color: "var(--rose)" }, display: "flex" }}>
+                  <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
 
-                                <TextField 
-                                    label="Custom Study Notes / Description (Optional)" 
-                                    variant="outlined" 
-                                    fullWidth 
-                                    multiline
-                                    rows={3}
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    placeholder={`Specific goals or lab challenges you want to accomplish in ${selectedSubject}...`}
-                                    InputProps={{
-                                        sx: { bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', color: '#ffffff' }
-                                    }}
-                                    InputLabelProps={{ sx: { color: '#94a3b8' } }}
-                                />
+      {/* Web search toggle */}
+      <Box
+        onClick={() => setData(d => ({ ...d, webSearch: !d.webSearch }))}
+        sx={{
+          display: "flex", alignItems: "center", gap: 1.5, p: "12px 16px",
+          borderRadius: "var(--r-md)", cursor: "pointer",
+          bgcolor: data.webSearch ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.03)",
+          border: `1px solid ${data.webSearch ? "rgba(99,102,241,0.35)" : "rgba(255,255,255,0.07)"}`,
+          transition: "all 0.18s",
+        }}
+      >
+        <ManageSearchRoundedIcon sx={{ fontSize: 20, color: data.webSearch ? "var(--indigo-lt)" : "var(--text-dim)" }} />
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: data.webSearch ? "#f1f5f9" : "var(--text-mid)" }}>Enable Web Search</Typography>
+          <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>Fetch Wikipedia + Google summaries when session starts</Typography>
+        </Box>
+        <Box sx={{ width: 36, height: 20, borderRadius: "100px", bgcolor: data.webSearch ? "var(--indigo)" : "rgba(255,255,255,0.1)", position: "relative", transition: "background 0.2s" }}>
+          <Box sx={{ position: "absolute", top: 2, left: data.webSearch ? 18 : 2, width: 16, height: 16, borderRadius: "50%", bgcolor: "#fff", transition: "left 0.2s ease" }} />
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
-                                <Button 
-                                    type="submit" 
-                                    className="epic-btn-primary" 
-                                    size="large"
-                                    disabled={loading}
-                                    fullWidth
-                                    sx={{ py: '18px !important', fontSize: '1.1rem !important', mt: 1 }}
-                                >
-                                    {loading ? (
-                                        <CircularProgress size={24} color="inherit" />
-                                    ) : (
-                                        '⚡ Launch AI Focus Studio & Virtual Lab →'
-                                    )}
-                                </Button>
-                            </Box>
-                        </form>
-                    </Paper>
-                </Grid>
-            </Grid>
-        </Container>
-    );
+/* ══ STEP 3 — Session Config ══════════════════════════════════════════════════ */
+const FEATURES_CONFIG = [
+  { key: "gaming",     icon: SportsEsportsRoundedIcon, label: "Gaming Arena",  desc: "Brain-refresh games during break time",    accent: "#10b981" },
+  { key: "chatbot",    icon: SmartToyRoundedIcon,      label: "AI Chatbot",   desc: "Ask questions related to your topic",      accent: "#6366f1" },
+  { key: "notes",      icon: NoteAltRoundedIcon,       label: "Notes Pad",    desc: "Quick-capture notes during session",       accent: "#f59e0b" },
+  { key: "webSearch",  icon: ManageSearchRoundedIcon,  label: "Web Search",   desc: "Wikipedia + Google inline search",         accent: "#3b82f6" },
+  { key: "summarizer", icon: SummarizeRoundedIcon,     label: "Summarizer",   desc: "AI summary of materials & transcript",     accent: "#a78bfa" },
+  { key: "focusLock",  icon: LockRoundedIcon,          label: "Focus Lock",   desc: "Block tab-switching during focus phase",   accent: "#f43f5e" },
+];
+
+const Step3 = ({ data, setData }) => (
+  <Box>
+    <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.3rem", color: "#f1f5f9", mb: 0.5 }}>
+      Configure your session
+    </Typography>
+    <Typography sx={{ color: "var(--text-dim)", fontSize: "0.84rem", mb: 3 }}>
+      Set durations, focus mode, and which tools to enable.
+    </Typography>
+
+    {/* Study duration */}
+    <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total Study Duration</Typography>
+        <Typography sx={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--indigo-lt)" }}>{data.totalMin} min</Typography>
+      </Box>
+      <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
+        {[25, 45, 60, 90].map(m => (
+          <Box
+            key={m}
+            onClick={() => setData(d => ({ ...d, totalMin: m }))}
+            sx={{
+              flex: 1, py: 0.75, borderRadius: "var(--r-md)", textAlign: "center",
+              cursor: "pointer", fontWeight: 700, fontSize: "0.82rem",
+              fontFamily: "Plus Jakarta Sans, sans-serif",
+              bgcolor: data.totalMin === m ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${data.totalMin === m ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.08)"}`,
+              color: data.totalMin === m ? "#a5b4fc" : "var(--text-mid)",
+              transition: "all 0.15s", "&:hover": { bgcolor: "rgba(99,102,241,0.1)" },
+            }}
+          >
+            {m}m
+          </Box>
+        ))}
+      </Box>
+      <Slider size="small" min={10} max={180} step={5} value={data.totalMin}
+        onChange={(_, v) => setData(d => ({ ...d, totalMin: v }))}
+        sx={{ color: "var(--indigo)", "& .MuiSlider-thumb": { width: 14, height: 14 }, "& .MuiSlider-rail": { bgcolor: "rgba(255,255,255,0.08)" } }}
+      />
+    </Box>
+
+    {/* Focus / Break intervals */}
+    <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+      <Box sx={{ flex: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+          <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.07em" }}>Focus Block</Typography>
+          <Typography sx={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--indigo-lt)" }}>{data.focusMin} min</Typography>
+        </Box>
+        <Slider size="small" min={5} max={60} step={5} value={data.focusMin}
+          onChange={(_, v) => setData(d => ({ ...d, focusMin: v }))}
+          sx={{ color: "var(--indigo)", "& .MuiSlider-thumb": { width: 12, height: 12 }, "& .MuiSlider-rail": { bgcolor: "rgba(255,255,255,0.08)" } }}
+        />
+      </Box>
+      <Box sx={{ flex: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+          <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.07em" }}>Break</Typography>
+          <Typography sx={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--emerald)" }}>{data.breakMin} min</Typography>
+        </Box>
+        <Slider size="small" min={1} max={20} step={1} value={data.breakMin}
+          onChange={(_, v) => setData(d => ({ ...d, breakMin: v }))}
+          sx={{ color: "var(--emerald)", "& .MuiSlider-thumb": { width: 12, height: 12 }, "& .MuiSlider-rail": { bgcolor: "rgba(255,255,255,0.08)" } }}
+        />
+      </Box>
+    </Box>
+
+    {/* Focus mode */}
+    <Box sx={{ mb: 3 }}>
+      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em", mb: 1 }}>Focus Mode</Typography>
+      <Box sx={{ display: "flex", gap: 1.5 }}>
+        {[
+          { key: "standard", label: "Standard",    desc: "Regular Pomodoro cycles" },
+          { key: "deep",     label: "Deep Focus",  desc: "No breaks until done"    },
+        ].map(m => (
+          <Box key={m.key} onClick={() => setData(d => ({ ...d, focusMode: m.key }))}
+            sx={{
+              flex: 1, p: "12px 16px", borderRadius: "var(--r-md)", cursor: "pointer",
+              bgcolor: data.focusMode === m.key ? "rgba(99,102,241,0.13)" : "rgba(255,255,255,0.03)",
+              border: `1.5px solid ${data.focusMode === m.key ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.07)"}`,
+              transition: "all 0.18s",
+            }}>
+            <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: data.focusMode === m.key ? "#a5b4fc" : "var(--text-mid)" }}>{m.label}</Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", mt: 0.25 }}>{m.desc}</Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+
+    {/* Session features */}
+    <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.08em", mb: 1 }}>
+      Session Features
+    </Typography>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+      {FEATURES_CONFIG.map(f => (
+        <FeatureToggle key={f.key} {...f}
+          checked={!!data.features?.[f.key]}
+          onChange={() => setData(d => ({ ...d, features: { ...d.features, [f.key]: !d.features?.[f.key] } }))}
+        />
+      ))}
+    </Box>
+  </Box>
+);
+
+/* ══ Main CreateFocusSession ══════════════════════════════════════════════════ */
+const CreateFocusSession = () => {
+  const navigate = useNavigate();
+  const [step, setStep]     = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]   = useState("");
+
+  const [data, setData] = useState({
+    subjectId: "", subjectName: "", topic: "",
+    youtubeUrl: "", youtubeId: "", files: [], webSearch: false,
+    totalMin: 45, focusMin: 25, breakMin: 5,
+    focusMode: "standard",
+    features: { gaming: true, chatbot: true, notes: true, webSearch: true, summarizer: true, focusLock: false },
+  });
+
+  const canNext = () => {
+    if (step === 0) return !!data.subjectId && !!data.topic;
+    if (step === 1) return true; // resources optional
+    return true;
+  };
+
+  const handleStart = async () => {
+    setError(""); setLoading(true);
+    try {
+      const payload = {
+        subject_focus: data.subjectName,
+        topic: data.topic,
+        youtube_url: data.youtubeUrl || null,
+        study_minutes: data.totalMin,
+        focus_minutes: data.focusMin,
+        break_minutes: data.breakMin,
+        focus_mode: data.focusMode,
+        features: data.features,
+      };
+      const res = await focusAPI.lock(data.subjectName);
+      localStorage.setItem("activeSession", JSON.stringify({ ...payload, sessionId: res?.data?.session_id }));
+      navigate("/focus");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to start session. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const slideVariants = {
+    enter: { x: 40, opacity: 0 },
+    center: { x: 0, opacity: 1 },
+    exit: { x: -40, opacity: 0 },
+  };
+
+  return (
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 680, mx: "auto", width: "100%" }}>
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: { xs: "1.5rem", md: "1.9rem" }, color: "#f1f5f9", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+          New Focus Session
+        </Typography>
+        <Typography sx={{ color: "var(--text-dim)", fontSize: "0.85rem", mt: 0.5 }}>
+          Lock in. Learn deep.
+        </Typography>
+      </Box>
+
+      <StepBar step={step} />
+
+      {error && <Alert severity="error" sx={{ mb: 2.5, borderRadius: "var(--r-md)" }}>{error}</Alert>}
+
+      {/* Step content */}
+      <Box sx={{ bgcolor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", p: { xs: 2.5, md: 3 }, mb: 3, minHeight: 400 }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            {step === 0 && <Step1 data={data} setData={setData} />}
+            {step === 1 && <Step2 data={data} setData={setData} />}
+            {step === 2 && <Step3 data={data} setData={setData} />}
+          </motion.div>
+        </AnimatePresence>
+      </Box>
+
+      {/* Navigation */}
+      <Box sx={{ display: "flex", gap: 1.5, justifyContent: "space-between" }}>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackRoundedIcon />}
+          onClick={() => setStep(s => s - 1)}
+          disabled={step === 0}
+          sx={{
+            borderColor: "var(--border)", color: "var(--text-mid)",
+            fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 600,
+            borderRadius: "var(--r-md)", px: 2.5,
+            "&:hover": { borderColor: "var(--border-active)", color: "#f1f5f9" },
+            "&.Mui-disabled": { opacity: 0.3 },
+          }}
+        >
+          Back
+        </Button>
+
+        {step < 2 ? (
+          <Button
+            variant="contained"
+            endIcon={<ArrowForwardRoundedIcon />}
+            onClick={() => setStep(s => s + 1)}
+            disabled={!canNext()}
+            sx={{
+              background: "var(--grad-primary)", fontFamily: "Plus Jakarta Sans, sans-serif",
+              fontWeight: 700, borderRadius: "var(--r-md)", px: 3,
+              boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
+              "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.45)", transform: "translateY(-1px)" },
+              "&.Mui-disabled": { opacity: 0.4 },
+            }}
+          >
+            {step === 1 && !data.youtubeUrl && !data.files?.length ? "Skip & Continue" : "Continue"}
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            endIcon={loading ? null : <PlayArrowRoundedIcon />}
+            onClick={handleStart}
+            disabled={loading}
+            sx={{
+              background: "linear-gradient(135deg,#10b981,#059669)",
+              fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700,
+              borderRadius: "var(--r-md)", px: 3,
+              boxShadow: "0 4px 14px rgba(16,185,129,0.3)",
+              "&:hover": { boxShadow: "0 8px 24px rgba(16,185,129,0.45)", transform: "translateY(-1px)" },
+            }}
+          >
+            {loading ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Start Session ⚡"}
+          </Button>
+        )}
+      </Box>
+
+      {/* Progress indicator */}
+      <Box sx={{ mt: 2 }}>
+        <LinearProgress
+          variant="determinate"
+          value={((step + 1) / 3) * 100}
+          sx={{
+            height: 3, borderRadius: 4, bgcolor: "rgba(255,255,255,0.06)",
+            "& .MuiLinearProgress-bar": { background: "var(--grad-primary)", transition: "all 0.4s ease" },
+          }}
+        />
+      </Box>
+    </Box>
+  );
 };
 
 export default CreateFocusSession;
