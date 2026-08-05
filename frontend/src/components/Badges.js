@@ -44,24 +44,39 @@ const FreebieModal = ({ badge, onClose }) => {
   return (
     <AnimatePresence>
       {badge && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 1400 }}
-          />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
+            zIndex: 1500,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px 16px", overflowY: "auto",
+          }}
+        >
           {/* Panel */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 40 }}
+            initial={{ opacity: 0, scale: 0.85, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85 }}
             transition={{ type: "spring", stiffness: 360, damping: 28 }}
-            style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 1500, width: "90%", maxWidth: 380 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%", maxWidth: 400,
+              maxHeight: "calc(100vh - 40px)",
+              margin: "auto",
+            }}
           >
-            <Box sx={{ bgcolor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", p: 3.5, textAlign: "center", position: "relative", overflow: "hidden" }}>
+            <Box sx={{
+              bgcolor: "var(--bg-card)", border: "1px solid var(--border)",
+              borderRadius: "var(--r-xl)", p: { xs: 2.5, sm: 3.5 },
+              textAlign: "center", position: "relative",
+              overflowY: "auto", maxHeight: "calc(100vh - 40px)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06)",
+            }}>
               {/* Shimmer */}
               <motion.div
                 animate={{ x: ["-100%", "200%"] }}
@@ -133,7 +148,7 @@ const FreebieModal = ({ badge, onClose }) => {
               </Box>
             </Box>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

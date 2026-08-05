@@ -211,4 +211,10 @@ export const badgesAPI = {
   getBadges: () => api.get('/badges'),
 };
 
+// Support API
+export const supportAPI = {
+  submitTicket: (data) => api.post('/support/ticket', data),
+  getFaqs: () => api.get('/support/faqs'),
+};
+
 export default api;

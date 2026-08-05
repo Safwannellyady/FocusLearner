@@ -32,7 +32,7 @@ const stagger = {
 const StatCard = ({ icon: Icon, label, value, accent = "var(--indigo)", sub }) => (
   <Box
     className="stat-card anim-fade-up"
-    sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}
+    sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, minHeight: 110 }}
   >
     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
       <Box
@@ -62,7 +62,11 @@ const ActionCard = ({ icon: Icon, label, description, accent, onClick, badge }) 
     <Box
       className="action-card"
       onClick={onClick}
-      sx={{ height: "100%", minWidth: 0 }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${label} - ${description}`}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      sx={{ height: "100%", minWidth: 0, minHeight: 130 }}
     >
       <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <Box
@@ -195,7 +199,7 @@ const Dashboard = () => {
         >
           {getGreeting()}, {firstName} 👋
         </Typography>
-        <Typography sx={{ color: "var(--text-dim)", fontSize: "0.85rem", mt: 0.5, fontWeight: 500 }}>
+        <Typography sx={{ color: "var(--text-mid)", fontSize: "0.85rem", mt: 0.5, fontWeight: 500 }}>
           {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
         </Typography>
       </Box>

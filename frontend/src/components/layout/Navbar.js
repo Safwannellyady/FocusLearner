@@ -281,6 +281,7 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
         <IconButton
           size="small" onClick={onMenuClick}
+          aria-label="Open Navigation Menu"
           sx={{ display: { md: "none" }, color: "var(--text-mid)", "&:hover": { bgcolor: "rgba(255,255,255,0.06)" } }}
         >
           <MenuRoundedIcon fontSize="small" />
@@ -387,6 +388,8 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
         {/* Search / Command palette */}
         <Tooltip title="Command palette (Ctrl+K)">
           <Box
+            role="button"
+            aria-label="Open command palette search"
             onClick={onCmdClick}
             sx={{
               display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 0.75,
@@ -409,6 +412,7 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
           <Tooltip title="Quick focus session">
             <IconButton
               size="small"
+              aria-label="Toggle quick focus session panel"
               onClick={() => { setQuickFocusOpen(p => !p); setMoreOpen(false); setProfileOpen(false); }}
               sx={{
                 color: quickFocusOpen ? "#fff" : "var(--indigo-lt)",
@@ -429,6 +433,8 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
         <Box sx={{ position: "relative" }}>
           <Tooltip title="Account">
             <Avatar
+              aria-label="User account menu"
+              role="button"
               onClick={() => { setProfileOpen(p => !p); setMoreOpen(false); }}
               sx={{
                 width: 32, height: 32, fontSize: "0.7rem", fontWeight: 700,

@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    FocusLearner Pro — Global Design System
    Minimal, premium, overflow-safe, maximum interaction
    ========================================================================== */
@@ -26,8 +26,8 @@
   --grad-amber:   linear-gradient(135deg,#f59e0b,#d97706);
 
   --text:     #f1f5f9;
-  --text-dim: #64748b;
-  --text-mid: #94a3b8;
+  --text-dim: #94a3b8;
+  --text-mid: #cbd5e1;
 
   --r-sm: 8px;
   --r-md: 12px;

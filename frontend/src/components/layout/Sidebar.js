@@ -120,6 +120,7 @@ const SidebarContent = ({ open, setOpen, navigate, location }) => {
       <Box sx={{ display: "flex", justifyContent: open ? "flex-end" : "center", px: 1.5, pt: 1.25, pb: 0.5 }}>
         <IconButton
           size="small" onClick={() => setOpen(!open)}
+          aria-label={open ? "Collapse navigation sidebar" : "Expand navigation sidebar"}
           sx={{ color: "var(--text-dim)", borderRadius: "var(--r-sm)", width: 26, height: 26, "&:hover": { bgcolor: "rgba(255,255,255,0.07)", color: "#f1f5f9" } }}
         >
           {open ? <ChevronLeftIcon sx={{ fontSize: 16 }} /> : <ChevronRightIcon sx={{ fontSize: 16 }} />}

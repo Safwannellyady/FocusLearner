@@ -1,33 +1,37 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+
+import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/layout/Layout';
+import { FocusProvider } from './context/FocusContext';
+
+// Eager loaded core routes for instant initial render
 import Login from './components/Login';
 import Signup from './components/Signup';
-import Dashboard from './components/Dashboard';
-import LectureDetail from './components/LectureDetail';
-import Preferences from './components/Preferences';
-import ProtectedRoute from './components/ProtectedRoute';
-import FocusStudio from './components/FocusStudio';
 
-import VideoPlayer from './components/VideoPlayer';
-import GameLab from './components/GameLab';
-import KCLChallenge from './components/games/KCLChallenge';
-import AIChallenge from './components/games/AIChallenge';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
-import ProgressDashboard from './components/ProgressDashboard';
-import LandingPage from './components/LandingPage';
-import Layout from './components/layout/Layout';
-import MyCourses from './components/MyCourses';
-import CreateFocusSession from './components/CreateFocusSession';
-import MyEnrollments from './components/MyEnrollments';
-import ManageFocus from './components/ManageFocus';
-import Badges from './components/Badges';
-import FocusArena from './components/FocusArena';
-import KnowledgeGraph from './components/common/KnowledgeGraph';
-import { FocusProvider } from './context/FocusContext';
+// Lazy loaded page components for bundle size & main-thread optimization
+const Dashboard          = lazy(() => import('./components/Dashboard'));
+const LectureDetail      = lazy(() => import('./components/LectureDetail'));
+const Preferences        = lazy(() => import('./components/Preferences'));
+const FocusStudio        = lazy(() => import('./components/FocusStudio'));
+const VideoPlayer        = lazy(() => import('./components/VideoPlayer'));
+const GameLab            = lazy(() => import('./components/GameLab'));
+const KCLChallenge       = lazy(() => import('./components/games/KCLChallenge'));
+const AIChallenge        = lazy(() => import('./components/games/AIChallenge'));
+const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard'));
+const ProgressDashboard  = lazy(() => import('./components/ProgressDashboard'));
+const LandingPage        = lazy(() => import('./components/LandingPage'));
+const MyCourses          = lazy(() => import('./components/MyCourses'));
+const CreateFocusSession = lazy(() => import('./components/CreateFocusSession'));
+const MyEnrollments      = lazy(() => import('./components/MyEnrollments'));
+const ManageFocus        = lazy(() => import('./components/ManageFocus'));
+const Badges             = lazy(() => import('./components/Badges'));
+const FocusArena         = lazy(() => import('./components/FocusArena'));
+const KnowledgeGraph     = lazy(() => import('./components/common/KnowledgeGraph'));
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
 
@@ -39,7 +43,7 @@ const theme = createTheme({
     success:    { main: '#10b981' },
     error:      { main: '#f43f5e' },
     background: { default: '#080d16', paper: '#0f1623' },
-    text:       { primary: '#f1f5f9', secondary: '#64748b' },
+    text:       { primary: '#f1f5f9', secondary: '#94a3b8' },
   },
   typography: {
     fontFamily: '"Plus Jakarta Sans", "Outfit", system-ui, sans-serif',
@@ -59,67 +63,17 @@ const theme = createTheme({
         body: {
           backgroundColor: '#080d16',
           color: '#f1f5f9',
-          overflowX: 'clip',
-          '&::-webkit-scrollbar':       { width: '5px', height: '5px' },
-          '&::-webkit-scrollbar-track': { background: 'transparent' },
-          '&::-webkit-scrollbar-thumb': { background: 'rgba(99,102,241,0.35)', borderRadius: '10px' },
-          '& *::-webkit-scrollbar':       { width: '5px', height: '5px' },
-          '& *::-webkit-scrollbar-thumb': { background: 'rgba(99,102,241,0.35)', borderRadius: '10px' },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          background: '#131d2e',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 16,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          textTransform: 'none',
-          fontWeight: 600,
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-        },
-        containedPrimary: {
-          background: 'linear-gradient(135deg,#6366f1,#3b82f6)',
-          boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
-          '&:hover': { boxShadow: '0 6px 20px rgba(99,102,241,0.5)' },
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-          background: '#0f1623',
-          border: '1px solid rgba(255,255,255,0.07)',
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: { fontWeight: 700, fontFamily: '"Plus Jakarta Sans", sans-serif' },
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          background: '#1a2540',
-          border: '1px solid rgba(255,255,255,0.1)',
-          fontSize: '0.75rem',
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
         },
       },
     },
   },
 });
 
+const PageFallback = () => (
+  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+    <CircularProgress size={32} sx={{ color: "var(--indigo)" }} />
+  </Box>
+);
 
 function App() {
   return (
@@ -128,159 +82,161 @@ function App() {
         <CssBaseline />
         <FocusProvider>
           <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/" element={<LandingPage />} />
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
 
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/my-courses" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <MyCourses />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/lecture/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <LectureDetail />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/preferences" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Preferences />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/courses" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreateFocusSession />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/create-focus-session" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreateFocusSession />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/enrollments" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <MyEnrollments />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/manage-focus" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ManageFocus />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/badges" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Badges />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/focus" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <FocusStudio />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/my-courses" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyCourses />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/lecture/:id" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <LectureDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/preferences" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Preferences />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/courses" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CreateFocusSession />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/create-focus-session" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CreateFocusSession />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/enrollments" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyEnrollments />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/manage-focus" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ManageFocus />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/badges" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Badges />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/focus" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <FocusStudio />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
 
-              <Route path="/player" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <VideoPlayer />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/games" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <GameLab />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/games/kcl" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <KCLChallenge />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/games/ai-challenge" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <AIChallenge />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/analytics" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <AnalyticsDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/progress" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ProgressDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/arena" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <FocusArena />
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-              <Route path="/knowledge-graph" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Box sx={{ p: { xs: 2, md: 4 } }}>
-                      <KnowledgeGraph />
-                    </Box>
-                  </Layout>
-                </ProtectedRoute>
-              }
-              />
-            </Routes>
+                <Route path="/player" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <VideoPlayer />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/games" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <GameLab />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/games/kcl" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <KCLChallenge />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/games/ai-challenge" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AIChallenge />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/analytics" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AnalyticsDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/progress" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ProgressDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/arena" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <FocusArena />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/knowledge-graph" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Box sx={{ p: { xs: 2, md: 4 } }}>
+                        <KnowledgeGraph />
+                      </Box>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+              </Routes>
+            </Suspense>
           </Router>
         </FocusProvider>
       </ThemeProvider>
@@ -289,4 +245,3 @@ function App() {
 }
 
 export default App;
-
