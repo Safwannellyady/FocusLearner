@@ -23,6 +23,11 @@ config_class = get_config()
 app.config.from_object(config_class)
 config_class.init_app(app)
 
+print("--- PRODUCTION DATABASE URI IN USE ---")
+print(app.config.get('SQLALCHEMY_DATABASE_URI'))
+print("---------------------------------------")
+
+
 # Configure CORS with proper settings for Cloudflare and local development
 CORS(
     app,
