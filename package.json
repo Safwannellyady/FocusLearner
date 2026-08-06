@@ -1,0 +1,12 @@
+{
+  "name": "focuslearner-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FocusLearner Monorepo Root",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --prefix frontend"
+  }
+}
