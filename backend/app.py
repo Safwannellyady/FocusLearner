@@ -6,7 +6,7 @@ Main Flask application for handling API requests
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
@@ -35,6 +35,23 @@ CORS(
     },
     supports_credentials=True
 )
+
+@app.before_request
+def handle_preflight():
+    """Handle CORS preflight OPTIONS requests cleanly before middleware"""
+    if request.method == "OPTIONS":
+        response = make_response()
+        origin = request.headers.get("Origin")
+        allowed = app.config.get('CORS_ORIGINS', [])
+        if origin and (origin in allowed or "localhost" in origin or origin.endswith(".pages.dev")):
+            response.headers.add("Access-Control-Allow-Origin", origin)
+        else:
+            response.headers.add("Access-Control-Allow-Origin", "https://focuslearner.pages.dev")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response, 200
+
 
 # Configure logging
 if not app.debug:
