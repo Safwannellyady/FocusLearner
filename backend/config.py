@@ -22,10 +22,14 @@ class Config:
     
     # Database Configuration
     DATABASE_URL = os.getenv('DATABASE_URL')
-    if not DATABASE_URL:
+    if DATABASE_URL:
+        if DATABASE_URL.startswith('postgres://'):
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    else:
         DATABASE_URL = 'sqlite:///focuslearner_v3.db'
     
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = os.getenv('SQLALCHEMY_ECHO', 'False').lower() == 'true'
     SQLALCHEMY_ENGINE_OPTIONS = {
