@@ -10,11 +10,13 @@ from datetime import timedelta
 load_dotenv()
 
 
+import secrets
+
 class Config:
     """Base configuration class"""
     
-    # Flask Configuration
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    # Flask Configuration (Cryptographically secure 256-bit key generation)
+    SECRET_KEY = os.getenv('SECRET_KEY') or secrets.token_hex(32)
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     TESTING = False
     
@@ -33,9 +35,10 @@ class Config:
         'max_overflow': 20,
     }
     
-    # JWT Configuration
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', SECRET_KEY)
+    # JWT Configuration (Cryptographically secure 256-bit HS256 signing key)
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY') or SECRET_KEY
     JWT_ALGORITHM = 'HS256'
+
     JWT_TOKEN_LOCATION = ['headers']
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
