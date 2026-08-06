@@ -5,7 +5,9 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const rawBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const cleanBaseUrl = rawBaseUrl.replace(/\/+$/, '');
+const API_BASE_URL = cleanBaseUrl.endsWith('/api') ? cleanBaseUrl : `${cleanBaseUrl}/api`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,6 +15,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
 
 // Add token to requests if available
 api.interceptors.request.use(

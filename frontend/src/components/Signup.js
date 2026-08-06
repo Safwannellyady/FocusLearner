@@ -283,15 +283,16 @@ const Signup = () => {
 
       {/* ══ RIGHT — Form Panel ═══════════════════════════════════════════ */}
       <Box sx={{
-        flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        p: { xs: 3, md: 5 }, py: { xs: 4, md: 6 }, bgcolor: "var(--bg)", overflowY: "auto", minHeight: "100vh",
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
+        p: { xs: 2.5, md: 4 }, py: { xs: 3, md: 4 }, bgcolor: "var(--bg)", overflowY: "auto", minHeight: "100vh",
       }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          style={{ width: "100%", maxWidth: 420, marginTop: "auto", marginBottom: "auto" }}
+          style={{ width: "100%", maxWidth: 420, paddingTop: 10, paddingBottom: 20 }}
         >
+
 
           {/* Mobile logo */}
           <Box sx={{ display: { xs: "flex", md: "none" }, alignItems: "center", gap: 1.5, mb: 4 }}>

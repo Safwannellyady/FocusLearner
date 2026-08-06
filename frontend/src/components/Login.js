@@ -289,15 +289,16 @@ const Login = () => {
 
       {/* ══ RIGHT — Form Panel ══════════════════════════════════════════════ */}
       <Box sx={{
-        flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        p: { xs: 3, md: 5 }, py: { xs: 4, md: 6 }, bgcolor: "var(--bg)", overflowY: "auto", minHeight: "100vh",
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
+        p: { xs: 2.5, md: 4 }, py: { xs: 3, md: 4 }, bgcolor: "var(--bg)", overflowY: "auto", minHeight: "100vh",
       }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
-          style={{ width: "100%", maxWidth: 400, marginTop: "auto", marginBottom: "auto" }}
+          style={{ width: "100%", maxWidth: 400, paddingTop: 10, paddingBottom: 20 }}
         >
+
           {/* Mobile logo */}
           <Box sx={{ display: { md: "none" }, mb: 4, display: "flex", alignItems: "center", gap: 1.5 }}>
             <Box sx={{ width: 36, height: 36, borderRadius: "var(--r-md)", background: "var(--grad-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
