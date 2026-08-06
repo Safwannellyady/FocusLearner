@@ -8,6 +8,7 @@ import ast
 import re
 from models import db, GameProgress, User, GameChallenge, ActivityResult, UserTopicMastery, TopicMasteryState
 from datetime import datetime
+from sqlalchemy import func
 
 class GameService:
     GAME_MODULES = {
