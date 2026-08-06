@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Box, Typography, Button, Divider, IconButton, CircularProgress } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
@@ -197,7 +197,7 @@ const Login = () => {
 
   return (
     <Box sx={{
-      minHeight: "100vh", display: "flex", overflow: "hidden",
+      minHeight: "100vh", display: "flex", overflowY: "auto",
       bgcolor: "var(--bg)", fontFamily: "Plus Jakarta Sans, sans-serif",
     }}>
 
@@ -207,7 +207,7 @@ const Login = () => {
         width: "48%", flexShrink: 0, position: "relative",
         bgcolor: "#080d16",
         borderRight: "1px solid var(--border)",
-        overflow: "hidden",
+        overflow: "hidden", minHeight: "100vh",
       }}>
         {/* Ambient particles */}
         <Particle style={{ width: 220, height: 220, top: "15%", left: "20%", background: "radial-gradient(circle,rgba(99,102,241,0.18),transparent 70%)", filter: "blur(40px)", duration: 6, delay: 0 }} />
@@ -289,14 +289,14 @@ const Login = () => {
 
       {/* ══ RIGHT — Form Panel ══════════════════════════════════════════════ */}
       <Box sx={{
-        flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-        p: { xs: 3, md: 5 }, bgcolor: "var(--bg)",
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        p: { xs: 3, md: 5 }, py: { xs: 4, md: 6 }, bgcolor: "var(--bg)", overflowY: "auto", minHeight: "100vh",
       }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
-          style={{ width: "100%", maxWidth: 400 }}
+          style={{ width: "100%", maxWidth: 400, marginTop: "auto", marginBottom: "auto" }}
         >
           {/* Mobile logo */}
           <Box sx={{ display: { md: "none" }, mb: 4, display: "flex", alignItems: "center", gap: 1.5 }}>

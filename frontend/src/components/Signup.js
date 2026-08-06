@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Box, Typography, Button, Divider, IconButton, CircularProgress, LinearProgress } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
@@ -209,13 +209,13 @@ const Signup = () => {
     && usernameStatus !== "taken" && usernameStatus !== "invalid" && usernameStatus !== "checking";
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", overflow: "hidden", bgcolor: "var(--bg)" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "var(--bg)", overflowY: "auto" }}>
 
       {/* ══ LEFT — Brand Panel ════════════════════════════════════════════ */}
       <Box sx={{
         display: { xs: "none", md: "flex" }, flexDirection: "column",
         width: "45%", flexShrink: 0, position: "relative",
-        bgcolor: "#080d16", borderRight: "1px solid var(--border)", overflow: "hidden",
+        bgcolor: "#080d16", borderRight: "1px solid var(--border)", overflow: "hidden", minHeight: "100vh",
       }}>
         <Particle style={{ width: 240, height: 240, top: "10%", left: "15%", background: "radial-gradient(circle,rgba(99,102,241,0.16),transparent 70%)", filter: "blur(50px)", duration: 6, delay: 0 }} />
         <Particle style={{ width: 160, height: 160, bottom: "25%", right: "5%",  background: "radial-gradient(circle,rgba(16,185,129,0.12),transparent 70%)",  filter: "blur(35px)", duration: 5, delay: 2 }} />
@@ -282,13 +282,17 @@ const Signup = () => {
       </Box>
 
       {/* ══ RIGHT — Form Panel ═══════════════════════════════════════════ */}
-      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", p: { xs: 3, md: 5 }, bgcolor: "var(--bg)", overflowY: "auto" }}>
+      <Box sx={{
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        p: { xs: 3, md: 5 }, py: { xs: 4, md: 6 }, bgcolor: "var(--bg)", overflowY: "auto", minHeight: "100vh",
+      }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          style={{ width: "100%", maxWidth: 420 }}
+          style={{ width: "100%", maxWidth: 420, marginTop: "auto", marginBottom: "auto" }}
         >
+
           {/* Mobile logo */}
           <Box sx={{ display: { xs: "flex", md: "none" }, alignItems: "center", gap: 1.5, mb: 4 }}>
             <Box sx={{ width: 36, height: 36, borderRadius: "var(--r-md)", background: "var(--grad-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
