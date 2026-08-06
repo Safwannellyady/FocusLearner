@@ -41,7 +41,10 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     
     # CORS Configuration
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:3001').split(',')
+    _env_origins = [orig.strip() for orig in os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:3001,http://localhost:5000,http://localhost:5001').split(',') if orig.strip()]
+    if 'https://focuslearner.pages.dev' not in _env_origins:
+        _env_origins.append('https://focuslearner.pages.dev')
+    CORS_ORIGINS = _env_origins
     CORS_SUPPORTS_CREDENTIALS = True
     CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     CORS_HEADERS = ['Content-Type', 'Authorization']

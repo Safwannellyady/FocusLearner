@@ -23,13 +23,17 @@ config_class = get_config()
 app.config.from_object(config_class)
 config_class.init_app(app)
 
-# Configure CORS with proper settings
+# Configure CORS with proper settings for Cloudflare and local development
 CORS(
     app,
-    origins=app.config['CORS_ORIGINS'],
-    supports_credentials=app.config['CORS_SUPPORTS_CREDENTIALS'],
-    methods=app.config['CORS_METHODS'],
-    allow_headers=app.config['CORS_HEADERS']
+    resources={
+        r"/*": {
+            "origins": app.config['CORS_ORIGINS'],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    },
+    supports_credentials=True
 )
 
 # Configure logging
