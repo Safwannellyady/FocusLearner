@@ -1,11 +1,12 @@
-# =============================================================================
+ï»¿# =============================================================================
 # FocusLearner Pro - Backend Dockerfile
 # Runtime: Python 3.11 (Flask API)
 # Served by: Gunicorn (production WSGI server)
+# Optimized for: Railway / Cloud / Containerized Deployments
 # =============================================================================
 
 # ---------------------------------------------------------------------------
-# Stage 1: Builder -- compile native extensions and cache the ML model
+# Stage 1: Builder -- compile native extensions and cache ML/NLTK assets
 # ---------------------------------------------------------------------------
 FROM python:3.11-slim-bookworm AS builder
 
@@ -16,13 +17,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build
 COPY requirements.txt .
 
-# FIX 1: Set an explicit, predictable HuggingFace cache dir in the builder
-# so the downloaded model lands exactly where we expect it.
 ENV HF_HOME=/content/cache
 
 RUN pip install --upgrade pip --no-cache-dir \
     && pip install --prefix=/install --no-cache-dir -r requirements.txt \
-    # Pre-bake the sentence-transformers model into HF_HOME=/content/cache
+    && python -m nltk.downloader -d /usr/local/share/nltk_data punkt stopwords punkt_tab \
     && python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # ---------------------------------------------------------------------------
@@ -34,7 +33,7 @@ LABEL maintainer="FocusLearner Pro Team" \
       app.version="1.0.0" \
       app.name="focuslearner-backend"
 
-# Runtime-only OS deps (no compiler toolchain)
+# Runtime-only OS deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq5 curl \
     && rm -rf /var/lib/apt/lists/*
@@ -43,21 +42,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd --system appgroup \
     && useradd --system --gid appgroup --no-create-home appuser
 
-# Copy compiled site-packages from the builder stage
+# Copy compiled site-packages from builder
 COPY --from=builder /install /usr/local
 
-# FIX 1 (cont.): Copy the pre-baked model from its explicit builder path
-# into a shared, world-readable location inside the runtime image.
+# Copy pre-baked model cache and NLTK corpora
 COPY --from=builder /content/cache /usr/local/share/model_cache
+COPY --from=builder /usr/local/share/nltk_data /usr/local/share/nltk_data
 
 WORKDIR /app
 COPY --chown=appuser:appgroup . .
 RUN mkdir -p logs uploads \
     && chown -R appuser:appgroup /app
 
-# FIX 1 (cont.): Tell sentence-transformers (and all HuggingFace libs) at
-# runtime to look in /usr/local/share/model_cache — matching the copy above.
-# This ensures zero outbound network calls are needed at container start-up.
+# Configure runtime environment
 ENV FLASK_ENV=production \
     FLASK_DEBUG=False \
     HOST=0.0.0.0 \
@@ -65,7 +62,8 @@ ENV FLASK_ENV=production \
     LOG_LEVEL=WARNING \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    HF_HOME=/usr/local/share/model_cache
+    HF_HOME=/usr/local/share/model_cache \
+    NLTK_DATA=/usr/local/share/nltk_data
 
 USER appuser
 EXPOSE 5000
@@ -74,7 +72,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:5000/api/health || exit 1
 
 CMD ["gunicorn", \
-     "--workers", "4", \
+     "--workers", "2", \
      "--threads", "2", \
      "--timeout", "120", \
      "--bind", "0.0.0.0:5000", \
