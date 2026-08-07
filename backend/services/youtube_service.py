@@ -154,14 +154,14 @@ class YouTubeService:
                 ("Trigonometry Essentials", "PUB0TaZ7bhA", "The Organic Chemistry Tutor"),
             ],
             "ECE": [
-                ("Circuit Analysis: Crash Course Physics", "-w-V3hC_rJ0", "CrashCourse"),
-                ("Electronic Circuit Design", "Vd255-aXkKg", "EEVblog"),
-                ("Kirchhoff's Laws Explained", "NB4FSE52bbY", "The Organic Chemistry Tutor"),
-                ("How Transistors Work", "7ukDKVHnacw", "Veritasium"),
-                ("Signals & Systems Lecture", "s8rsR_TXi-I", "MIT OpenCourseWare"),
-                ("Digital Logic & Logic Gates", "M0mx8S05v60", "Neso Academy"),
+                ("Electronic Circuit Design & Analysis", "Vd255-aXkKg", "EEVblog"),
+                ("Kirchhoff's Laws & Circuit Analysis", "NB4FSE52bbY", "The Organic Chemistry Tutor"),
+                ("Signals & Systems Principles", "s8rsR_TXi-I", "MIT OpenCourseWare"),
+                ("How Transistors & Semiconductors Work", "7ukDKVHnacw", "Veritasium"),
+                ("Digital Logic & Gate Fundamentals", "M0mx8S05v60", "Neso Academy"),
                 ("Microprocessors & Microcontrollers", "4G1ZJ2tW7qA", "Neso Academy"),
             ],
+
             "English": [
                 ("Basic English Grammar: Have, Has, Had", "Mx8f11Xm-ss", "English Lessons with Adam"),
                 ("8 Parts of Speech in English", "juHiil2C2lE", "Khan Academy"), 
@@ -253,8 +253,9 @@ class YouTubeService:
             category = "CS"
         elif any(x in combined_lower for x in ["math", "algebra", "calculus", "geometry", "trigonometry", "statistics"]):
             category = "Math"
-        elif any(x in combined_lower for x in ["ece", "circuit", "electronics", "electrical"]):
+        elif any(x in combined_lower for x in ["ece", "circuit", "electronics", "electrical", "signal"]):
             category = "ECE"
+
         elif any(x in combined_lower for x in ["eng", "lang", "grammar", "essay"]):
             category = "English"
         elif "phys" in combined_lower:

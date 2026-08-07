@@ -236,32 +236,63 @@ const MyCourses = () => {
 
   useEffect(() => {
     const load = async () => {
-      let currentUser = null;
       try {
-        const userStr = localStorage.getItem("user");
-        if (userStr) currentUser = JSON.parse(userStr);
-      } catch {}
+        const [focusRes, lecRes] = await Promise.allSettled([
+          focusAPI.getSessions(),
+          lectureAPI.getAll ? lectureAPI.getAll() : lectureAPI.getLectures(),
+        ]);
 
-      const isChappu = currentUser?.username === "Chappu8535";
+        let combined = [];
 
-      try {
-        const res = await lectureAPI.getAll ? await lectureAPI.getAll() : await lectureAPI.getLectures();
-        const data = res?.data?.lectures || res?.data || [];
-        if (Array.isArray(data) && data.length > 0) {
-          setSessions(data);
-        } else if (isChappu) {
-          setSessions(DEMO);
-        } else {
-          setSessions([]);
+        if (focusRes.status === "fulfilled") {
+          const rawFocus = focusRes.value?.data?.sessions || [];
+          rawFocus.forEach((fs) => {
+            combined.push({
+              id: `focus-${fs.id}`,
+              db_id: fs.id,
+              title: fs.topic || fs.subject_focus || "Focus Session",
+              subject: fs.subject_focus || "General Study",
+              topic: fs.topic || fs.subject_focus,
+              selected_lab: fs.selected_lab,
+              duration: fs.duration_minutes || 30,
+              xp: Math.round((fs.elapsed_seconds || 0) / 60 * 5),
+              progress: fs.status === "completed" ? 100 : Math.min(100, Math.round(((fs.elapsed_seconds || 0) / ((fs.duration_minutes || 30) * 60)) * 100)),
+              status: fs.status || (fs.is_locked ? "active" : "in_progress"),
+              date: fs.started_at ? new Date(fs.started_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+              youtube_id: fs.current_video_id,
+            });
+          });
         }
-      } catch {
-        setSessions(isChappu ? DEMO : []);
+
+        if (lecRes.status === "fulfilled") {
+          const rawLec = lecRes.value?.data?.lectures || lecRes.value?.data || [];
+          if (Array.isArray(rawLec)) {
+            rawLec.forEach((l) => {
+              combined.push({
+                ...l,
+                id: `lec-${l.id}`,
+                db_id: l.id,
+                subject: l.subject || "General Study",
+                duration: l.duration || 30,
+              });
+            });
+          }
+        }
+
+        if (combined.length > 0) {
+          setSessions(combined);
+        } else {
+          setSessions(DEMO);
+        }
+      } catch (err) {
+        setSessions(DEMO);
       } finally {
         setLoading(false);
       }
     };
     load();
   }, []);
+
 
   const handleResume = (session) => {
     let videoId = session.youtube_id || session.youtubeId;

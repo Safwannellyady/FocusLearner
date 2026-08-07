@@ -529,7 +529,8 @@ const FocusStudio = () => {
         if (results.length > 0) {
           const currentClean = extractYouTubeId(videoId);
           // If videoId is empty or points to default/unavailable study tips video, auto-sync to first result
-          if (!currentClean || currentClean === "inWWhN5EWM4" || currentClean === "p60rN9JEapg") {
+          if (!currentClean || currentClean === "inWWhN5EWM4" || currentClean === "p60rN9JEapg" || currentClean === "-w-V3hC_rJ0") {
+
             const rawVid = results[0].video_id || results[0].id || results[0].url || "";
             const vid = extractYouTubeId(rawVid);
             if (vid) setVideoId(vid);
