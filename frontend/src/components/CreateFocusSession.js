@@ -542,9 +542,16 @@ const CreateFocusSession = () => {
         files: data.files || []
       };
 
-      const res = await focusAPI.lock(data.subjectName);
-      localStorage.setItem("activeSession", JSON.stringify({ ...payload, sessionId: res?.data?.session_id }));
+      const res = await focusAPI.lock({
+        subject_focus: data.subjectName,
+        topic: data.topic,
+        selected_lab: data.selectedLab || "",
+        duration_minutes: data.totalMin || 30,
+        youtube_id: finalVideoId || ""
+      });
+      localStorage.setItem("activeSession", JSON.stringify({ ...payload, sessionId: res?.data?.session?.id || res?.data?.session_id }));
       navigate("/focus");
+
     } catch (err) {
       setError(err.response?.data?.error || "Failed to start session. Please try again.");
     } finally {

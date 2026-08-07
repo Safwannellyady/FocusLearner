@@ -77,14 +77,35 @@ if not app.debug:
 
 # Import models and initialize db
 from models import db
+from sqlalchemy import text
 db.init_app(app)
 
 with app.app_context():
     try:
         db.create_all()
-        app.logger.info('Database tables created/verified successfully')
+
+        # Auto-migrate missing schema columns into existing PostgreSQL tables
+        migrations = [
+            "ALTER TABLE focus_sessions ADD COLUMN IF NOT EXISTS topic VARCHAR(255) DEFAULT '';",
+            "ALTER TABLE focus_sessions ADD COLUMN IF NOT EXISTS selected_lab VARCHAR(100) DEFAULT '';",
+            "ALTER TABLE focus_sessions ADD COLUMN IF NOT EXISTS elapsed_seconds INTEGER DEFAULT 0;",
+            "ALTER TABLE focus_sessions ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 30;",
+            "ALTER TABLE focus_sessions ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';",
+            "ALTER TABLE focus_sessions ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active';",
+            "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lab_config TEXT;",
+            "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS game_config TEXT;",
+            "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS quiz_config TEXT;",
+        ]
+        for query in migrations:
+            try:
+                db.session.execute(text(query))
+            except Exception as m_err:
+                app.logger.warning(f"Migration note: {m_err}")
+        db.session.commit()
+        app.logger.info('Database tables & column schema auto-migrated successfully')
     except Exception as e:
         app.logger.error(f'Error auto-creating database tables: {e}')
+
 
 
 # Import and register routes

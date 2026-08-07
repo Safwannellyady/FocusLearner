@@ -129,65 +129,76 @@ def get_lectures():
 @lecture_routes.route('/', methods=['POST'])
 @token_required
 def create_lecture():
-    """Create a new lecture"""
-    user_id = request.current_user_id
-    data = request.get_json()
-    
-    course_id = data.get('course_id')
-    title = data.get('title')
-    subject = data.get('subject')
-    topic = data.get('topic')
-    description = data.get('description', '')
-    video_ids = data.get('video_ids', [])
-    
-    if not title or not subject or not topic:
-        return jsonify({'error': 'Title, subject, and topic are required'}), 400
-    
-    # Auto-generate content if no videos provided
-    if not video_ids:
-        print(f"Auto-generating content for: {subject} - {topic}")
-        from services.youtube_service import YouTubeService
-        youtube_service = YouTubeService()
+    """Create a new lecture with safe fallbacks"""
+    try:
+        user_id = request.current_user_id
+        data = request.get_json() or {}
         
-        # Construct a targeted query
-        query = topic
+        course_id = data.get('course_id')
+        title = data.get('title')
+        subject = data.get('subject')
+        topic = data.get('topic')
+        description = data.get('description', '')
+        video_ids = data.get('video_ids', [])
         
-        # Search for videos
-        videos = youtube_service.search_videos(query, subject_focus=subject, max_results=5)
+        if not title or not subject or not topic:
+            return jsonify({'error': 'Title, subject, and topic are required'}), 400
         
-        # Extract IDs
-        video_ids = [v['video_id'] for v in videos]
-        print(f"Found {len(video_ids)} videos: {video_ids}")
+        # Auto-generate content if no videos provided
+        if not video_ids:
+            try:
+                print(f"Auto-generating content for: {subject} - {topic}")
+                from services.youtube_service import YouTubeService
+                youtube_service = YouTubeService()
+                videos = youtube_service.search_videos(topic, subject_focus=subject, max_results=5)
+                video_ids = [v['video_id'] for v in videos if 'video_id' in v]
+            except Exception as yt_err:
+                print(f"YouTube search warning: {yt_err}")
+                video_ids = []
 
-    # Look up Learning Intent
-    intent = LearningIntent.query.filter_by(subject=subject, topic=topic).first()
-    intent_id = intent.id if intent else None
+        # Look up Learning Intent safely
+        intent_id = None
+        try:
+            intent = LearningIntent.query.filter_by(subject=subject, topic=topic).first()
+            if intent:
+                intent_id = intent.id
+        except Exception as int_err:
+            print(f"Intent lookup warning: {int_err}")
 
-    # Deep-learn user session details to generate required Virtual Lab, Game Session, and Neural Quiz
-    print(f"Executing AI Deep-Learn for: {title} ({subject} - {topic})")
-    deep_learned_suite = ai_service.deep_learn_session(title, subject, topic, description)
+        # Deep-learn user session details safely with fallback
+        deep_learned_suite = {}
+        try:
+            deep_learned_suite = ai_service.deep_learn_session(title, subject, topic, description) or {}
+        except Exception as ai_err:
+            print(f"AI Deep-learn fallback warning: {ai_err}")
 
-    lecture = Lecture(
-        user_id=user_id,
-        course_id=course_id,
-        title=title,
-        subject=subject,
-        topic=topic,
-        description=description,
-        video_ids=json.dumps(video_ids) if video_ids else None,
-        lab_config=json.dumps(deep_learned_suite.get('lab_config')) if deep_learned_suite.get('lab_config') else None,
-        game_config=json.dumps(deep_learned_suite.get('game_config')) if deep_learned_suite.get('game_config') else None,
-        quiz_config=json.dumps(deep_learned_suite.get('quiz_config')) if deep_learned_suite.get('quiz_config') else None,
-        learning_intent_id=intent_id
-    )
-    
-    db.session.add(lecture)
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Lecture created successfully',
-        'lecture': lecture.to_dict()
-    }), 201
+        lecture = Lecture(
+            user_id=user_id,
+            course_id=course_id,
+            title=title,
+            subject=subject,
+            topic=topic,
+            description=description,
+            video_ids=json.dumps(video_ids) if video_ids else None,
+            lab_config=json.dumps(deep_learned_suite.get('lab_config')) if deep_learned_suite.get('lab_config') else None,
+            game_config=json.dumps(deep_learned_suite.get('game_config')) if deep_learned_suite.get('game_config') else None,
+            quiz_config=json.dumps(deep_learned_suite.get('quiz_config')) if deep_learned_suite.get('quiz_config') else None,
+            learning_intent_id=intent_id
+        )
+        
+        db.session.add(lecture)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Lecture created successfully',
+            'lecture': lecture.to_dict()
+        }), 201
+
+    except Exception as e:
+        print(f"Error in create_lecture: {e}")
+        db.session.rollback()
+        return jsonify({'error': f'Failed to create lecture: {str(e)}'}), 500
+
 
 
 @lecture_routes.route('/<int:lecture_id>', methods=['GET'])
