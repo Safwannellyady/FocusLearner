@@ -85,11 +85,17 @@ class FocusSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     subject_focus = db.Column(db.String(100), nullable=False, index=True)
+    topic = db.Column(db.String(255), nullable=True)
+    selected_lab = db.Column(db.String(100), nullable=True)
     is_locked = db.Column(db.Boolean, default=False, index=True)
     started_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     ended_at = db.Column(db.DateTime, nullable=True)
     current_video_id = db.Column(db.String(100), nullable=True)
     current_timestamp = db.Column(db.Integer, default=0)  # Video timestamp in seconds
+    elapsed_seconds = db.Column(db.Integer, default=0)
+    duration_minutes = db.Column(db.Integer, default=30)
+    notes = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(50), default='active', index=True)  # 'active', 'completed', 'abandoned'
     
     # Relationships
     distraction_logs = db.relationship('DistractionLog', backref='focus_session', lazy=True, cascade='all, delete-orphan')
@@ -105,12 +111,43 @@ class FocusSession(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'subject_focus': self.subject_focus,
+            'topic': self.topic,
+            'selected_lab': self.selected_lab,
             'is_locked': self.is_locked,
             'started_at': self.started_at.isoformat(),
             'ended_at': self.ended_at.isoformat() if self.ended_at else None,
             'current_video_id': self.current_video_id,
-            'current_timestamp': self.current_timestamp
+            'current_timestamp': self.current_timestamp,
+            'elapsed_seconds': self.elapsed_seconds or 0,
+            'duration_minutes': self.duration_minutes or 30,
+            'notes': self.notes or '',
+            'status': self.status or 'active'
         }
+
+
+class PasswordResetToken(db.Model):
+    """Model for storing single-use password reset tokens"""
+    __tablename__ = 'password_reset_tokens'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    token = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    is_used = db.Column(db.Boolean, default=False, index=True)
+    
+    user = db.relationship('User', backref=db.backref('reset_tokens', lazy=True, cascade='all, delete-orphan'))
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'token': self.token,
+            'created_at': self.created_at.isoformat(),
+            'expires_at': self.expires_at.isoformat(),
+            'is_used': self.is_used
+        }
+
 
 
 class ContentItem(db.Model):

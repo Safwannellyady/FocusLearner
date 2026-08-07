@@ -24,13 +24,14 @@ youtube_service = YouTubeService()
 @focus_routes.route('/lock', methods=['POST'])
 @token_required
 def lock_focus():
-    """Lock a focus session with a specific subject"""
+    """Lock a focus session with a specific subject, topic, and lab"""
     data = request.get_json() or {}
     user_id = request.current_user_id
-    subject_focus = data.get('subject_focus') or data.get('subjectFocus')
-    
-    if not subject_focus:
-        return jsonify({'error': 'subject_focus is required'}), 400
+    subject_focus = data.get('subject_focus') or data.get('subjectFocus') or 'General Science'
+    topic = data.get('topic') or data.get('title') or ''
+    selected_lab = data.get('selected_lab') or data.get('selectedLab') or ''
+    duration_minutes = data.get('duration_minutes') or data.get('duration') or 30
+    youtube_id = data.get('youtube_id') or data.get('youtubeId') or ''
     
     # Verify user exists
     user = User.query.get(user_id)
@@ -47,20 +48,111 @@ def lock_focus():
         session.is_locked = False
         session.ended_at = datetime.utcnow()
     
-    # Create new focus session
+    # Create new focus session immediately in PostgreSQL
     new_session = FocusSession(
         user_id=user_id,
         subject_focus=subject_focus,
-        is_locked=True
+        topic=topic,
+        selected_lab=selected_lab,
+        duration_minutes=int(duration_minutes),
+        current_video_id=youtube_id,
+        is_locked=True,
+        status='active'
     )
     
     db.session.add(new_session)
     db.session.commit()
     
     return jsonify({
-        'message': 'Focus locked successfully',
+        'message': 'Focus locked & saved successfully',
         'session': new_session.to_dict()
     }), 201
+
+
+@focus_routes.route('/autosave', methods=['POST'])
+@token_required
+def autosave_session():
+    """Autosave session progress incrementally every 30s"""
+    data = request.get_json() or {}
+    user_id = request.current_user_id
+    session_id = data.get('session_id') or data.get('sessionId')
+    elapsed_seconds = data.get('elapsed_seconds') or data.get('elapsedSec') or 0
+    notes = data.get('notes') or ''
+    selected_lab = data.get('selected_lab') or data.get('selectedLab')
+    video_id = data.get('video_id') or data.get('videoId')
+    timestamp = data.get('timestamp') or 0
+
+    session = None
+    if session_id:
+        session = FocusSession.query.filter_by(id=session_id, user_id=user_id).first()
+    if not session:
+        session = FocusSession.query.filter_by(user_id=user_id, is_locked=True).first()
+
+    if not session:
+        return jsonify({'error': 'No active session found'}), 404
+
+    session.elapsed_seconds = int(elapsed_seconds)
+    if notes:
+        session.notes = notes
+    if selected_lab:
+        session.selected_lab = selected_lab
+    if video_id:
+        session.current_video_id = video_id
+    if timestamp:
+        session.current_timestamp = int(timestamp)
+
+    db.session.commit()
+    return jsonify({'message': 'Autosaved successfully', 'session': session.to_dict()}), 200
+
+
+@focus_routes.route('/sessions', methods=['GET'])
+@token_required
+def get_user_sessions():
+    """Get all focus sessions for current user"""
+    user_id = request.current_user_id
+    sessions = FocusSession.query.filter_by(user_id=user_id)\
+        .order_by(FocusSession.started_at.desc()).all()
+    return jsonify({'sessions': [s.to_dict() for s in sessions]}), 200
+
+
+@focus_routes.route('/<int:session_id>', methods=['PUT'])
+@token_required
+def update_session(session_id):
+    """Modify session metadata (title, topic, subject, lab, duration)"""
+    user_id = request.current_user_id
+    session = FocusSession.query.filter_by(id=session_id, user_id=user_id).first()
+    if not session:
+        return jsonify({'error': 'Session not found'}), 404
+
+    data = request.get_json() or {}
+    if 'topic' in data:
+        session.topic = data['topic']
+    if 'subject_focus' in data or 'subjectFocus' in data:
+        session.subject_focus = data.get('subject_focus') or data.get('subjectFocus')
+    if 'selected_lab' in data or 'selectedLab' in data:
+        session.selected_lab = data.get('selected_lab') or data.get('selectedLab')
+    if 'duration_minutes' in data or 'duration' in data:
+        session.duration_minutes = int(data.get('duration_minutes') or data.get('duration'))
+    if 'notes' in data:
+        session.notes = data['notes']
+
+    db.session.commit()
+    return jsonify({'message': 'Session updated successfully', 'session': session.to_dict()}), 200
+
+
+@focus_routes.route('/<int:session_id>', methods=['DELETE'])
+@token_required
+def delete_session(session_id):
+    """Delete focus session from PostgreSQL (supports instant creation undo & 3-dots delete)"""
+    user_id = request.current_user_id
+    session = FocusSession.query.filter_by(id=session_id, user_id=user_id).first()
+    if not session:
+        return jsonify({'error': 'Session not found'}), 404
+
+    db.session.delete(session)
+    db.session.commit()
+    return jsonify({'message': 'Session deleted successfully', 'id': session_id}), 200
+
 
 
 @focus_routes.route('/unlock', methods=['POST'])

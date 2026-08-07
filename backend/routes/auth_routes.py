@@ -420,3 +420,95 @@ def google_login():
         traceback.print_exc()
         return jsonify({'error': f'Authentication failed: {str(e)}'}), 500
 
+
+from models import PasswordResetToken
+import secrets
+from datetime import datetime, timedelta
+
+@auth_routes.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    """Request password reset link/token"""
+    try:
+        data = request.get_json() or {}
+        email = data.get('email', '').strip().lower()
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            # Return generic success to prevent email enumeration
+            return jsonify({'message': 'If that email is registered, a password reset link has been issued.'}), 200
+
+        # Invalidate any old tokens for this user
+        PasswordResetToken.query.filter_by(user_id=user.id, is_used=False).update({'is_used': True})
+
+        # Create single-use token valid for 1 hour
+        token_str = secrets.token_urlsafe(32)
+        expires_at = datetime.utcnow() + timedelta(hours=1)
+
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token=token_str,
+            expires_at=expires_at,
+            is_used=False
+        )
+        db.session.add(reset_token)
+        db.session.commit()
+
+        reset_link = f"https://focuslearner.pages.dev/login?reset_token={token_str}"
+        print(f"Password reset token issued for {email}: {reset_link}")
+
+        return jsonify({
+            'message': 'If that email is registered, a password reset link has been issued.',
+            'reset_token': token_str,
+            'reset_link': reset_link
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f'Forgot password error: {e}')
+        db.session.rollback()
+        return jsonify({'error': 'Failed to process password reset'}), 500
+
+
+@auth_routes.route('/reset-password', methods=['POST'])
+def reset_password():
+    """Submit new password with single-use reset token"""
+    try:
+        data = request.get_json() or {}
+        token_str = data.get('token') or data.get('reset_token')
+        new_password = data.get('new_password') or data.get('password')
+
+        if not token_str or not new_password:
+            return jsonify({'error': 'Token and new password are required'}), 400
+
+        reset_token = PasswordResetToken.query.filter_by(token=token_str, is_used=False).first()
+        if not reset_token:
+            return jsonify({'error': 'Invalid or expired password reset token'}), 400
+
+        if reset_token.expires_at < datetime.utcnow():
+            reset_token.is_used = True
+            db.session.commit()
+            return jsonify({'error': 'Password reset token has expired. Please request a new link.'}), 400
+
+        user = User.query.get(reset_token.user_id)
+        if not user:
+            return jsonify({'error': 'Associated user account not found'}), 404
+
+        # Validate strength
+        password_valid, password_error = validate_password_strength(new_password)
+        if not password_valid:
+            return jsonify({'error': password_error}), 400
+
+        user.set_password(new_password)
+        reset_token.is_used = True
+        db.session.commit()
+
+        current_app.logger.info(f'Password reset successfully for user: {user.id}')
+        return jsonify({'message': 'Password reset successfully. You may now log in.'}), 200
+
+    except Exception as e:
+        current_app.logger.error(f'Reset password error: {e}')
+        db.session.rollback()
+        return jsonify({'error': 'An error occurred resetting your password'}), 500
+
+

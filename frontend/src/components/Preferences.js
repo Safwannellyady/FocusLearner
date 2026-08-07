@@ -630,61 +630,7 @@ const Settings = () => {
             {/* HELP & SUPPORT TAB */}
             {activeTab === "help" && (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3.5 }}>
-                {/* 1. Developer Contact Card */}
-                <Box sx={{
-                  p: 2.5, borderRadius: "var(--r-lg)",
-                  bgcolor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)",
-                  display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "flex-start", sm: "center" },
-                  justifyContent: "space-between", gap: 2,
-                }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <Box sx={{ width: 42, height: 42, borderRadius: "var(--r-md)", bgcolor: "rgba(99,102,241,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <EmailRoundedIcon sx={{ color: "var(--indigo-lt)", fontSize: 22 }} />
-                    </Box>
-                    <Box>
-                      <Typography sx={{ fontWeight: 800, fontSize: "0.92rem", color: "#f1f5f9" }}>
-                        Developer Direct Support
-                      </Typography>
-                      <Typography sx={{ fontSize: "0.78rem", color: "var(--indigo-lt)", fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}>
-                        {developerEmail}
-                      </Typography>
-                    </Box>
-                  </Box>
 
-                  <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", sm: "auto" } }}>
-                    <Button
-                      size="small" variant="outlined"
-                      startIcon={copiedEmail ? <CheckCircleRoundedIcon sx={{ color: "var(--emerald)" }} /> : <ContentCopyRoundedIcon />}
-                      onClick={handleCopyEmail}
-                      sx={{
-                        borderRadius: "var(--r-md)", borderColor: "rgba(99,102,241,0.3)",
-                        color: copiedEmail ? "var(--emerald)" : "var(--indigo-lt)",
-                        fontSize: "0.78rem", fontWeight: 700, flex: 1,
-                        "&:hover": { borderColor: "var(--indigo-lt)", bgcolor: "rgba(99,102,241,0.12)" },
-                      }}
-                    >
-                      {copiedEmail ? "Copied!" : "Copy Email"}
-                    </Button>
-
-                    <Button
-                      size="small" variant="contained"
-                      component="a"
-                      href={`mailto:${developerEmail}?subject=${encodeURIComponent("FocusLearner Support Inquiry")}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.location.href = `mailto:${developerEmail}?subject=${encodeURIComponent("FocusLearner Support Inquiry")}`;
-                      }}
-                      startIcon={<OpenInNewRoundedIcon />}
-                      sx={{
-                        borderRadius: "var(--r-md)", background: "var(--grad-primary)",
-                        fontSize: "0.78rem", fontWeight: 700, flex: 1,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Email Us
-                    </Button>
-                  </Box>
-                </Box>
 
                 {/* 2. Searchable FAQs Accordion */}
                 <Box>
@@ -946,8 +892,65 @@ const Settings = () => {
                     </Box>
                   )}
                 </Box>
+
+                {/* Developer Contact Card (Relocated to Bottom) */}
+                <Box sx={{
+                  p: 2.5, borderRadius: "var(--r-lg)",
+                  bgcolor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)",
+                  display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "flex-start", sm: "center" },
+                  justifyContent: "space-between", gap: 2, mt: 1
+                }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <Box sx={{ width: 42, height: 42, borderRadius: "var(--r-md)", bgcolor: "rgba(99,102,241,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <EmailRoundedIcon sx={{ color: "var(--indigo-lt)", fontSize: 22 }} />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ fontWeight: 800, fontSize: "0.92rem", color: "#f1f5f9" }}>
+                        Developer Direct Support
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.78rem", color: "var(--indigo-lt)", fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}>
+                        {developerEmail}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", sm: "auto" } }}>
+                    <Button
+                      size="small" variant="outlined"
+                      startIcon={copiedEmail ? <CheckCircleRoundedIcon sx={{ color: "var(--emerald)" }} /> : <ContentCopyRoundedIcon />}
+                      onClick={handleCopyEmail}
+                      sx={{
+                        borderRadius: "var(--r-md)", borderColor: "rgba(99,102,241,0.3)",
+                        color: copiedEmail ? "var(--emerald)" : "var(--indigo-lt)",
+                        fontSize: "0.78rem", fontWeight: 700, flex: 1,
+                        "&:hover": { borderColor: "var(--indigo-lt)", bgcolor: "rgba(99,102,241,0.12)" },
+                      }}
+                    >
+                      {copiedEmail ? "Copied!" : "Copy Email"}
+                    </Button>
+
+                    <Button
+                      size="small" variant="contained"
+                      component="a"
+                      href={`mailto:${developerEmail}?subject=${encodeURIComponent("FocusLearner Support Inquiry")}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.location.href = `mailto:${developerEmail}?subject=${encodeURIComponent("FocusLearner Support Inquiry")}`;
+                      }}
+                      startIcon={<OpenInNewRoundedIcon />}
+                      sx={{
+                        borderRadius: "var(--r-md)", background: "var(--grad-primary)",
+                        fontSize: "0.78rem", fontWeight: 700, flex: 1,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Email Us
+                    </Button>
+                  </Box>
+                </Box>
               </Box>
             )}
+
           </motion.div>
         </AnimatePresence>
       </Box>

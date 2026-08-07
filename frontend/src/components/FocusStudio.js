@@ -26,8 +26,13 @@ import CheckCircleRoundedIcon   from "@mui/icons-material/CheckCircleRounded";
 import ViewSidebarRoundedIcon   from "@mui/icons-material/ViewSidebarRounded";
 import FullscreenRoundedIcon    from "@mui/icons-material/FullscreenRounded";
 import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
-import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
+import MoreVertRoundedIcon     from "@mui/icons-material/MoreVertRounded";
+import CloudDoneRoundedIcon    from "@mui/icons-material/CloudDoneRounded";
+import CloudSyncRoundedIcon    from "@mui/icons-material/CloudSyncRounded";
+import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import { focusAPI, lectureAPI } from "../services/api";
+import SubjectLabs from "./labs/SubjectLabs";
+
 
 const extractYouTubeId = (url) => {
   if (!url) return "";
@@ -582,6 +587,26 @@ const FocusStudio = () => {
   }, [running, phase, focusMin, breakMin]);
 
   const elapsedMin = Math.floor(elapsedSec / 60);
+  const [saveStatus, setSaveStatus] = useState("saved"); // "saved" | "saving" | "error"
+
+  /* Incremental Autosave (Every 30 seconds) */
+  useEffect(() => {
+    const autosaveInterval = setInterval(() => {
+      if (elapsedSec > 0) {
+        setSaveStatus("saving");
+        focusAPI.autosave({
+          session_id: session.id,
+          elapsed_seconds: elapsedSec,
+          selected_lab: session.selected_lab,
+          video_id: videoId
+        })
+        .then(() => setSaveStatus("saved"))
+        .catch(() => setSaveStatus("error"));
+      }
+    }, 30000);
+    return () => clearInterval(autosaveInterval);
+  }, [elapsedSec, session.id, session.selected_lab, videoId]);
+
 
   const getScaledXP = (mins) => {
     if (mins >= 90) return { xp: 650, label: "Elite Focus!" };
@@ -646,7 +671,8 @@ const FocusStudio = () => {
 
   const renderTab = () => {
     switch (activeTab) {
-      case "lab":       return <LabPanel session={session} />;
+      case "lab":       return <SubjectLabs subjectFocus={session.subject_focus} topic={session.topic} initialLabId={session.selected_lab} />;
+
       case "notes":     return <NotesPanel session={session} />;
       case "search":    return <SearchPanel session={session} />;
       case "chat":      return <ChatPanel session={session} />;
@@ -701,7 +727,20 @@ const FocusStudio = () => {
           <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", fontFamily: "JetBrains Mono, monospace" }}>
             #{sessionCount}
           </Typography>
+
+          {/* Autosave Status Badge */}
+          <Tooltip title={saveStatus === "saved" ? "Session synced with PostgreSQL cloud" : saveStatus === "saving" ? "Autosaving session..." : "Autosave failed — retrying"}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, px: 1, py: 0.3, borderRadius: "100px", bgcolor: saveStatus === "saved" ? "rgba(16,185,129,0.1)" : saveStatus === "saving" ? "rgba(99,102,241,0.1)" : "rgba(239,68,68,0.1)", border: `1px solid ${saveStatus === "saved" ? "rgba(16,185,129,0.25)" : saveStatus === "saving" ? "rgba(99,102,241,0.25)" : "rgba(239,68,68,0.25)"}` }}>
+              {saveStatus === "saved" && <CloudDoneRoundedIcon sx={{ fontSize: 13, color: "var(--emerald)" }} />}
+              {saveStatus === "saving" && <CloudSyncRoundedIcon sx={{ fontSize: 13, color: "var(--indigo-lt)" }} />}
+              {saveStatus === "error" && <ErrorOutlineRoundedIcon sx={{ fontSize: 13, color: "var(--rose)" }} />}
+              <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: saveStatus === "saved" ? "var(--emerald)" : saveStatus === "saving" ? "var(--indigo-lt)" : "var(--rose)" }}>
+                {saveStatus === "saved" ? "Saved" : saveStatus === "saving" ? "Saving..." : "Save Failed"}
+              </Typography>
+            </Box>
+          </Tooltip>
         </Box>
+
 
         {/* Controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>

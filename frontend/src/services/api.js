@@ -42,8 +42,20 @@ api.interceptors.response.use(
 
 // Focus Session API
 export const focusAPI = {
-  lock: (subjectFocus) =>
-    api.post('/focus/lock', { subject_focus: subjectFocus }),
+  lock: (data) =>
+    api.post('/focus/lock', typeof data === 'string' ? { subject_focus: data } : data),
+
+  autosave: (data) =>
+    api.post('/focus/autosave', data),
+
+  getSessions: () =>
+    api.get('/focus/sessions'),
+
+  updateSession: (id, data) =>
+    api.put(`/focus/${id}`, data),
+
+  deleteSession: (id) =>
+    api.delete(`/focus/${id}`),
 
   unlock: () =>
     api.post('/focus/unlock'),
@@ -63,6 +75,7 @@ export const focusAPI = {
   logDistraction: (duration, reason, timestamp) =>
     api.post('/focus/distraction/log', { duration, reason, timestamp }),
 };
+
 
 // Content API
 export const contentAPI = {
@@ -145,10 +158,16 @@ export const authAPI = {
   changePassword: (oldPassword, newPassword) =>
     api.post('/auth/change-password', { old_password: oldPassword, new_password: newPassword }),
 
+  forgotPassword: (email) =>
+    api.post('/auth/forgot-password', { email }),
+
+  resetPassword: (data) =>
+    api.post('/auth/reset-password', data),
+
   checkUsername: (username) =>
     api.get('/auth/check-username', { params: { username } }),
-
 };
+
 
 // Preferences API
 export const preferencesAPI = {

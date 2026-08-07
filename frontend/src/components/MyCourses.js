@@ -87,7 +87,7 @@ const SessionCard = ({ session, index, onResume }) => {
         <Box sx={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, bgcolor: color, borderRadius: "4px 0 0 4px", opacity: hovered ? 1 : 0.4, transition: "opacity 0.25s" }} />
 
         <Box sx={{ p: 2, pl: 2.5 }}>
-          {/* Row 1: subject + status + date */}
+          {/* Row 1: subject + status + date + 3-dots options */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
               <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
@@ -104,6 +104,7 @@ const SessionCard = ({ session, index, onResume }) => {
               </Typography>
             </Box>
           </Box>
+
 
           {/* Row 2: title */}
           <Typography sx={{
