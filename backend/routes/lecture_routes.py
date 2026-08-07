@@ -273,24 +273,70 @@ def generate_quiz():
         return jsonify({'error': 'Failed to generate quiz'}), 500
 
 
+from datetime import datetime
+from models import ActivityResult
 from services.learning_loop_service import LearningLoopService
 loop_service = LearningLoopService()
 
 @lecture_routes.route('/<int:lecture_id>/complete', methods=['POST'])
 @token_required
 def complete_lecture(lecture_id):
-    """Mark lecture as complete and advance learning loop"""
+    """Mark lecture as complete, award scaled XP based on study time, and advance learning loop"""
     user_id = request.current_user_id
     lecture = Lecture.query.filter_by(id=lecture_id, user_id=user_id).first()
     
     if not lecture:
         return jsonify({'error': 'Lecture not found'}), 404
         
+    data = request.get_json() or {}
+    elapsed_minutes = data.get('elapsed_minutes', 30)
+    try:
+        elapsed_minutes = int(elapsed_minutes)
+    except (ValueError, TypeError):
+        elapsed_minutes = 30
+        
+    if elapsed_minutes < 30:
+        return jsonify({'error': 'Minimum 30 minutes required to complete session'}), 400
+
+    # Calculate scaled XP reward
+    if elapsed_minutes >= 90:
+        xp_earned = 650
+        label = "Elite Focus!"
+    elif elapsed_minutes >= 60:
+        xp_earned = 400
+        label = "Brilliant!"
+    elif elapsed_minutes >= 45:
+        xp_earned = 250
+        label = "Deep Focus!"
+    else:
+        xp_earned = 150
+        label = "Solid Session!"
+
+    lecture.is_completed = True
+    lecture.completed_at = datetime.utcnow()
+    lecture.study_minutes_logged = elapsed_minutes
+    
+    # Save activity result for XP credit
+    act = ActivityResult(
+        user_id=user_id,
+        module_id="focus_session",
+        score=100,
+        xp_earned=xp_earned,
+        summary=f"Completed {lecture.subject}: {lecture.topic} ({elapsed_minutes}m) - {label}"
+    )
+    db.session.add(act)
+
     loop_status = None
     if lecture.learning_intent_id:
         loop_status = loop_service.update_stage(user_id, lecture.learning_intent_id, success=True)
         
+    db.session.commit()
+    
     return jsonify({
-        'message': 'Lecture completed',
+        'message': 'Lecture completed successfully',
+        'xp_earned': xp_earned,
+        'label': label,
+        'elapsed_minutes': elapsed_minutes,
+        'lecture': lecture.to_dict(),
         'loop_status': loop_status
     }), 200

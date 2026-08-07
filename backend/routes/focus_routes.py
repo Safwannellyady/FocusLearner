@@ -140,28 +140,27 @@ def update_current_video():
 @focus_routes.route('/content', methods=['GET'])
 @token_required
 def get_focused_content():
-    """Get filtered content for the current focus session"""
+    """Get filtered content for the current focus session or custom search query"""
     user_id = request.current_user_id
-    query = request.args.get('query', '')
+    query = request.args.get('query', '').strip()
     
     session = FocusSession.query.filter_by(
         user_id=user_id,
         is_locked=True
     ).first()
     
-    if not session:
-        return jsonify({'error': 'No active focus session found'}), 404
+    subject_focus = session.subject_focus if session else (query or "General Science")
+    search_term = query or subject_focus
     
-    # Get filtered YouTube videos
+    # Get filtered YouTube videos (up to 20 items)
     videos = youtube_service.search_videos(
-        query=query or session.subject_focus,
-        subject_focus=session.subject_focus,
-        max_results=10
+        query=search_term,
+        subject_focus=subject_focus,
+        max_results=20
     )
     
-    
     return jsonify({
-        'subject_focus': session.subject_focus,
+        'subject_focus': subject_focus,
         'videos': videos,
         'count': len(videos)
     }), 200

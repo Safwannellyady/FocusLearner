@@ -267,6 +267,9 @@ class Lecture(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True, index=True)
+    is_completed = db.Column(db.Boolean, default=False, index=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    study_minutes_logged = db.Column(db.Integer, default=0)
     
     __table_args__ = (
         db.Index('idx_lecture_user_subject', 'user_id', 'subject', 'is_active'),
@@ -288,7 +291,10 @@ class Lecture(db.Model):
             'quiz_config': json.loads(self.quiz_config) if self.quiz_config else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'is_completed': self.is_completed or False,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+            'study_minutes_logged': self.study_minutes_logged or 0
         }
 
 

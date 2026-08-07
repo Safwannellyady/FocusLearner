@@ -171,6 +171,7 @@ export const lectureAPI = {
   getById: (id) => api.get(`/lectures/${id}`),
   update: (id, lecture) => api.put(`/lectures/${id}`, lecture),
   delete: (id) => api.delete(`/lectures/${id}`),
+  complete: (id, payload) => api.post(`/lectures/${id}/complete`, payload),
   generateQuiz: (subject, topic, count, videoContext) =>
     api.post('/lectures/quiz/generate', { subject, topic, count, video_context: videoContext }),
 };

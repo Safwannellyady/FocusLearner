@@ -23,7 +23,11 @@ import AttachFileRoundedIcon    from "@mui/icons-material/AttachFileRounded";
 import RefreshRoundedIcon       from "@mui/icons-material/RefreshRounded";
 import OpenInNewRoundedIcon     from "@mui/icons-material/OpenInNewRounded";
 import CheckCircleRoundedIcon   from "@mui/icons-material/CheckCircleRounded";
-import { focusAPI } from "../services/api";
+import ViewSidebarRoundedIcon   from "@mui/icons-material/ViewSidebarRounded";
+import FullscreenRoundedIcon    from "@mui/icons-material/FullscreenRounded";
+import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
+import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
+import { focusAPI, lectureAPI } from "../services/api";
 
 const extractYouTubeId = (url) => {
   if (!url) return "";
@@ -500,24 +504,46 @@ const FocusStudio = () => {
   })();
 
   const initialVid = extractYouTubeId(session.youtubeId) || extractYouTubeId(session.youtube_id) || extractYouTubeId(session.youtube_url);
-  const [videoId, setVideoId] = useState(initialVid || "");
+  const [videoId, setVideoId]       = useState(initialVid || "");
+  const [videoList, setVideoList]   = useState([]);
+  const [theaterMode, setTheaterMode] = useState(false);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completionModal, setCompletionModal] = useState({ open: false, xp: 0, label: "", minutes: 0 });
+  const [sidebarSearch, setSidebarSearch] = useState("");
+  const [isSearchingSidebar, setIsSearchingSidebar] = useState(false);
 
   useEffect(() => {
-    const currentClean = extractYouTubeId(videoId);
-    if (!currentClean) {
-      const query = session.topic || session.subject_focus || session.subjectName || "Fluid Dynamics";
-      focusAPI.getContent(query)
-        .then(res => {
-          const results = res?.data?.results || res?.data?.videos || [];
-          if (results.length > 0) {
+    const query = session.topic || session.subject_focus || session.subjectName || session.title || "Neurosciences";
+    focusAPI.getContent(query)
+      .then(res => {
+        const results = res?.data?.results || res?.data?.videos || [];
+        setVideoList(results);
+        if (results.length > 0) {
+          const currentClean = extractYouTubeId(videoId);
+          // If videoId is empty or points to default/unavailable study tips video, auto-sync to first result
+          if (!currentClean || currentClean === "inWWhN5EWM4" || currentClean === "p60rN9JEapg") {
             const rawVid = results[0].video_id || results[0].id || results[0].url || "";
             const vid = extractYouTubeId(rawVid);
             if (vid) setVideoId(vid);
           }
-        })
-        .catch(err => console.error("Video search fallback error:", err));
-    }
-  }, [videoId, session.topic, session.subject_focus, session.subjectName]);
+        }
+      })
+      .catch(err => console.error("Video search fallback error:", err));
+  }, [session.topic, session.subject_focus, session.subjectName, session.title]);
+
+  const handleSidebarSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    const q = sidebarSearch.trim() || session.topic || session.subject_focus || "Neurosciences";
+    setIsSearchingSidebar(true);
+    focusAPI.getContent(q)
+      .then(res => {
+        const results = res?.data?.results || res?.data?.videos || [];
+        if (results.length > 0) setVideoList(results);
+      })
+      .catch(err => console.error("Sidebar search error:", err))
+      .finally(() => setIsSearchingSidebar(false));
+  };
 
   /* Timer state */
   const [phase,     setPhase]    = useState("focus");   // focus | break
@@ -534,10 +560,11 @@ const FocusStudio = () => {
   const dragRef = useRef(null);
   const isDragging = useRef(false);
 
-  /* Timer tick */
+  /* Timer tick & elapsed study seconds tracking */
   useEffect(() => {
     if (running) {
       intervalRef.current = setInterval(() => {
+        setElapsedSec(sec => sec + 1);
         setRemaining(r => {
           if (r <= 1) {
             const next = phase === "focus" ? "break" : "focus";
@@ -553,6 +580,43 @@ const FocusStudio = () => {
     }
     return () => clearInterval(intervalRef.current);
   }, [running, phase, focusMin, breakMin]);
+
+  const elapsedMin = Math.floor(elapsedSec / 60);
+
+  const getScaledXP = (mins) => {
+    if (mins >= 90) return { xp: 650, label: "Elite Focus!" };
+    if (mins >= 60) return { xp: 400, label: "Brilliant!" };
+    if (mins >= 45) return { xp: 250, label: "Deep Focus!" };
+    if (mins >= 30) return { xp: 150, label: "Solid Session!" };
+    return { xp: 0, label: "Below 30m" };
+  };
+
+  const handleCompleteSession = async () => {
+    if (elapsedMin < 30) return;
+    setIsCompleting(true);
+    try {
+      const lectureId = session.lectureId;
+      if (lectureId) {
+        const res = await lectureAPI.complete(lectureId, { elapsed_minutes: elapsedMin });
+        const data = res?.data || {};
+        setCompletionModal({
+          open: true,
+          xp: data.xp_earned || getScaledXP(elapsedMin).xp,
+          label: data.label || getScaledXP(elapsedMin).label,
+          minutes: elapsedMin
+        });
+      } else {
+        const { xp, label } = getScaledXP(elapsedMin);
+        setCompletionModal({ open: true, xp, label, minutes: elapsedMin });
+      }
+    } catch (err) {
+      console.error("Completion error:", err);
+      const { xp, label } = getScaledXP(elapsedMin);
+      setCompletionModal({ open: true, xp, label, minutes: elapsedMin });
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   /* Divider drag */
   const onMouseMove = useCallback((e) => {
@@ -640,19 +704,54 @@ const FocusStudio = () => {
         </Box>
 
         {/* Controls */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Tooltip title={running ? "Pause" : "Resume"}>
-            <IconButton size="small" onClick={() => setRunning(r => !r)} sx={{ color: "var(--indigo-lt)", bgcolor: "rgba(99,102,241,0.1)", width: 28, height: 28, borderRadius: "var(--r-sm)" }}>
-              {running ? <PauseRoundedIcon sx={{ fontSize: 14 }} /> : <PlayArrowRoundedIcon sx={{ fontSize: 14 }} />}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+          {/* Milestone indicator */}
+          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.75, px: 1.25, py: 0.4, borderRadius: "var(--r-md)", bgcolor: elapsedMin >= 30 ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${elapsedMin >= 30 ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.08)"}` }}>
+            <BoltRoundedIcon sx={{ fontSize: 15, color: elapsedMin >= 30 ? "var(--emerald)" : "var(--amber)" }} />
+            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: elapsedMin >= 30 ? "var(--emerald)" : "var(--text-mid)" }}>
+              {elapsedMin < 30 ? `${elapsedMin}m / 30m min` : `${elapsedMin}m (${getScaledXP(elapsedMin).xp} XP • ${getScaledXP(elapsedMin).label})`}
+            </Typography>
+          </Box>
+
+          <Tooltip title={theaterMode ? "Split View (Sidebar)" : "Theater View (Full Video)"}>
+            <IconButton size="small" onClick={() => setTheaterMode(t => !t)} sx={{ color: "var(--indigo-lt)", bgcolor: "rgba(99,102,241,0.1)", width: 30, height: 30, borderRadius: "var(--r-sm)" }}>
+              {theaterMode ? <ViewSidebarRoundedIcon sx={{ fontSize: 16 }} /> : <FullscreenRoundedIcon sx={{ fontSize: 16 }} />}
             </IconButton>
           </Tooltip>
-          <Tooltip title="Skip phase">
-            <IconButton size="small"
-              onClick={() => { const next = phase === "focus" ? "break" : "focus"; setPhase(next); setRemaining((next === "focus" ? focusMin : breakMin) * 60); }}
-              sx={{ color: "var(--text-dim)", width: 28, height: 28, borderRadius: "var(--r-sm)", "&:hover": { color: "#f1f5f9" } }}>
-              <SkipNextRoundedIcon sx={{ fontSize: 14 }} />
+
+          <Tooltip title={running ? "Pause Timer" : "Resume Timer"}>
+            <IconButton size="small" onClick={() => setRunning(r => !r)} sx={{ color: "var(--indigo-lt)", bgcolor: "rgba(99,102,241,0.1)", width: 30, height: 30, borderRadius: "var(--r-sm)" }}>
+              {running ? <PauseRoundedIcon sx={{ fontSize: 15 }} /> : <PlayArrowRoundedIcon sx={{ fontSize: 15 }} />}
             </IconButton>
           </Tooltip>
+
+          {/* Complete / Done button */}
+          {elapsedMin < 30 ? (
+            <Tooltip title={`Study at least 30 minutes to complete session & claim XP (Studied ${elapsedMin}m / 30m)`}>
+              <Box sx={{ display: "inline-block" }}>
+                <Box sx={{ px: 1.5, py: 0.5, borderRadius: "var(--r-md)", bgcolor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--text-dim)", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <CheckCircleRoundedIcon sx={{ fontSize: 14 }} />
+                  Complete ({30 - elapsedMin}m left)
+                </Box>
+              </Box>
+            </Tooltip>
+          ) : (
+            <Box
+              onClick={handleCompleteSession}
+              sx={{
+                px: 1.5, py: 0.5, borderRadius: "var(--r-md)",
+                background: "linear-gradient(135deg,#10b981,#059669)",
+                color: "#fff", fontSize: "0.75rem", fontWeight: 800,
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 0.5,
+                boxShadow: "0 2px 10px rgba(16,185,129,0.35)", transition: "all 0.15s",
+                "&:hover": { transform: "translateY(-1px)", boxShadow: "0 4px 14px rgba(16,185,129,0.5)" },
+              }}
+            >
+              {isCompleting ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : <EmojiEventsRoundedIcon sx={{ fontSize: 15 }} />}
+              Complete & Claim {getScaledXP(elapsedMin).xp} XP 🏆
+            </Box>
+          )}
+
           <Box
             onClick={handleEndSession}
             sx={{
@@ -671,30 +770,154 @@ const FocusStudio = () => {
       {/* ── Main split area ── */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
 
-        {/* TOP — Video panel */}
+        {/* TOP — Video & YouTube Sidebar Panel */}
         <Box sx={{ height: `${topPct}%`, flexShrink: 0, bgcolor: "#000", position: "relative", overflow: "hidden" }}>
-          {extractYouTubeId(videoId) ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${extractYouTubeId(videoId)}?autoplay=1&rel=0`}
-              style={{ width: "100%", height: "100%", border: "none" }}
-              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title="Session Video"
-            />
+          {theaterMode ? (
+            /* Theater Mode: 100% width video */
+            extractYouTubeId(videoId) ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${extractYouTubeId(videoId)}?autoplay=1&rel=0`}
+                style={{ width: "100%", height: "100%", border: "none" }}
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="Session Video"
+              />
+            ) : (
+              <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 3, repeat: Infinity }}>
+                  <Box sx={{ width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle,${accent}44,transparent)`, border: `2px solid ${accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <TimerRoundedIcon sx={{ fontSize: 36, color: accent }} />
+                  </Box>
+                </motion.div>
+                <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "1rem", color: "#f1f5f9" }}>
+                  {phase === "focus" ? "Focus Phase — Stay locked in" : "Break Phase — Rest your mind"}
+                </Typography>
+                <Typography sx={{ fontSize: "0.8rem", color: "var(--text-dim)", textAlign: "center", maxWidth: 320 }}>
+                  {session.topic ? `Studying: ${session.topic}` : "No video attached."}
+                </Typography>
+              </Box>
+            )
           ) : (
-            <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
-              {/* Ambient focus graphic */}
-              <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 3, repeat: Infinity }}>
-                <Box sx={{ width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle,${accent}44,transparent)`, border: `2px solid ${accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <TimerRoundedIcon sx={{ fontSize: 36, color: accent }} />
+            /* Split View: Video Player + YouTube Sidebar */
+            <Box sx={{ display: "flex", width: "100%", height: "100%" }}>
+              {/* Left Video Player */}
+              <Box sx={{ flex: "1 1 70%", height: "100%", bgcolor: "#000" }}>
+                {extractYouTubeId(videoId) ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${extractYouTubeId(videoId)}?autoplay=1&rel=0`}
+                    style={{ width: "100%", height: "100%", border: "none" }}
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Session Video"
+                  />
+                ) : (
+                  <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1.5 }}>
+                    <TimerRoundedIcon sx={{ fontSize: 36, color: accent }} />
+                    <Typography sx={{ fontSize: "0.88rem", color: "var(--text-mid)" }}>Select a video from the sidebar list</Typography>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Right YouTube-style Sidebar */}
+              <Box sx={{ width: { xs: "240px", sm: "310px", md: "340px" }, flexShrink: 0, height: "100%", bgcolor: "#0b1320", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column" }}>
+                <Box sx={{ p: 1.25, borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.85rem", color: "#f1f5f9" }}>
+                      Related Videos ({videoList.length})
+                    </Typography>
+                    <Tooltip title="Theater Mode (Full Screen Video)">
+                      <IconButton size="small" onClick={() => setTheaterMode(true)} sx={{ color: "var(--text-dim)" }}>
+                        <FullscreenRoundedIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+
+                  {/* Interactive Search Bar in Sidebar */}
+                  <Box
+                    component="form"
+                    onSubmit={handleSidebarSearchSubmit}
+                    sx={{
+                      display: "flex", alignItems: "center", gap: 0.5,
+                      bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+                      borderRadius: "var(--r-md)", px: 1, py: 0.4, transition: "all 0.15s",
+                      "&:focus-within": { borderColor: "rgba(99,102,241,0.5)", bgcolor: "rgba(99,102,241,0.05)" }
+                    }}
+                  >
+                    <SearchRoundedIcon sx={{ fontSize: 14, color: "var(--text-dim)" }} />
+                    <Box
+                      component="input"
+                      value={sidebarSearch}
+                      onChange={e => setSidebarSearch(e.target.value)}
+                      placeholder="Search YouTube topics..."
+                      sx={{
+                        width: "100%", border: "none", outline: "none",
+                        bgcolor: "transparent", color: "#f1f5f9", fontSize: "0.75rem",
+                        fontFamily: "Plus Jakarta Sans, sans-serif"
+                      }}
+                    />
+                    {isSearchingSidebar ? (
+                      <CircularProgress size={12} sx={{ color: "var(--indigo)" }} />
+                    ) : (
+                      <IconButton size="small" type="submit" sx={{ p: 0.2, color: "var(--text-dim)" }}>
+                        <SendRoundedIcon sx={{ fontSize: 12 }} />
+                      </IconButton>
+                    )}
+                  </Box>
                 </Box>
-              </motion.div>
-              <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "1rem", color: "#f1f5f9" }}>
-                {phase === "focus" ? "Focus Phase — Stay locked in" : "Break Phase — Rest your mind"}
-              </Typography>
-              <Typography sx={{ fontSize: "0.8rem", color: "var(--text-dim)", textAlign: "center", maxWidth: 320 }}>
-                {session.topic ? `Studying: ${session.topic}` : "No video attached. Use the tool dock below."}
-              </Typography>
+
+                <Box sx={{ flex: 1, overflowY: "auto", p: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                  {videoList.length > 0 ? (
+                    videoList.map((v) => {
+                      const vId = extractYouTubeId(v.video_id || v.id || v.url);
+                      const isSel = vId && vId === extractYouTubeId(videoId);
+                      const thumbUrl = v.thumbnail || `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`;
+                      return (
+                        <Box
+                          key={vId || v.title}
+                          onClick={() => vId && setVideoId(vId)}
+                          sx={{
+                            display: "flex", gap: 1, p: 0.75, borderRadius: "var(--r-md)",
+                            cursor: "pointer", transition: "all 0.15s",
+                            bgcolor: isSel ? "rgba(99,102,241,0.18)" : "rgba(255,255,255,0.02)",
+                            border: `1px solid ${isSel ? "rgba(99,102,241,0.45)" : "transparent"}`,
+                            "&:hover": { bgcolor: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.2)" },
+                          }}
+                        >
+                          <Box sx={{ width: 104, height: 58, borderRadius: "6px", overflow: "hidden", position: "relative", bgcolor: "#0f172a", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <img
+                              src={thumbUrl}
+                              alt={v.title}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://img.youtube.com/vi/${vId}/hqdefault.jpg`;
+                              }}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                            {isSel && (
+                              <Box sx={{ position: "absolute", inset: 0, bgcolor: "rgba(99,102,241,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <Typography sx={{ fontSize: "0.6rem", fontWeight: 900, color: "#fff", bgcolor: "var(--indigo)", px: 0.75, py: 0.2, borderRadius: 1 }}>PLAYING</Typography>
+                              </Box>
+                            )}
+                          </Box>
+                          <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                            <Typography sx={{ fontWeight: 700, fontSize: "0.74rem", color: isSel ? "#a5b4fc" : "#f1f5f9", lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {v.title}
+                            </Typography>
+                            <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)", mt: 0.4 }} noWrap>
+                              {v.channel || "Educational Video"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      );
+                    })
+                  ) : (
+                    <Box sx={{ p: 2, textAlign: "center" }}>
+                      <CircularProgress size={20} sx={{ color: "var(--indigo)", mb: 1 }} />
+                      <Typography sx={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Fetching related videos…</Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
             </Box>
           )}
         </Box>
@@ -753,6 +976,42 @@ const FocusStudio = () => {
           </Box>
         </Box>
       </Box>
+
+      {/* Celebration XP Completion Modal */}
+      <AnimatePresence>
+        {completionModal.open && (
+          <Box sx={{ position: "fixed", inset: 0, zIndex: 9999, bgcolor: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}>
+              <Box sx={{ bgcolor: "#0f172a", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", p: 4, maxWidth: 420, textAlign: "center", boxShadow: "0 20px 40px rgba(0,0,0,0.6)" }}>
+                <Box sx={{ width: 72, height: 72, borderRadius: "50%", bgcolor: "rgba(16,185,129,0.15)", border: "2px solid var(--emerald)", display: "flex", alignItems: "center", justifyContent: "center", mx: "auto", mb: 2 }}>
+                  <EmojiEventsRoundedIcon sx={{ fontSize: 40, color: "var(--emerald)" }} />
+                </Box>
+                <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: "1.5rem", color: "#f1f5f9", mb: 0.5 }}>
+                  Session Completed! 🎉
+                </Typography>
+                <Typography sx={{ fontSize: "0.9rem", color: "var(--emerald)", fontWeight: 700, mb: 1 }}>
+                  {completionModal.label}
+                </Typography>
+                <Typography sx={{ fontSize: "0.85rem", color: "var(--text-dim)", mb: 3 }}>
+                  You spent {completionModal.minutes} minutes studying {session.topic || session.subject_focus || "your topic"}.
+                </Typography>
+                <Box sx={{ bgcolor: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "var(--r-md)", p: 2, mb: 3 }}>
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase" }}>Reward Claimed</Typography>
+                  <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: "1.8rem", color: "#fbbf24", mt: 0.25 }}>
+                    +{completionModal.xp} XP
+                  </Typography>
+                </Box>
+                <Box
+                  onClick={() => { setCompletionModal({ open: false, xp: 0, label: "", minutes: 0 }); navigate("/my-courses?tab=completed"); }}
+                  sx={{ width: "100%", py: 1.25, borderRadius: "var(--r-md)", background: "var(--grad-primary)", color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", textAlign: "center", boxShadow: "0 4px 14px rgba(99,102,241,0.4)" }}
+                >
+                  View Completed Sessions
+                </Box>
+              </Box>
+            </motion.div>
+          </Box>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Box, Typography, Chip, LinearProgress, CircularProgress } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { lectureAPI, focusAPI } from "../services/api";
@@ -221,6 +221,11 @@ const EmptyState = ({ onNew }) => (
 /* ══ MyCourses ════════════════════════════════════════════════════════════════ */
 const MyCourses = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get("tab") === "completed" ? "completed" : "active";
+
+  const [activeTab,   setActiveTab]   = useState(initialTab);
   const [sessions,    setSessions]    = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [search,      setSearch]      = useState("");
@@ -275,6 +280,7 @@ const MyCourses = () => {
       youtube_url: session.youtube_url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : ""),
       youtubeId: videoId || "",
       youtube_id: videoId || "",
+      lectureId: session.id,
       focus_minutes: 25,
       break_minutes: 5,
     }));
@@ -287,11 +293,13 @@ const MyCourses = () => {
       const q = search.toLowerCase();
       const matchSearch = !q || s.title?.toLowerCase().includes(q) || s.subject?.toLowerCase().includes(q) || s.topic?.toLowerCase().includes(q);
       const matchSubj   = filterSubj === "All" || s.subject === filterSubj;
-      return matchSearch && matchSubj;
+      const isComp      = Boolean(s.is_completed || s.status === "completed");
+      const matchTab    = activeTab === "completed" ? isComp : !isComp;
+      return matchSearch && matchSubj && matchTab;
     })
     .sort((a, b) => {
-      if (sortBy === "Recent")   return new Date(b.date || 0) - new Date(a.date || 0);
-      if (sortBy === "Longest")  return (b.duration || 0) - (a.duration || 0);
+      if (sortBy === "Recent")   return new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0);
+      if (sortBy === "Longest")  return (b.duration || b.study_minutes_logged || 0) - (a.duration || a.study_minutes_logged || 0);
       if (sortBy === "Most XP")  return (b.xp || 0) - (a.xp || 0);
       if (sortBy === "Progress") return (b.progress || 0) - (a.progress || 0);
       return 0;
@@ -299,15 +307,44 @@ const MyCourses = () => {
 
   // Unique subjects in current data
   const uniqueSubjects = ["All", ...new Set(sessions.map(s => s.subject).filter(Boolean))];
+  const activeCount = sessions.filter(s => !(s.is_completed || s.status === "completed")).length;
+  const completedCount = sessions.filter(s => Boolean(s.is_completed || s.status === "completed")).length;
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: "auto" }}>
 
       {/* Header */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 2 }}>
         <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: { xs: "1.5rem", md: "1.9rem" }, color: "#f1f5f9", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
           My Sessions
         </Typography>
+        <Typography sx={{ color: "var(--text-dim)", fontSize: "0.85rem", mt: 0.5 }}>
+          {sessions.length} total session{sessions.length !== 1 ? "s" : ""} · {completedCount} completed
+        </Typography>
+      </Box>
+
+      {/* Active vs Completed Tab Bar */}
+      <Box sx={{ display: "flex", borderBottom: "1px solid var(--border)", mb: 2.5, gap: 1 }}>
+        {[
+          { id: "active", label: `In-Progress (${activeCount})` },
+          { id: "completed", label: `Completed (${completedCount})` }
+        ].map(t => (
+          <Box
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            sx={{
+              px: 2, py: 1, cursor: "pointer",
+              fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "0.9rem",
+              borderBottom: `2px solid ${activeTab === t.id ? "var(--indigo)" : "transparent"}`,
+              color: activeTab === t.id ? "var(--indigo-lt)" : "var(--text-dim)",
+              transition: "all 0.15s",
+              "&:hover": { color: "#f1f5f9" }
+            }}
+          >
+            {t.label}
+          </Box>
+        ))}
+      </Box>
         <Typography sx={{ color: "var(--text-dim)", fontSize: "0.85rem", mt: 0.5 }}>
           {sessions.length} session{sessions.length !== 1 ? "s" : ""} · {sessions.filter(s => s.status === "completed").length} completed
         </Typography>
