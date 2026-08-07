@@ -79,6 +79,14 @@ if not app.debug:
 from models import db
 db.init_app(app)
 
+with app.app_context():
+    try:
+        db.create_all()
+        app.logger.info('Database tables created/verified successfully')
+    except Exception as e:
+        app.logger.error(f'Error auto-creating database tables: {e}')
+
+
 # Import and register routes
 from routes.focus_routes import focus_routes
 from routes.content_routes import content_routes
