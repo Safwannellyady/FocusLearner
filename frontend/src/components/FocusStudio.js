@@ -26,7 +26,9 @@ import CheckCircleRoundedIcon   from "@mui/icons-material/CheckCircleRounded";
 import ViewSidebarRoundedIcon   from "@mui/icons-material/ViewSidebarRounded";
 import FullscreenRoundedIcon    from "@mui/icons-material/FullscreenRounded";
 import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
+import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
 import MoreVertRoundedIcon     from "@mui/icons-material/MoreVertRounded";
+
 import CloudDoneRoundedIcon    from "@mui/icons-material/CloudDoneRounded";
 import CloudSyncRoundedIcon    from "@mui/icons-material/CloudSyncRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
