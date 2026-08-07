@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Box, Typography, Chip, LinearProgress, CircularProgress } from "@mui/material";
+import {
+  Box, Typography, Chip, LinearProgress, CircularProgress, IconButton, Menu, MenuItem,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button
+} from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { lectureAPI, focusAPI } from "../services/api";
 
@@ -11,6 +14,9 @@ import BoltRoundedIcon          from "@mui/icons-material/BoltRounded";
 import AccessTimeRoundedIcon    from "@mui/icons-material/AccessTimeRounded";
 import EmojiEventsRoundedIcon   from "@mui/icons-material/EmojiEventsRounded";
 import AutoAwesomeRoundedIcon   from "@mui/icons-material/AutoAwesomeRounded";
+import MoreVertRoundedIcon     from "@mui/icons-material/MoreVertRounded";
+import EditRoundedIcon         from "@mui/icons-material/EditRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 
 /* ── Fallback demo data ────────────────────────────────────────────────────── */
@@ -41,11 +47,53 @@ const SUBJECTS_FILTER = ["All", ...Object.keys(SUBJECT_COLORS), "Neurosciences",
 const SORT_OPTIONS    = ["Recent", "Longest", "Most XP", "Progress"];
 
 /* ── Session card ──────────────────────────────────────────────────────────── */
-const SessionCard = ({ session, index, onResume }) => {
+const SessionCard = ({ session, index, onResume, onModify, onDelete }) => {
   const [hovered, setHovered] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTopic, setEditTopic] = useState(session.topic || session.title || "");
+  const [editSubject, setEditSubject] = useState(session.subject || "");
+  const [editDuration, setEditDuration] = useState(session.duration || 30);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const color  = subjectColor(session.subject);
   const status = STATUS_META[session.status] || STATUS_META.in_progress;
   const xp     = session.xp || Math.round((session.duration || 30) * 2.5);
+
+  const handleSaveEdit = async (e) => {
+    e.stopPropagation();
+    try {
+      if (session.db_id) {
+        await focusAPI.updateSession(session.db_id, {
+          topic: editTopic,
+          subject_focus: editSubject,
+          duration_minutes: editDuration
+        });
+      }
+      onModify && onModify(session.id, { topic: editTopic, subject: editSubject, duration: editDuration, title: editTopic });
+    } catch (err) {
+      console.error("Modify error:", err);
+    } finally {
+      setEditOpen(false);
+      setAnchorEl(null);
+    }
+  };
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    setIsDeleting(true);
+    try {
+      if (session.db_id) {
+        await focusAPI.deleteSession(session.db_id);
+      }
+      onDelete && onDelete(session.id);
+    } catch (err) {
+      console.error("Delete error:", err);
+    } finally {
+      setIsDeleting(false);
+      setAnchorEl(null);
+    }
+  };
 
   return (
     <motion.div
@@ -95,15 +143,101 @@ const SessionCard = ({ session, index, onResume }) => {
                 {session.subject}
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <Box sx={{ px: 0.9, py: 0.2, borderRadius: "100px", bgcolor: status.bg, border: `1px solid ${status.color}33` }}>
                 <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: status.color }}>{status.label}</Typography>
               </Box>
-              <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>
-                {session.date || ""}
-              </Typography>
+
+              {/* 3-Dots Options Menu Trigger */}
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAnchorEl(e.currentTarget);
+                }}
+                sx={{
+                  color: "var(--text-dim)", p: 0.4,
+                  "&:hover": { color: "#f1f5f9", bgcolor: "rgba(255,255,255,0.08)" }
+                }}
+              >
+                <MoreVertRoundedIcon sx={{ fontSize: 16 }} />
+              </IconButton>
             </Box>
           </Box>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={(e) => { e && e.stopPropagation(); setAnchorEl(null); }}
+            PaperProps={{
+              sx: { bgcolor: "#0f172a", border: "1px solid var(--border)", borderRadius: "var(--r-md)", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }
+            }}
+          >
+            <MenuItem
+              onClick={(e) => { e.stopPropagation(); setEditOpen(true); setAnchorEl(null); }}
+              sx={{ gap: 1.25, py: 0.8, px: 2, fontSize: "0.8rem", color: "#f1f5f9" }}
+            >
+              <EditRoundedIcon sx={{ fontSize: 16, color: "var(--indigo-lt)" }} />
+              Modify Session
+            </MenuItem>
+            <MenuItem
+              onClick={handleDelete}
+              disabled={isDeleting}
+              sx={{ gap: 1.25, py: 0.8, px: 2, fontSize: "0.8rem", color: "var(--rose)" }}
+            >
+              <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: "var(--rose)" }} />
+              {isDeleting ? "Deleting..." : "Delete Session"}
+            </MenuItem>
+          </Menu>
+
+          {/* Edit / Modify Session Dialog */}
+          <Dialog
+            open={editOpen}
+            onClose={(e) => { e && e.stopPropagation(); setEditOpen(false); }}
+            onClick={(e) => e.stopPropagation()}
+            PaperProps={{
+              sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", p: 1, minWidth: 320 }
+            }}
+          >
+            <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", pb: 1 }}>
+              Modify Focus Session
+            </DialogTitle>
+            <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+              <TextField
+                label="Topic / Title"
+                value={editTopic}
+                onChange={(e) => setEditTopic(e.target.value)}
+                size="small" fullWidth
+              />
+              <TextField
+                label="Subject Focus"
+                value={editSubject}
+                onChange={(e) => setEditSubject(e.target.value)}
+                size="small" fullWidth
+              />
+              <TextField
+                label="Duration (Minutes)"
+                type="number"
+                value={editDuration}
+                onChange={(e) => setEditDuration(e.target.value)}
+                size="small" fullWidth
+              />
+            </DialogContent>
+            <DialogActions sx={{ p: 2, pt: 1 }}>
+              <Button size="small" onClick={() => setEditOpen(false)} sx={{ color: "var(--text-mid)" }}>
+                Cancel
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handleSaveEdit}
+                sx={{ background: "var(--grad-primary)", fontWeight: 700 }}
+              >
+                Save Changes
+              </Button>
+            </DialogActions>
+          </Dialog>
+
 
 
           {/* Row 2: title */}
@@ -319,6 +453,15 @@ const MyCourses = () => {
     navigate("/focus");
   };
 
+  const handleModifySession = (sessionId, updatedData) => {
+    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updatedData, topic: updatedData.topic, subject: updatedData.subject, duration: updatedData.duration } : s));
+  };
+
+  const handleDeleteSession = (sessionId) => {
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
+  };
+
+
   // Filter + sort
   const visible = sessions
     .filter(s => {
@@ -479,13 +622,17 @@ const MyCourses = () => {
                 session={session}
                 index={i}
                 onResume={handleResume}
+                onModify={handleModifySession}
+                onDelete={handleDeleteSession}
               />
             ))}
           </AnimatePresence>
         </Box>
       )}
+
     </Box>
   );
 };
 
 export default MyCourses;
+
