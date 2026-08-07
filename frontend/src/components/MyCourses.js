@@ -345,10 +345,6 @@ const MyCourses = () => {
           </Box>
         ))}
       </Box>
-        <Typography sx={{ color: "var(--text-dim)", fontSize: "0.85rem", mt: 0.5 }}>
-          {sessions.length} session{sessions.length !== 1 ? "s" : ""} · {sessions.filter(s => s.status === "completed").length} completed
-        </Typography>
-      </Box>
 
       {/* Search + filter bar */}
       <Box sx={{ display: "flex", gap: 1, mb: 2.5, flexWrap: "wrap" }}>
