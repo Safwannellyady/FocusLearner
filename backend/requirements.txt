@@ -17,7 +17,7 @@ python-dotenv==1.0.0
 requests==2.31.0
 
 # YouTube transcript extraction
-youtube-transcript-api==0.6.1
+youtube-transcript-api==1.2.4
 
 # Google Cloud / AI
 google-cloud-aiplatform==1.38.1
