@@ -131,7 +131,10 @@ class PasswordResetToken(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
-    token = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    # Store a SHA-256 hash of the token, never the raw value — mirrors how we
+    # never store raw passwords. The raw token only ever exists in the email
+    # we send and briefly in memory on this request.
+    token_hash = db.Column(db.String(128), unique=True, nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
     is_used = db.Column(db.Boolean, default=False, index=True)
@@ -142,7 +145,6 @@ class PasswordResetToken(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
-            'token': self.token,
             'created_at': self.created_at.isoformat(),
             'expires_at': self.expires_at.isoformat(),
             'is_used': self.is_used

@@ -12,6 +12,7 @@ from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
 from config import get_config
+from extensions import limiter
 
 load_dotenv()
 
@@ -23,9 +24,30 @@ config_class = get_config()
 app.config.from_object(config_class)
 config_class.init_app(app)
 
-print("--- PRODUCTION DATABASE URI IN USE ---")
-print(app.config.get('SQLALCHEMY_DATABASE_URI'))
-print("---------------------------------------")
+if getattr(config_class, '_SECRET_KEY_IS_EPHEMERAL', False):
+    print(
+        "WARNING: SECRET_KEY is not set as an environment variable. A random "
+        "key was generated for this process only — every logged-in user will "
+        "be signed out the next time this service restarts or redeploys. "
+        "Set SECRET_KEY and JWT_SECRET_KEY as fixed environment variables in "
+        "Railway to fix this."
+    )
+
+# Rate limiting — storage_uri/default_limits are set on the Limiter
+# constructor in extensions.py (init_app() doesn't accept them). Storage
+# defaults to in-memory (per-worker); move RATELIMIT_STORAGE_URL to a Redis
+# URL once you run multiple Gunicorn workers so limits are enforced globally
+# instead of per-process.
+limiter.init_app(app)
+if not app.config.get('RATELIMIT_ENABLED', True):
+    limiter.enabled = False
+
+# NOTE: never print the full SQLALCHEMY_DATABASE_URI — it contains the DB
+# password and Railway captures stdout as logs. If you need to sanity-check
+# which database is active, print only the host/db name, e.g.:
+#   from urllib.parse import urlparse
+#   parsed = urlparse(app.config.get('SQLALCHEMY_DATABASE_URI', ''))
+#   app.logger.info(f"DB host={parsed.hostname} db={parsed.path.lstrip('/')}")
 
 
 # Configure CORS with proper settings for Cloudflare and local development
@@ -43,18 +65,30 @@ CORS(
 
 @app.before_request
 def handle_preflight():
-    """Handle CORS preflight OPTIONS requests cleanly before middleware"""
+    """Handle CORS preflight OPTIONS requests cleanly before middleware.
+
+    SECURITY: origins must be checked with an EXACT match against the
+    allow-list. The previous check accepted any origin containing the
+    substring "localhost" (e.g. https://localhost.attacker.com) and any
+    origin ending in ".pages.dev" — which is shared public Cloudflare Pages
+    hosting, so that accepted every other project on the platform too, not
+    just this one. Combined with Access-Control-Allow-Credentials: true,
+    that let any such origin make authenticated, cookie/credential-bearing
+    requests against this API.
+    """
     if request.method == "OPTIONS":
         response = make_response()
         origin = request.headers.get("Origin")
-        allowed = app.config.get('CORS_ORIGINS', [])
-        if origin and (origin in allowed or "localhost" in origin or origin.endswith(".pages.dev")):
+        allowed = set(app.config.get('CORS_ORIGINS', []))
+        allowed.add('https://focuslearner.pages.dev')
+        if origin and origin in allowed:
             response.headers.add("Access-Control-Allow-Origin", origin)
-        else:
-            response.headers.add("Access-Control-Allow-Origin", "https://focuslearner.pages.dev")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-        response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        response.headers.add("Access-Control-Allow-Credentials", "true")
+            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+            response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+        # If the origin isn't on the allow-list, we simply don't add any
+        # Access-Control-Allow-* headers — the browser will then correctly
+        # block the response on the caller's side.
         return response, 200
 
 
@@ -95,6 +129,14 @@ with app.app_context():
             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lab_config TEXT;",
             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS game_config TEXT;",
             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS quiz_config TEXT;",
+            # password_reset_tokens: move from storing raw tokens to storing
+            # a SHA-256 hash. The old `token` column's NOT NULL constraint is
+            # relaxed so new rows (which no longer set it) can still insert;
+            # it can be dropped entirely in a later cleanup once you've
+            # confirmed nothing else reads it.
+            "ALTER TABLE password_reset_tokens ADD COLUMN IF NOT EXISTS token_hash VARCHAR(128);",
+            "ALTER TABLE password_reset_tokens ALTER COLUMN token DROP NOT NULL;",
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_password_reset_tokens_token_hash ON password_reset_tokens (token_hash);",
         ]
         for query in migrations:
             try:

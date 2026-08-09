@@ -125,6 +125,11 @@ def is_token_blacklisted(token: str) -> bool:
     return token_hash in _token_blacklist
 
 
+def hash_reset_token(token: str) -> str:
+    """Hash a password-reset token for storage — never store the raw token."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
 def get_token_from_request() -> Optional[str]:
     """Extract token from Authorization header"""
     auth_header = request.headers.get('Authorization')
@@ -139,22 +144,38 @@ def get_token_from_request() -> Optional[str]:
 
 
 def token_required(f):
-    """Decorator to protect routes requiring authentication, verifying tokens when present"""
+    """Decorator to protect routes requiring authentication.
+
+    SECURITY: this must reject the request outright when no valid token is
+    present. There is intentionally no "local dev fallback" here — a
+    previous version of this decorator silently authenticated *every*
+    unauthenticated or invalid-token request as user_id=1, which meant every
+    route using this decorator was effectively unauthenticated in
+    production. If you want a convenience login for local development, log
+    in for real and use the token you get back, or add a fallback that is
+    strictly gated behind `current_app.config['DEBUG']` — never let it run
+    unconditionally.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = get_token_from_request()
-        if token:
-            user_id = verify_token(token)
-            if user_id:
-                request.current_user_id = user_id
-                request.current_token = token
-                return f(*args, **kwargs)
-        
-        # Local development fallback if token is not present or invalid
-        request.current_user_id = 1
-        request.current_token = "mock_token"
+        if not token:
+            return jsonify({
+                'error': 'Authentication required',
+                'message': 'A valid access token is required to access this resource'
+            }), 401
+
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({
+                'error': 'Authentication failed',
+                'message': 'Token is invalid, expired, or has been revoked'
+            }), 401
+
+        request.current_user_id = user_id
+        request.current_token = token
         return f(*args, **kwargs)
-    
+
     return decorated
 
 

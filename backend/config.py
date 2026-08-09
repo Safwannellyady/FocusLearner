@@ -16,6 +16,13 @@ class Config:
     """Base configuration class"""
     
     # Flask Configuration (Cryptographically secure 256-bit key generation)
+    # SECURITY: if SECRET_KEY isn't set as a real environment variable, this
+    # falls back to a fresh random key every time the process starts —
+    # meaning every logged-in user gets silently signed out on every restart
+    # or redeploy. Set SECRET_KEY (and JWT_SECRET_KEY) as fixed env vars in
+    # Railway. _SECRET_KEY_IS_EPHEMERAL lets app.py warn loudly at boot if
+    # that hasn't been done.
+    _SECRET_KEY_IS_EPHEMERAL = not bool(os.getenv('SECRET_KEY'))
     SECRET_KEY = os.getenv('SECRET_KEY') or secrets.token_hex(32)
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     TESTING = False
@@ -135,7 +142,19 @@ class ProductionConfig(Config):
     DEBUG = False
     LOG_LEVEL = 'WARNING'
     SESSION_COOKIE_SECURE = True
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', '').split(',')
+
+    # SECURITY: this used to be `os.getenv('CORS_ORIGINS', '').split(',')`,
+    # which drops the automatic localhost defaults AND the automatic
+    # focuslearner.pages.dev fallback that the base Config class computes —
+    # if the CORS_ORIGINS env var isn't set on Railway, this became [''],
+    # meaning flask-cors had no valid origin for real (non-preflight)
+    # requests even though the separate manual OPTIONS handler in app.py
+    # still worked, causing preflight to pass but the actual GET/POST to
+    # fail CORS. Rebuild it the same defensive way the base class does.
+    _prod_origins = [o.strip() for o in os.getenv('CORS_ORIGINS', '').split(',') if o.strip()]
+    if 'https://focuslearner.pages.dev' not in _prod_origins:
+        _prod_origins.append('https://focuslearner.pages.dev')
+    CORS_ORIGINS = _prod_origins
     
     # Production database optimizations
     SQLALCHEMY_ENGINE_OPTIONS = {
