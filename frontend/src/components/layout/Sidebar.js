@@ -91,26 +91,25 @@ const SidebarContent = ({ open, setOpen, navigate, location }) => {
   return (
     <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Brand */}
-      <Box sx={{
-        display: "flex", alignItems: "center",
-        gap: open ? 1.5 : 0, justifyContent: open ? "flex-start" : "center",
-        px: 2, height: 60, borderBottom: "1px solid var(--border)", flexShrink: 0,
-      }}>
+      <Box 
+        onClick={() => navigate("/dashboard")}
+        sx={{
+          display: "flex", alignItems: "center",
+          gap: open ? 1.5 : 0, justifyContent: open ? "flex-start" : "center",
+          px: 2, height: 60, borderBottom: "1px solid var(--border)", flexShrink: 0,
+          cursor: "pointer"
+        }}
+      >
         <Box sx={{
           width: 34, height: 34, borderRadius: "var(--r-md)",
-          background: "var(--grad-primary)", display: "flex",
-          alignItems: "center", justifyContent: "center",
-          flexShrink: 0, boxShadow: "0 4px 12px rgba(99,102,241,0.28)",
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
-          <AutoAwesomeIcon sx={{ color: "#fff", fontSize: 16 }} />
+          <img src="/icon.png" alt="FocusLearner Logo" style={{ width: 34, height: 34, borderRadius: 8 }} />
         </Box>
         {open && (
           <Box sx={{ overflow: "hidden" }}>
-            <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.9rem", letterSpacing: "-0.02em", color: "#f1f5f9", lineHeight: 1.1 }}>
+            <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.1rem", letterSpacing: "-0.02em", color: "#f1f5f9", lineHeight: 1.1 }}>
               Focus<span style={{ color: "var(--indigo)" }}>Learner</span>
-            </Typography>
-            <Typography sx={{ fontSize: "0.58rem", color: "var(--text-dim)", fontWeight: 600, letterSpacing: "0.1em" }}>
-              ACADEMIC STUDIO
             </Typography>
           </Box>
         )}

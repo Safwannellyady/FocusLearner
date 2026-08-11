@@ -286,18 +286,13 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
         >
           <MenuRoundedIcon fontSize="small" />
         </IconButton>
-        <Box 
-          onClick={() => goTo('/dashboard')}
-          sx={{ display: 'flex', alignItems: 'center', gap: 1.25, cursor: 'pointer' }}
-        >
-          <img src="/icon.png" alt="FocusLearner Logo" style={{ width: 28, height: 28, borderRadius: 6 }} />
-          <Typography sx={{
-            fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "1.1rem",
-            color: "#f1f5f9", letterSpacing: "-0.02em", whiteSpace: "nowrap",
-          }}>
-            FocusLearner
-          </Typography>
-        </Box>
+        <Typography sx={{
+          fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "0.98rem",
+          color: "#f1f5f9", letterSpacing: "-0.01em", whiteSpace: "nowrap",
+          overflow: "hidden", textOverflow: "ellipsis",
+        }}>
+          {pageTitle}
+        </Typography>
       </Box>
 
       {/* ── Center: primary links + More dropdown ──────────────────────── */}
