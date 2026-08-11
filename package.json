@@ -3,10 +3,33 @@
   "version": "1.0.0",
   "private": true,
   "description": "FocusLearner Monorepo Root",
+  "main": "electron/main.js",
   "workspaces": [
     "frontend"
   ],
   "scripts": {
-    "build": "npm run build --prefix frontend"
+    "build": "npm run build --prefix frontend",
+    "package-win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.focuslearner.app",
+    "productName": "FocusLearner Pro",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "electron/icon.png"
+    }
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3"
   }
 }
