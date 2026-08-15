@@ -182,6 +182,7 @@ const Signup = () => {
       const res   = await authAPI.register(form.username.trim(), form.email.trim(), form.password, form.fullName.trim());
       const token = res.data.token || res.data.access_token;
       localStorage.setItem("token", token);
+      if (res.data.refresh_token) localStorage.setItem("refresh_token", res.data.refresh_token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/dashboard");
     } catch (err) {
@@ -197,6 +198,7 @@ const Signup = () => {
       try {
         const res = await authAPI.googleLogin(tokenRes.access_token);
         localStorage.setItem("token", res.data.token || res.data.access_token);
+        if (res.data.refresh_token) localStorage.setItem("refresh_token", res.data.refresh_token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         navigate(res.data.is_new_user ? "/preferences" : "/dashboard");
       } catch (err) { setError(err.response?.data?.error || "Google signup failed."); }

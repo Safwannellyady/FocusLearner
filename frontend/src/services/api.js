@@ -1,6 +1,17 @@
 /**
  * FocusLearner Pro - API Service
- * Centralized API client for backend communication
+ * Centralized API client with silent JWT refresh (access token: 15 min,
+ * refresh token: 30 days).
+ *
+ * Flow:
+ *   1. Every outgoing request receives the stored access token in the
+ *      Authorization header.
+ *   2. If the server returns HTTP 401, the interceptor pauses ALL pending
+ *      requests and hits POST /api/auth/refresh exactly once.
+ *   3. On success the new access token is stored and every queued request is
+ *      automatically retried with the new token.
+ *   4. If the refresh itself fails (30-day token expired / revoked) the user
+ *      is cleared from storage and redirected to /login.
  */
 
 import axios from 'axios';
@@ -11,36 +22,128 @@ const API_BASE_URL = cleanBaseUrl.endsWith('/api') ? cleanBaseUrl : `${cleanBase
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
+// ── Token helpers ────────────────────────────────────────────────────────────
 
-// Add token to requests if available
+const getAccessToken  = () => localStorage.getItem('token');
+const getRefreshToken = () => localStorage.getItem('refresh_token');
+
+const saveTokens = ({ access_token, token }) => {
+  const newToken = access_token || token;
+  if (newToken) localStorage.setItem('token', newToken);
+};
+
+const clearAuth = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('activeSession');
+};
+
+// ── Request interceptor — attach current access token ───────────────────────
+
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    const token = getAccessToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Handle 401 errors (unauthorized)
+// ── Response interceptor — silent token refresh on 401 ──────────────────────
+
+let isRefreshing   = false;       // true while a refresh call is in-flight
+let pendingQueue   = [];          // requests waiting for the new token
+
+/**
+ * Flush the queue: call each pending resolver with the new token (or reject
+ * them all if the refresh failed).
+ */
+const flushQueue = (error, newToken = null) => {
+  pendingQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else       resolve(newToken);
+  });
+  pendingQueue = [];
+};
+
 api.interceptors.response.use(
+  // Happy path — pass through unchanged
   (response) => response,
-  (error) => {
-    // Demo Mode: Do not redirect on 401
-    return Promise.reject(error);
+
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Only act on 401s that haven't already been retried
+    const is401         = error.response?.status === 401;
+    const alreadyRetried = originalRequest._retry;
+    // Skip the refresh endpoint itself to avoid infinite loops
+    const isRefreshCall = originalRequest.url?.includes('/auth/refresh');
+
+    if (!is401 || alreadyRetried || isRefreshCall) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      // Another 401 fired while a refresh is already in-flight — queue it
+      return new Promise((resolve, reject) => {
+        pendingQueue.push({ resolve, reject });
+      }).then((newToken) => {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      });
+    }
+
+    // Mark this request so we don't retry it again if it 401s a second time
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      // No refresh token stored — send straight to login
+      clearAuth();
+      isRefreshing = false;
+      flushQueue(new Error('No refresh token'));
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+
+    try {
+      // Call refresh endpoint directly with axios (not the intercepted instance)
+      // to avoid triggering our own interceptor recursively.
+      const { data } = await axios.post(
+        `${API_BASE_URL}/auth/refresh`,
+        {},
+        { headers: { Authorization: `Bearer ${refreshToken}` } }
+      );
+
+      const newAccessToken = data.access_token || data.token;
+      saveTokens({ token: newAccessToken });
+
+      // Retry the original failed request with the fresh token
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+      // Unblock all queued requests
+      flushQueue(null, newAccessToken);
+      isRefreshing = false;
+
+      return api(originalRequest);
+
+    } catch (refreshError) {
+      // Refresh itself failed — session is dead, redirect to login
+      flushQueue(refreshError);
+      isRefreshing = false;
+      clearAuth();
+      window.location.href = '/login';
+      return Promise.reject(refreshError);
+    }
   }
 );
 
-// Focus Session API
+// ── Focus Session API ─────────────────────────────────────────────────────────
 export const focusAPI = {
   lock: (data) =>
     api.post('/focus/lock', typeof data === 'string' ? { subject_focus: data } : data),
@@ -91,12 +194,7 @@ export const contentAPI = {
     api.get(`/content/transcript/${videoId}`),
 };
 
-// NO REPLACEMENT CONTENT IN THIS TOOL CALL - SWITCHING TO MULTI_REPLACE
-// This is just a comment. I will abort and use multi_replace.
-// Wait, I can just use 2 tool calls in parallel? No, sequential is cleaner.
-// I will use multi_replace.
-
-// Game API
+// ── Game API ──────────────────────────────────────────────────────────────────
 export const gameAPI = {
   getModules: () => api.get('/game/modules'),
 

@@ -167,6 +167,7 @@ const Login = () => {
       const res   = await authAPI.login(username.trim(), password);
       const token = res.data.token || res.data.access_token;
       localStorage.setItem("token", token);
+      if (res.data.refresh_token) localStorage.setItem("refresh_token", res.data.refresh_token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/dashboard");
     } catch (err) {
@@ -184,6 +185,7 @@ const Login = () => {
         const res   = await authAPI.googleLogin(tokenRes.access_token);
         const token = res.data.token || res.data.access_token;
         localStorage.setItem("token", token);
+        if (res.data.refresh_token) localStorage.setItem("refresh_token", res.data.refresh_token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         navigate(res.data.is_new_user ? "/preferences" : "/dashboard");
       } catch (err) {
