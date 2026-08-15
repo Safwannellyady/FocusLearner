@@ -35,6 +35,9 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     last_login_at = db.Column(db.DateTime, nullable=True)
     streak_days = db.Column(db.Integer, default=0)
+    # Account lockout — brute-force protection
+    failed_login_attempts = db.Column(db.Integer, default=0, nullable=False)
+    locked_until = db.Column(db.DateTime, nullable=True)
     
     # Relationships
     focus_sessions = db.relationship('FocusSession', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -60,10 +63,30 @@ class User(db.Model):
     def set_password(self, password):
         """Hash and set password"""
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         """Check if provided password matches hash"""
         return check_password_hash(self.password_hash, password)
+
+    # ── Account Lockout Helpers ───────────────────────────────────────────────
+
+    def is_locked(self) -> bool:
+        """Return True if the account is currently locked out."""
+        if self.locked_until is None:
+            return False
+        return datetime.utcnow() < self.locked_until
+
+    def record_failed_login(self, max_attempts: int = 5, lockout_minutes: int = 15) -> None:
+        """Increment failed attempt counter; lock the account when threshold is hit."""
+        from datetime import timedelta
+        self.failed_login_attempts = (self.failed_login_attempts or 0) + 1
+        if self.failed_login_attempts >= max_attempts:
+            self.locked_until = datetime.utcnow() + timedelta(minutes=lockout_minutes)
+
+    def clear_failed_logins(self) -> None:
+        """Reset failed attempt counter and remove any lockout after a successful login."""
+        self.failed_login_attempts = 0
+        self.locked_until = None
     
     def to_dict(self):
         return {

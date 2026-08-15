@@ -153,31 +153,50 @@ def login():
     """Login user and return JWT tokens"""
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({'error': 'Request body is required'}), 400
-        
+
         username = data.get('username', '').strip()
         password = data.get('password', '')
-        
+
         if not username or not password:
             return jsonify({'error': 'Username and password are required'}), 400
-        
+
         # Find user by username or email
         user = User.query.filter(
             (User.username == username) | (User.email == username.lower())
         ).first()
-        
+
+        # SECURITY: Account lockout — check BEFORE verifying password to avoid
+        # timing-based user enumeration through lockout-only responses.
+        if user and user.is_locked():
+            from datetime import timezone
+            remaining_secs = int((user.locked_until - datetime.utcnow()).total_seconds())
+            remaining_min  = max(1, (remaining_secs + 59) // 60)
+            current_app.logger.warning(f'Locked account login attempt: {username}')
+            return jsonify({
+                'error': 'Account temporarily locked',
+                'message': f'Too many failed login attempts. Try again in {remaining_min} minute(s).'
+            }), 429
+
         if not user or not user.check_password(password):
+            # Record the failure (applies lockout if threshold reached)
+            if user:
+                user.record_failed_login(max_attempts=5, lockout_minutes=15)
+                db.session.commit()
             current_app.logger.warning(f'Failed login attempt for: {username}')
             return jsonify({'error': 'Invalid username or password'}), 401
-        
+
         if not user.is_active:
             return jsonify({'error': 'Account is deactivated'}), 403
-        
+
+        # Successful login — reset lockout counters
+        user.clear_failed_logins()
+
         # Update login streak and last login
         now = datetime.utcnow()
-        
+
         if user.last_login_at:
             # Check difference in days
             delta = now.date() - user.last_login_at.date()
@@ -187,15 +206,15 @@ def login():
                 user.streak_days = 1
         else:
             user.streak_days = 1
-        
+
         user.last_login_at = now
         db.session.commit()
-        
+
         # Generate tokens
         tokens = generate_token_pair(user.id)
-        
+
         current_app.logger.info(f'User logged in: {user.username}')
-        
+
         return jsonify({
             'message': 'Login successful',
             'token': tokens['access_token'],
@@ -203,7 +222,7 @@ def login():
             'refresh_token': tokens['refresh_token'],
             'user': user.to_dict()
         }), 200
-        
+
     except Exception as e:
         current_app.logger.error(f'Login error: {e}')
         return jsonify({'error': 'An unexpected error occurred'}), 500

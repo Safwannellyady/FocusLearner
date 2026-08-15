@@ -51,7 +51,10 @@ class Config:
     JWT_ALGORITHM = 'HS256'
 
     JWT_TOKEN_LOCATION = ['headers']
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
+    # SECURITY: Short-lived access tokens (15 min) reduce the damage window if a
+    # token is stolen via XSS or network interception. Clients should silently
+    # refresh using the long-lived refresh token (POST /api/auth/refresh).
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     
     # CORS Configuration

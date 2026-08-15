@@ -137,6 +137,9 @@ with app.app_context():
             "ALTER TABLE password_reset_tokens ADD COLUMN IF NOT EXISTS token_hash VARCHAR(128);",
             "ALTER TABLE password_reset_tokens ALTER COLUMN token DROP NOT NULL;",
             "CREATE UNIQUE INDEX IF NOT EXISTS ix_password_reset_tokens_token_hash ON password_reset_tokens (token_hash);",
+            # Account lockout columns — brute-force protection (2026-08-15)
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP;",
         ]
         for query in migrations:
             try:
