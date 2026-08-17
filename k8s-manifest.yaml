@@ -1,0 +1,539 @@
+---
+# FocusLearner Pro - Kubernetes Manifest
+# Services: PostgreSQL, Flask Backend, React Frontend
+# This manifest includes:
+# - Persistent Volumes for database and uploads
+# - Services for networking
+# - Deployments for each component
+# - ConfigMap for non-secret config
+# - Secrets for sensitive data
+
+# ============================================================================
+# NAMESPACE
+# ============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: focuslearner
+
+---
+# ============================================================================
+# PERSISTENT VOLUMES & CLAIMS
+# ============================================================================
+
+# PostgreSQL persistent storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: focuslearner
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  # Adjust storageClassName for your cluster (e.g., "standard", "fast", "ebs")
+  # storageClassName: standard
+
+---
+# Uploads persistent storage (for user-uploaded files)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+  namespace: focuslearner
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  # storageClassName: standard
+
+---
+# ============================================================================
+# SECRETS (Base64 encoded - CHANGE THESE VALUES!)
+# ============================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: focuslearner-secrets
+  namespace: focuslearner
+type: Opaque
+stringData:
+  # Database credentials
+  POSTGRES_PASSWORD: "ChangeMe@9535"
+  # Flask security keys (generate with: python -c "import secrets; print(secrets.token_hex(32))")
+  SECRET_KEY: "9d4f2e8a1c6b3f7d0e5a8b2c4d9e1f3a6b0c7d4e8f2a5b1c9d3e7f0a6b2c4d1e"
+  JWT_SECRET_KEY: "a383e49003e76688365b6f44924dc2728f8d1af6495c29842b2efe844ece575"
+  # Google APIs (add your actual keys)
+  GEMINI_API_KEY: "your-gemini-api-key"
+  YOUTUBE_API_KEY: "your-youtube-api-key"
+  GOOGLE_SEARCH_API_KEY: "your-google-search-api-key"
+  GOOGLE_CLIENT_ID: "your-google-client-id"
+  GOOGLE_CLIENT_SECRET: "your-google-client-secret"
+  # Pinecone
+  PINECONE_API_KEY: "your-pinecone-api-key"
+
+---
+# ============================================================================
+# CONFIGMAP (Non-sensitive configuration)
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: focuslearner-config
+  namespace: focuslearner
+data:
+  FLASK_ENV: "production"
+  FLASK_DEBUG: "False"
+  PORT: "5000"
+  POSTGRES_DB: "focuslearner"
+  POSTGRES_USER: "focususer"
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  # Frontend can use this to construct API URL
+  REACT_APP_API_URL: "/api"
+  # CORS Origins
+  CORS_ORIGINS: "https://focuslearner.pages.dev,http://localhost:3000"
+  # Pinecone config
+  PINECONE_ENVIRONMENT: "us-east-1-aws"
+  PINECONE_INDEX_NAME: "focuslearner-transcripts"
+  GEMINI_MODEL: "gemini-2.0-flash"
+  # Gunicorn workers
+  GUNICORN_WORKERS: "4"
+  GUNICORN_TIMEOUT: "120"
+
+---
+# ============================================================================
+# POSTGRESQL SERVICE & DEPLOYMENT
+# ============================================================================
+
+# PostgreSQL Service (internal only, no LoadBalancer)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: focuslearner
+spec:
+  selector:
+    app: postgres
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+
+---
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: focuslearner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres  # Avoids permission issues on some storage classes
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U focususer -d focuslearner
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U focususer -d focuslearner
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+      restartPolicy: Always
+
+---
+# ============================================================================
+# BACKEND (FLASK) SERVICE & DEPLOYMENT
+# ============================================================================
+
+# Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: focuslearner
+spec:
+  selector:
+    app: backend
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+
+---
+# Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: focuslearner
+spec:
+  replicas: 2  # 2 replicas for redundancy
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          # Use your Docker image from your registry (Docker Hub, ECR, GCR, etc.)
+          # Replace with your actual image
+          image: your-registry/focuslearner-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            # ConfigMap values
+            - name: FLASK_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: FLASK_ENV
+            - name: FLASK_DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: FLASK_DEBUG
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: PORT
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: CORS_ORIGINS
+            - name: GUNICORN_WORKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: GUNICORN_WORKERS
+            - name: GUNICORN_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: GUNICORN_TIMEOUT
+            # Database connection
+            - name: DATABASE_URL
+              value: "postgresql://focususer:$(POSTGRES_PASSWORD)@postgres:5432/focuslearner"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: POSTGRES_PASSWORD
+            # Secrets
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: SECRET_KEY
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: JWT_SECRET_KEY
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: GEMINI_API_KEY
+            - name: YOUTUBE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: YOUTUBE_API_KEY
+            - name: GOOGLE_SEARCH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: GOOGLE_SEARCH_API_KEY
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: GOOGLE_CLIENT_SECRET
+            - name: PINECONE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: focuslearner-secrets
+                  key: PINECONE_API_KEY
+            - name: PINECONE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: PINECONE_ENVIRONMENT
+            - name: PINECONE_INDEX_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: PINECONE_INDEX_NAME
+            - name: GEMINI_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: focuslearner-config
+                  key: GEMINI_MODEL
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 2
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: uploads-pvc
+      # Wait for PostgreSQL to be ready before starting backend
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done
+      restartPolicy: Always
+
+---
+# ============================================================================
+# FRONTEND (NGINX) SERVICE & DEPLOYMENT
+# ============================================================================
+
+# Frontend Service (exposed via LoadBalancer or Ingress)
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: focuslearner
+spec:
+  selector:
+    app: frontend
+  type: LoadBalancer  # Change to ClusterIP if using Ingress
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  # For LoadBalancer, K8s will assign an external IP automatically
+
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: focuslearner
+spec:
+  replicas: 2  # 2 replicas for redundancy
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          # Use your Docker image from your registry
+          # Replace with your actual image
+          image: your-registry/focuslearner-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 2
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      restartPolicy: Always
+
+---
+# ============================================================================
+# INGRESS (Optional - for more control over routing)
+# ============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: focuslearner-ingress
+  namespace: focuslearner
+  annotations:
+    # Uncomment for cert-manager (HTTPS/TLS)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  # Uncomment for HTTPS/TLS
+  # tls:
+  #   - hosts:
+  #       - focuslearner.example.com
+  #     secretName: focuslearner-tls
+  rules:
+    - host: "focuslearner.example.com"  # Change to your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 5000
+
+---
+# ============================================================================
+# OPTIONAL: Horizontal Pod Autoscaler (HPA)
+# Scales replicas based on CPU usage
+# ============================================================================
+
+# HPA for Backend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: focuslearner
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+# HPA for Frontend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-hpa
+  namespace: focuslearner
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
