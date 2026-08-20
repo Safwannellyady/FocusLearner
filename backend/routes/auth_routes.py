@@ -49,6 +49,7 @@ def validate_username(username: str) -> tuple[bool, str]:
 
 
 @auth_routes.route('/check-username', methods=['GET'])
+@limiter.limit("30 per minute")
 def check_username():
     """Check if a username is available (SQL-injection safe via ORM + regex pre-filter)"""
     username = request.args.get('username', '').strip()
@@ -353,7 +354,60 @@ def change_password():
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
+@auth_routes.route('/refresh', methods=['POST'])
+@refresh_token_required
+def refresh():
+    """Refresh access token using refresh token"""
+    try:
+        user_id = request.current_user_id
+        refresh_token = request.current_token
+        
+        # Verify user exists
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if not user.is_active:
+            return jsonify({'error': 'Account is deactivated'}), 403
+        
+        # Generate new token pair
+        new_tokens = generate_token_pair(user_id)
+        
+        # Blacklist the old refresh token
+        blacklist_token(refresh_token)
+        
+        current_app.logger.info(f'Token refreshed for user: {user.id}')
+        
+        return jsonify({
+            'message': 'Token refreshed successfully',
+            'access_token': new_tokens['access_token'],
+            'refresh_token': new_tokens['refresh_token']
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Token refresh error: {e}')
+        return jsonify({'error': 'An error occurred refreshing token'}), 500
+
+
+@auth_routes.route('/logout', methods=['POST'])
+@token_required
+def logout():
+    """Logout user by blacklisting the current token"""
+    try:
+        token = getattr(request, 'current_token', None)
+        if token:
+            blacklist_token(token)
+        
+        current_app.logger.info(f'User logged out: {request.current_user_id}')
+        return jsonify({'message': 'Logged out successfully'}), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Logout error: {e}')
+        return jsonify({'error': 'An error occurred during logout'}), 500
+
+
 @auth_routes.route('/google', methods=['POST'])
+@limiter.limit("10 per minute")
 def google_login():
     """Login or register user with Google OAuth"""
     try:
@@ -367,7 +421,7 @@ def google_login():
         google_user_info = google_auth_service.verify_google_token(token)
         
         if not google_user_info:
-            print(f"Failed to verify Google token. Token received: {token[:20]}...")
+            current_app.logger.warning("Failed to verify Google token")
             return jsonify({'error': 'Invalid Google token. Please try again.'}), 401
         
         email = google_user_info.get('email')
@@ -426,22 +480,21 @@ def google_login():
         user.last_login_at = now
         db.session.commit()
         
-        # Generate JWT token
-        jwt_token = generate_token(user.id)
+        # Generate JWT token pair for proper session management
+        tokens = generate_token_pair(user.id)
         
         return jsonify({
             'message': 'Google authentication successful',
-            'token': jwt_token,
-            'access_token': jwt_token,
+            'token': tokens['access_token'],
+            'access_token': tokens['access_token'],
+            'refresh_token': tokens['refresh_token'],
             'user': user.to_dict(),
             'is_new_user': not user.password_hash  # True if just created
         }), 200
     
     except Exception as e:
-        print(f"Error in Google login: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': f'Authentication failed: {str(e)}'}), 500
+        current_app.logger.error(f"Error in Google login: {e}")
+        return jsonify({'error': 'Authentication failed'}), 500
 
 
 from models import PasswordResetToken
@@ -558,5 +611,3 @@ def reset_password():
         current_app.logger.error(f'Reset password error: {e}')
         db.session.rollback()
         return jsonify({'error': 'An error occurred resetting your password'}), 500
-
-

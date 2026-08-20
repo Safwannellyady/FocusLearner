@@ -5,10 +5,13 @@ Handles Google Sign-In authentication
 
 import os
 import requests
+import logging
 from typing import Dict, Optional
 
-GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com')
-GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
+logger = logging.getLogger(__name__)
+
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 GOOGLE_TOKEN_VERIFY_URL = 'https://www.googleapis.com/oauth2/v1/tokeninfo'
 GOOGLE_USER_INFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo'
 
@@ -20,7 +23,7 @@ class GoogleAuthService:
         self.client_id = GOOGLE_CLIENT_ID
         self.client_secret = GOOGLE_CLIENT_SECRET
         if not self.client_id:
-            print("WARNING: GOOGLE_CLIENT_ID not set!")
+            logger.warning("GOOGLE_CLIENT_ID not set!")
     
     def verify_google_token(self, token: str) -> Optional[Dict]:
         """
@@ -60,8 +63,9 @@ class GoogleAuthService:
                 
                 # Verify client ID matches (if provided)
                 if self.client_id and token_info.get('audience') != self.client_id:
-                    print(f"Client ID mismatch: {token_info.get('audience')} != {self.client_id}")
-                    # Continue anyway - client ID check is optional for access tokens
+                    logger.warning(f"Client ID mismatch: {token_info.get('audience')} != {self.client_id}")
+                    # SECURITY: Reject tokens with incorrect audience to prevent token abuse
+                    return None
                 
                 # Get user info
                 user_info_response = requests.get(
@@ -83,16 +87,14 @@ class GoogleAuthService:
             return self._verify_id_token(token)
         
         except Exception as e:
-            print(f"Error verifying Google token: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Error verifying Google token: {e}")
             return None
     
     def _verify_id_token(self, id_token: str) -> Optional[Dict]:
         """Verify Google ID token (alternative method)"""
         try:
             if not self.client_id:
-                print("Cannot verify ID token: Client ID not set")
+                logger.warning("Cannot verify ID token: Client ID not set")
                 return None
                 
             from google.auth.transport import requests as google_requests
@@ -113,8 +115,6 @@ class GoogleAuthService:
                 'verified_email': user_info.get('email_verified', False)
             }
         except Exception as e:
-            print(f"Error verifying ID token: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Error verifying ID token: {e}")
             return None
 

@@ -148,6 +148,31 @@ class FocusSession(db.Model):
         }
 
 
+class TokenBlacklist(db.Model):
+    """Model for storing blacklisted JWT tokens for logout and token invalidation"""
+    __tablename__ = 'token_blacklist'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    token_hash = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    revoked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False, index=True)
+    
+    user = db.relationship('User', backref=db.backref('blacklisted_tokens', lazy=True, cascade='all, delete-orphan'))
+    
+    __table_args__ = (
+        db.Index('idx_token_blacklist_expiry', 'expires_at'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'revoked_at': self.revoked_at.isoformat(),
+            'expires_at': self.expires_at.isoformat()
+        }
+
+
 class PasswordResetToken(db.Model):
     """Model for storing single-use password reset tokens"""
     __tablename__ = 'password_reset_tokens'

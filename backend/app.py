@@ -110,7 +110,7 @@ if not app.debug:
     app.logger.info('FocusLearner Pro startup')
 
 # Import models and initialize db
-from models import db
+from models import db, TokenBlacklist
 from sqlalchemy import text
 db.init_app(app)
 
@@ -140,6 +140,19 @@ with app.app_context():
             # Account lockout columns — brute-force protection (2026-08-15)
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP;",
+            # Token blacklist table for JWT invalidation — replaces in-memory blacklist
+            # SECURITY: This ensures blacklisted tokens persist across restarts and work
+            # in multi-worker deployments (2026-08-20)
+            """CREATE TABLE IF NOT EXISTS token_blacklist (
+                id SERIAL PRIMARY KEY,
+                token_hash VARCHAR(128) UNIQUE NOT NULL,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                revoked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP NOT NULL
+            );""",
+            "CREATE INDEX IF NOT EXISTS idx_token_blacklist_token_hash ON token_blacklist (token_hash);",
+            "CREATE INDEX IF NOT EXISTS idx_token_blacklist_user_id ON token_blacklist (user_id);",
+            "CREATE INDEX IF NOT EXISTS idx_token_blacklist_expiry ON token_blacklist (expires_at);",
         ]
         for query in migrations:
             try:
@@ -148,6 +161,17 @@ with app.app_context():
                 app.logger.warning(f"Migration note: {m_err}")
         db.session.commit()
         app.logger.info('Database tables & column schema auto-migrated successfully')
+        
+        # Clean up expired blacklisted tokens on startup
+        try:
+            from datetime import datetime
+            expired_count = TokenBlacklist.query.filter(TokenBlacklist.expires_at < datetime.utcnow()).delete()
+            db.session.commit()
+            if expired_count > 0:
+                app.logger.info(f'Cleaned up {expired_count} expired blacklisted tokens on startup')
+        except Exception as cleanup_err:
+            app.logger.warning(f'Error cleaning up expired blacklisted tokens on startup: {cleanup_err}')
+            db.session.rollback()
     except Exception as e:
         app.logger.error(f'Error auto-creating database tables: {e}')
 
