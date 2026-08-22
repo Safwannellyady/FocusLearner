@@ -34,7 +34,7 @@ sentence-transformers==2.2.2
 numpy
 
 # Auth
-PyJWT==2.8.0
+PyJWT==2.13.0
 
 # Vector database
 pinecone-client==2.2.4
