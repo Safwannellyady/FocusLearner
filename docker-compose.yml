@@ -1,28 +1,14 @@
-# =============================================================================
-# FocusLearner Pro - Docker Compose
-# Services: db (PostgreSQL 16), backend (Flask/Gunicorn), frontend (React/Nginx)
-#
-# USAGE
-#   1. Copy .env.example -> .env and fill in all values marked <CHANGE_ME>
-#   2. First run (watch logs):  docker compose up --build
-#   3. Subsequent runs:         docker compose up -d
-#   4. DB schema init:          docker compose exec backend python -c "from models import db; from app import app; app.app_context().push(); db.create_all()"
-# =============================================================================
-
 version: "3.9"
 
 services:
 
-  # ---------------------------------------------------------------------------
-  # PostgreSQL 16 — persistent relational database
-  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 - persistent relational database
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB:       ${POSTGRES_DB:-focuslearner}
       POSTGRES_USER:     ${POSTGRES_USER:-focususer}
-      # :? means Docker Compose will refuse to start if this var is missing/empty
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your .env file}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -35,9 +21,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # ---------------------------------------------------------------------------
-  # Flask / Gunicorn backend API — internal only (not exposed to the host)
-  # ---------------------------------------------------------------------------
+  # Flask / Gunicorn backend API - internal only
   backend:
     build:
       context: ./backend
@@ -46,19 +30,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Load all secrets from the root .env file (never hard-code them here)
     env_file:
       - .env
     environment:
-      # These override any matching keys in .env so Docker networking is used
       FLASK_ENV:    production
       FLASK_DEBUG:  "False"
       PORT:         "5000"
       DATABASE_URL: postgresql://${POSTGRES_USER:-focususer}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-focuslearner}
-      # CORS must allow requests that arrive via the Nginx proxy
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
     volumes:
-      - uploads_data:/app/uploads   # Persist user-uploaded files across restarts
+      - uploads_data:/app/uploads
     networks:
       - app_net
     healthcheck:
@@ -68,16 +49,11 @@ services:
       start_period: 20s
       retries: 3
 
-  # ---------------------------------------------------------------------------
-  # React / Nginx frontend — the only service exposed to the outside world
-  # ---------------------------------------------------------------------------
+  # React / Nginx frontend - exposed to the outside world
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      # REACT_APP_API_URL is baked into the JS bundle at build time.
-      # /api is a relative path; Nginx proxies it to the backend container.
-      # This works on any host without rebuilding the image.
       args:
         REACT_APP_API_URL: /api
     restart: unless-stopped
@@ -85,20 +61,14 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "80:80"     # Only port exposed to the host — backend stays internal
+      - "80:80"
     networks:
       - app_net
 
-# ---------------------------------------------------------------------------
-# Named volumes (managed by Docker; survive container restarts/rebuilds)
-# ---------------------------------------------------------------------------
 volumes:
   postgres_data:
   uploads_data:
 
-# ---------------------------------------------------------------------------
-# Private bridge network — services communicate by service name (e.g. "backend")
-# ---------------------------------------------------------------------------
 networks:
   app_net:
     driver: bridge

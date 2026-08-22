@@ -60,3 +60,4 @@ uploads/
 
 # Python virtual environments
 backend/venv_new/
+node_modules/

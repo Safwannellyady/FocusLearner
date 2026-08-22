@@ -12,8 +12,9 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-# In-memory token blacklist (use Redis in production)
-_token_blacklist = set()
+# Token blacklist using database for persistence across restarts
+# This replaces the previous in-memory implementation which didn't persist
+# across server restarts or work in multi-worker deployments
 
 
 def get_jwt_config() -> Dict[str, Any]:
@@ -113,16 +114,77 @@ def verify_token(token: str, token_type: str = 'access') -> Optional[int]:
 
 
 def blacklist_token(token: str) -> None:
-    """Add token to blacklist"""
-    # In production, use Redis or database
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
-    _token_blacklist.add(token_hash)
+    """Add token to blacklist using database for persistence"""
+    try:
+        from models import TokenBlacklist, db
+        from datetime import datetime
+        
+        # Get token expiration to know when to clean up
+        config = get_jwt_config()
+        try:
+            payload = jwt.decode(
+                token,
+                config['secret_key'],
+                algorithms=[config['algorithm']],
+                options={"verify_signature": False}  # Don't verify signature for expiration check
+            )
+            expires_at = datetime.fromtimestamp(payload.get('exp', 0))
+            user_id = payload.get('user_id')
+        except:
+            # If we can't decode, default to 30 days from now
+            expires_at = datetime.utcnow() + timedelta(days=30)
+            user_id = None
+        
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        
+        # Create blacklist entry
+        blacklisted = TokenBlacklist(
+            token_hash=token_hash,
+            user_id=user_id,
+            expires_at=expires_at
+        )
+        db.session.add(blacklisted)
+        db.session.commit()
+        
+        # Clean up expired tokens periodically
+        try:
+            TokenBlacklist.query.filter(TokenBlacklist.expires_at < datetime.utcnow()).delete()
+            db.session.commit()
+        except Exception as cleanup_err:
+            current_app.logger.warning(f'Error cleaning up expired blacklisted tokens: {cleanup_err}')
+            db.session.rollback()
+            
+    except Exception as e:
+        current_app.logger.error(f'Error blacklisting token: {e}')
 
 
 def is_token_blacklisted(token: str) -> bool:
-    """Check if token is blacklisted"""
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
-    return token_hash in _token_blacklist
+    """Check if token is blacklisted using database"""
+    try:
+        from models import TokenBlacklist, db
+        from datetime import datetime
+        
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        
+        # Clean up expired tokens first
+        try:
+            TokenBlacklist.query.filter(TokenBlacklist.expires_at < datetime.utcnow()).delete()
+            db.session.commit()
+        except Exception as cleanup_err:
+            current_app.logger.warning(f'Error cleaning up expired blacklisted tokens: {cleanup_err}')
+            db.session.rollback()
+        
+        # Check if token is blacklisted
+        blacklisted = TokenBlacklist.query.filter_by(token_hash=token_hash).first()
+        return blacklisted is not None
+    except Exception as e:
+        current_app.logger.error(f'Error checking token blacklist: {e}')
+        return False
+
+
+def hash_reset_token(token: str) -> str:
+    """Hash a password-reset token for storage — never store the raw token."""
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 def get_token_from_request() -> Optional[str]:
@@ -139,22 +201,38 @@ def get_token_from_request() -> Optional[str]:
 
 
 def token_required(f):
-    """Decorator to protect routes requiring authentication, verifying tokens when present"""
+    """Decorator to protect routes requiring authentication.
+
+    SECURITY: this must reject the request outright when no valid token is
+    present. There is intentionally no "local dev fallback" here — a
+    previous version of this decorator silently authenticated *every*
+    unauthenticated or invalid-token request as user_id=1, which meant every
+    route using this decorator was effectively unauthenticated in
+    production. If you want a convenience login for local development, log
+    in for real and use the token you get back, or add a fallback that is
+    strictly gated behind `current_app.config['DEBUG']` — never let it run
+    unconditionally.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = get_token_from_request()
-        if token:
-            user_id = verify_token(token)
-            if user_id:
-                request.current_user_id = user_id
-                request.current_token = token
-                return f(*args, **kwargs)
-        
-        # Local development fallback if token is not present or invalid
-        request.current_user_id = 1
-        request.current_token = "mock_token"
+        if not token:
+            return jsonify({
+                'error': 'Authentication required',
+                'message': 'A valid access token is required to access this resource'
+            }), 401
+
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({
+                'error': 'Authentication failed',
+                'message': 'Token is invalid, expired, or has been revoked'
+            }), 401
+
+        request.current_user_id = user_id
+        request.current_token = token
         return f(*args, **kwargs)
-    
+
     return decorated
 
 

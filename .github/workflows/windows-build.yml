@@ -1,0 +1,23 @@
+name: Build Windows EXE
+on:
+  workflow_dispatch: # Allows you to manually trigger the build from the GitHub Actions tab
+jobs:
+  build-exe:
+    runs-on: windows-latest # Runs on a cloud Windows server to build the EXE properly
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm install
+      - name: Compile Windows Executable
+        run: npm run package-win # Triggers the Electron packaging script you made earlier
+      - name: Upload Finished EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Desktop-Windows-EXE
+          path: dist/*.exe

@@ -1,0 +1,10 @@
+{
+  "appId": "com.focuslearner.app",
+  "appName": "FocusLearner Pro",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://focuslearner.pages.dev",
+    "cleartext": true
+  }
+}

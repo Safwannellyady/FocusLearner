@@ -1,0 +1,511 @@
+diff --git a/backend/app.py b/backend/app.py
+index dbf8b52..92566cf 100644
+--- a/backend/app.py
++++ b/backend/app.py
+@@ -12,6 +12,7 @@ from werkzeug.exceptions import HTTPException
+ from dotenv import load_dotenv
+ 
+ from config import get_config
++from extensions import limiter
+ 
+ load_dotenv()
+ 
+@@ -23,9 +24,30 @@ config_class = get_config()
+ app.config.from_object(config_class)
+ config_class.init_app(app)
+ 
+-print("--- PRODUCTION DATABASE URI IN USE ---")
+-print(app.config.get('SQLALCHEMY_DATABASE_URI'))
+-print("---------------------------------------")
++if getattr(config_class, '_SECRET_KEY_IS_EPHEMERAL', False):
++    print(
++        "WARNING: SECRET_KEY is not set as an environment variable. A random "
++        "key was generated for this process only — every logged-in user will "
++        "be signed out the next time this service restarts or redeploys. "
++        "Set SECRET_KEY and JWT_SECRET_KEY as fixed environment variables in "
++        "Railway to fix this."
++    )
++
++# Rate limiting — storage_uri/default_limits are set on the Limiter
++# constructor in extensions.py (init_app() doesn't accept them). Storage
++# defaults to in-memory (per-worker); move RATELIMIT_STORAGE_URL to a Redis
++# URL once you run multiple Gunicorn workers so limits are enforced globally
++# instead of per-process.
++limiter.init_app(app)
++if not app.config.get('RATELIMIT_ENABLED', True):
++    limiter.enabled = False
++
++# NOTE: never print the full SQLALCHEMY_DATABASE_URI — it contains the DB
++# password and Railway captures stdout as logs. If you need to sanity-check
++# which database is active, print only the host/db name, e.g.:
++#   from urllib.parse import urlparse
++#   parsed = urlparse(app.config.get('SQLALCHEMY_DATABASE_URI', ''))
++#   app.logger.info(f"DB host={parsed.hostname} db={parsed.path.lstrip('/')}")
+ 
+ 
+ # Configure CORS with proper settings for Cloudflare and local development
+@@ -43,18 +65,30 @@ CORS(
+ 
+ @app.before_request
+ def handle_preflight():
+-    """Handle CORS preflight OPTIONS requests cleanly before middleware"""
++    """Handle CORS preflight OPTIONS requests cleanly before middleware.
++
++    SECURITY: origins must be checked with an EXACT match against the
++    allow-list. The previous check accepted any origin containing the
++    substring "localhost" (e.g. https://localhost.attacker.com) and any
++    origin ending in ".pages.dev" — which is shared public Cloudflare Pages
++    hosting, so that accepted every other project on the platform too, not
++    just this one. Combined with Access-Control-Allow-Credentials: true,
++    that let any such origin make authenticated, cookie/credential-bearing
++    requests against this API.
++    """
+     if request.method == "OPTIONS":
+         response = make_response()
+         origin = request.headers.get("Origin")
+-        allowed = app.config.get('CORS_ORIGINS', [])
+-        if origin and (origin in allowed or "localhost" in origin or origin.endswith(".pages.dev")):
++        allowed = set(app.config.get('CORS_ORIGINS', []))
++        allowed.add('https://focuslearner.pages.dev')
++        if origin and origin in allowed:
+             response.headers.add("Access-Control-Allow-Origin", origin)
+-        else:
+-            response.headers.add("Access-Control-Allow-Origin", "https://focuslearner.pages.dev")
+-        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+-        response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+-        response.headers.add("Access-Control-Allow-Credentials", "true")
++            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
++            response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
++            response.headers.add("Access-Control-Allow-Credentials", "true")
++        # If the origin isn't on the allow-list, we simply don't add any
++        # Access-Control-Allow-* headers — the browser will then correctly
++        # block the response on the caller's side.
+         return response, 200
+ 
+ 
+@@ -95,6 +129,14 @@ with app.app_context():
+             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lab_config TEXT;",
+             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS game_config TEXT;",
+             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS quiz_config TEXT;",
++            # password_reset_tokens: move from storing raw tokens to storing
++            # a SHA-256 hash. The old `token` column's NOT NULL constraint is
++            # relaxed so new rows (which no longer set it) can still insert;
++            # it can be dropped entirely in a later cleanup once you've
++            # confirmed nothing else reads it.
++            "ALTER TABLE password_reset_tokens ADD COLUMN IF NOT EXISTS token_hash VARCHAR(128);",
++            "ALTER TABLE password_reset_tokens ALTER COLUMN token DROP NOT NULL;",
++            "CREATE UNIQUE INDEX IF NOT EXISTS ix_password_reset_tokens_token_hash ON password_reset_tokens (token_hash);",
+         ]
+         for query in migrations:
+             try:
+diff --git a/backend/config.py b/backend/config.py
+index 9aec12a..e609e8c 100644
+--- a/backend/config.py
++++ b/backend/config.py
+@@ -16,6 +16,13 @@ class Config:
+     """Base configuration class"""
+     
+     # Flask Configuration (Cryptographically secure 256-bit key generation)
++    # SECURITY: if SECRET_KEY isn't set as a real environment variable, this
++    # falls back to a fresh random key every time the process starts —
++    # meaning every logged-in user gets silently signed out on every restart
++    # or redeploy. Set SECRET_KEY (and JWT_SECRET_KEY) as fixed env vars in
++    # Railway. _SECRET_KEY_IS_EPHEMERAL lets app.py warn loudly at boot if
++    # that hasn't been done.
++    _SECRET_KEY_IS_EPHEMERAL = not bool(os.getenv('SECRET_KEY'))
+     SECRET_KEY = os.getenv('SECRET_KEY') or secrets.token_hex(32)
+     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+     TESTING = False
+@@ -135,7 +142,19 @@ class ProductionConfig(Config):
+     DEBUG = False
+     LOG_LEVEL = 'WARNING'
+     SESSION_COOKIE_SECURE = True
+-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', '').split(',')
++
++    # SECURITY: this used to be `os.getenv('CORS_ORIGINS', '').split(',')`,
++    # which drops the automatic localhost defaults AND the automatic
++    # focuslearner.pages.dev fallback that the base Config class computes —
++    # if the CORS_ORIGINS env var isn't set on Railway, this became [''],
++    # meaning flask-cors had no valid origin for real (non-preflight)
++    # requests even though the separate manual OPTIONS handler in app.py
++    # still worked, causing preflight to pass but the actual GET/POST to
++    # fail CORS. Rebuild it the same defensive way the base class does.
++    _prod_origins = [o.strip() for o in os.getenv('CORS_ORIGINS', '').split(',') if o.strip()]
++    if 'https://focuslearner.pages.dev' not in _prod_origins:
++        _prod_origins.append('https://focuslearner.pages.dev')
++    CORS_ORIGINS = _prod_origins
+     
+     # Production database optimizations
+     SQLALCHEMY_ENGINE_OPTIONS = {
+diff --git a/backend/extensions.py b/backend/extensions.py
+new file mode 100644
+index 0000000..8b3cf22
+--- /dev/null
++++ b/backend/extensions.py
+@@ -0,0 +1,22 @@
++"""
++FocusLearner Pro - Shared Flask extensions
++
++Kept in their own module (rather than defined in app.py) so route
++blueprints can import them without triggering a circular import with
++app.py, which imports the blueprints.
++"""
++
++import os
++from flask_limiter import Limiter
++from flask_limiter.util import get_remote_address
++
++# storage_uri must be set here on the constructor — Flask-Limiter's
++# init_app(app) does NOT accept a storage_uri kwarg (verified against the
++# installed 3.x API; passing it there raises TypeError). Read the env var
++# directly rather than from app.config, since this module loads before the
++# Flask app's config is populated in app.py.
++limiter = Limiter(
++    key_func=get_remote_address,
++    storage_uri=os.getenv('RATELIMIT_STORAGE_URL', 'memory://'),
++    default_limits=[os.getenv('RATELIMIT_DEFAULT', '200 per hour')],
++)
+diff --git a/backend/models.py b/backend/models.py
+index dfe0461..b11eaf3 100644
+--- a/backend/models.py
++++ b/backend/models.py
+@@ -131,7 +131,10 @@ class PasswordResetToken(db.Model):
+     
+     id = db.Column(db.Integer, primary_key=True)
+     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+-    token = db.Column(db.String(128), unique=True, nullable=False, index=True)
++    # Store a SHA-256 hash of the token, never the raw value — mirrors how we
++    # never store raw passwords. The raw token only ever exists in the email
++    # we send and briefly in memory on this request.
++    token_hash = db.Column(db.String(128), unique=True, nullable=False, index=True)
+     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+     expires_at = db.Column(db.DateTime, nullable=False)
+     is_used = db.Column(db.Boolean, default=False, index=True)
+@@ -142,7 +145,6 @@ class PasswordResetToken(db.Model):
+         return {
+             'id': self.id,
+             'user_id': self.user_id,
+-            'token': self.token,
+             'created_at': self.created_at.isoformat(),
+             'expires_at': self.expires_at.isoformat(),
+             'is_used': self.is_used
+diff --git a/backend/requirements.txt b/backend/requirements.txt
+index d4db6fb..6c61623 100644
+--- a/backend/requirements.txt
++++ b/backend/requirements.txt
+@@ -3,6 +3,7 @@ Flask==3.0.0
+ Flask-CORS==4.0.0
+ Flask-SQLAlchemy==3.1.1
+ Flask-JWT-Extended==4.6.0
++Flask-Limiter>=3.5,<4.0
+ 
+ # Production WSGI server (used in Dockerfile CMD - required for Docker deployment)
+ gunicorn==22.0.0
+diff --git a/backend/routes/auth_routes.py b/backend/routes/auth_routes.py
+index 0273826..7cbcacd 100644
+--- a/backend/routes/auth_routes.py
++++ b/backend/routes/auth_routes.py
+@@ -23,9 +23,12 @@ from utils.auth import (
+     refresh_token_required,
+     blacklist_token,
+     validate_password_strength,
+-    validate_email
++    validate_email,
++    hash_reset_token
+ )
+ from services.google_auth import GoogleAuthService
++from services.email_service import send_password_reset_email, EmailNotConfiguredError
++from extensions import limiter
+ 
+ auth_routes = Blueprint('auth', __name__, url_prefix='/api/auth')
+ google_auth_service = GoogleAuthService()
+@@ -58,7 +61,7 @@ def check_username():
+ 
+ 
+ @auth_routes.route('/register', methods=['POST'])
+-
++@limiter.limit("10 per hour")
+ def register():
+     """Register a new user with comprehensive validation"""
+     try:
+@@ -145,6 +148,7 @@ def register():
+ 
+ 
+ @auth_routes.route('/login', methods=['POST'])
++@limiter.limit("10 per minute")
+ def login():
+     """Login user and return JWT tokens"""
+     try:
+@@ -426,29 +430,43 @@ import secrets
+ from datetime import datetime, timedelta
+ 
+ @auth_routes.route('/forgot-password', methods=['POST'])
++@limiter.limit("5 per hour")
+ def forgot_password():
+-    """Request password reset link/token"""
++    """Request password reset link/token.
++
++    SECURITY: the raw reset token must NEVER be returned in this response.
++    Anyone who knows a user's email address (not their inbox — just the
++    address) could previously call this endpoint and get everything needed
++    to take over that account. The token now only ever leaves this process
++    inside the email we send to the account's actual registered address.
++    """
+     try:
+         data = request.get_json() or {}
+         email = data.get('email', '').strip().lower()
+         if not email:
+             return jsonify({'error': 'Email is required'}), 400
+ 
++        # Always return the same generic message whether or not the email
++        # exists AND whether or not sending succeeds — the response must not
++        # leak which emails are registered or whether delivery worked.
++        generic_response = jsonify({
++            'message': 'If that email is registered, a password reset link has been issued.'
++        }), 200
++
+         user = User.query.filter_by(email=email).first()
+         if not user:
+-            # Return generic success to prevent email enumeration
+-            return jsonify({'message': 'If that email is registered, a password reset link has been issued.'}), 200
++            return generic_response
+ 
+         # Invalidate any old tokens for this user
+         PasswordResetToken.query.filter_by(user_id=user.id, is_used=False).update({'is_used': True})
+ 
+-        # Create single-use token valid for 1 hour
++        # Create single-use token valid for 1 hour. Only the hash is stored.
+         token_str = secrets.token_urlsafe(32)
+         expires_at = datetime.utcnow() + timedelta(hours=1)
+ 
+         reset_token = PasswordResetToken(
+             user_id=user.id,
+-            token=token_str,
++            token_hash=hash_reset_token(token_str),
+             expires_at=expires_at,
+             is_used=False
+         )
+@@ -456,13 +474,21 @@ def forgot_password():
+         db.session.commit()
+ 
+         reset_link = f"https://focuslearner.pages.dev/login?reset_token={token_str}"
+-        print(f"Password reset token issued for {email}: {reset_link}")
+ 
+-        return jsonify({
+-            'message': 'If that email is registered, a password reset link has been issued.',
+-            'reset_token': token_str,
+-            'reset_link': reset_link
+-        }), 200
++        try:
++            send_password_reset_email(to_email=user.email, reset_link=reset_link)
++        except EmailNotConfiguredError:
++            current_app.logger.warning(
++                'Password reset requested but MAIL_* env vars are not set — email not sent.'
++            )
++            if current_app.debug:
++                # DEV ONLY: never do this in production. Logged, not returned
++                # to the client, so it can't be scraped via the API response.
++                current_app.logger.warning(f'[DEV ONLY] Reset link: {reset_link}')
++        except Exception as mail_err:
++            current_app.logger.error(f'Failed to send password reset email: {mail_err}')
++
++        return generic_response
+ 
+     except Exception as e:
+         current_app.logger.error(f'Forgot password error: {e}')
+@@ -471,6 +497,7 @@ def forgot_password():
+ 
+ 
+ @auth_routes.route('/reset-password', methods=['POST'])
++@limiter.limit("10 per hour")
+ def reset_password():
+     """Submit new password with single-use reset token"""
+     try:
+@@ -481,7 +508,9 @@ def reset_password():
+         if not token_str or not new_password:
+             return jsonify({'error': 'Token and new password are required'}), 400
+ 
+-        reset_token = PasswordResetToken.query.filter_by(token=token_str, is_used=False).first()
++        reset_token = PasswordResetToken.query.filter_by(
++            token_hash=hash_reset_token(token_str), is_used=False
++        ).first()
+         if not reset_token:
+             return jsonify({'error': 'Invalid or expired password reset token'}), 400
+ 
+diff --git a/backend/services/email_service.py b/backend/services/email_service.py
+new file mode 100644
+index 0000000..351bb0a
+--- /dev/null
++++ b/backend/services/email_service.py
+@@ -0,0 +1,78 @@
++"""
++FocusLearner Pro - Email Service
++
++Minimal SMTP-based email sending, built on the MAIL_* config values that
++already existed in config.py but were never wired up to anything.
++
++Uses stdlib smtplib/email — no new dependency needed. If you'd rather use
++a transactional provider (Resend, SendGrid, etc.) later, swap the body of
++send_email() for their API call; callers don't need to change.
++"""
++
++import smtplib
++from email.mime.text import MIMEText
++from email.mime.multipart import MIMEMultipart
++from flask import current_app
++
++
++class EmailNotConfiguredError(Exception):
++    """Raised when MAIL_* settings are missing, so callers can decide how to degrade."""
++    pass
++
++
++def send_email(to_email: str, subject: str, html_body: str, text_body: str = "") -> None:
++    cfg = current_app.config
++    server = cfg.get("MAIL_SERVER")
++    username = cfg.get("MAIL_USERNAME")
++    password = cfg.get("MAIL_PASSWORD")
++
++    if not server or not username or not password:
++        raise EmailNotConfiguredError(
++            "MAIL_SERVER / MAIL_USERNAME / MAIL_PASSWORD are not set — "
++            "set them as environment variables to enable outgoing email."
++        )
++
++    port = cfg.get("MAIL_PORT", 587)
++    use_tls = cfg.get("MAIL_USE_TLS", True)
++
++    msg = MIMEMultipart("alternative")
++    msg["Subject"] = subject
++    msg["From"] = username
++    msg["To"] = to_email
++    if text_body:
++        msg.attach(MIMEText(text_body, "plain"))
++    msg.attach(MIMEText(html_body, "html"))
++
++    with smtplib.SMTP(server, port) as smtp:
++        if use_tls:
++            smtp.starttls()
++        smtp.login(username, password)
++        smtp.sendmail(username, [to_email], msg.as_string())
++
++
++def send_password_reset_email(to_email: str, reset_link: str) -> None:
++    subject = "Reset your FocusLearner Pro password"
++    text_body = (
++        f"We received a request to reset your FocusLearner Pro password.\n\n"
++        f"Reset it here (valid for 1 hour): {reset_link}\n\n"
++        f"If you didn't request this, you can safely ignore this email."
++    )
++    html_body = f"""
++    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
++        <h2 style="color:#111;">Reset your password</h2>
++        <p>We received a request to reset your FocusLearner Pro password.
++           This link is valid for <strong>1 hour</strong>.</p>
++        <p style="margin: 24px 0;">
++            <a href="{reset_link}"
++               style="background:#000; color:#fff; padding:12px 20px;
++                      text-decoration:none; border-radius:6px;">
++                Reset Password
++            </a>
++        </p>
++        <p style="color:#666; font-size: 13px;">
++            If you didn't request this, you can safely ignore this email —
++            your password won't be changed.
++        </p>
++    </div>
++    """
++    send_email(to_email, subject, html_body, text_body)
+diff --git a/backend/utils/auth.py b/backend/utils/auth.py
+index 2f18a99..9cb0f95 100644
+--- a/backend/utils/auth.py
++++ b/backend/utils/auth.py
+@@ -125,6 +125,11 @@ def is_token_blacklisted(token: str) -> bool:
+     return token_hash in _token_blacklist
+ 
+ 
++def hash_reset_token(token: str) -> str:
++    """Hash a password-reset token for storage — never store the raw token."""
++    return hashlib.sha256(token.encode()).hexdigest()
++
++
+ def get_token_from_request() -> Optional[str]:
+     """Extract token from Authorization header"""
+     auth_header = request.headers.get('Authorization')
+@@ -139,22 +144,38 @@ def get_token_from_request() -> Optional[str]:
+ 
+ 
+ def token_required(f):
+-    """Decorator to protect routes requiring authentication, verifying tokens when present"""
++    """Decorator to protect routes requiring authentication.
++
++    SECURITY: this must reject the request outright when no valid token is
++    present. There is intentionally no "local dev fallback" here — a
++    previous version of this decorator silently authenticated *every*
++    unauthenticated or invalid-token request as user_id=1, which meant every
++    route using this decorator was effectively unauthenticated in
++    production. If you want a convenience login for local development, log
++    in for real and use the token you get back, or add a fallback that is
++    strictly gated behind `current_app.config['DEBUG']` — never let it run
++    unconditionally.
++    """
+     @wraps(f)
+     def decorated(*args, **kwargs):
+         token = get_token_from_request()
+-        if token:
+-            user_id = verify_token(token)
+-            if user_id:
+-                request.current_user_id = user_id
+-                request.current_token = token
+-                return f(*args, **kwargs)
+-        
+-        # Local development fallback if token is not present or invalid
+-        request.current_user_id = 1
+-        request.current_token = "mock_token"
++        if not token:
++            return jsonify({
++                'error': 'Authentication required',
++                'message': 'A valid access token is required to access this resource'
++            }), 401
++
++        user_id = verify_token(token)
++        if not user_id:
++            return jsonify({
++                'error': 'Authentication failed',
++                'message': 'Token is invalid, expired, or has been revoked'
++            }), 401
++
++        request.current_user_id = user_id
++        request.current_token = token
+         return f(*args, **kwargs)
+-    
++
+     return decorated
+ 
+ 
+diff --git a/frontend/public/index.html b/frontend/public/index.html
+index aa95745..1e3fd70 100644
+--- a/frontend/public/index.html
++++ b/frontend/public/index.html
+@@ -8,6 +8,21 @@
+       name="description"
+       content="FocusLearner Pro - A Unified, Contextual, and Gamified Learning Ecosystem"
+     />
++
++    <!-- Open Graph / Twitter Card: without these, sharing this link on
++         LinkedIn, WhatsApp, etc. shows a blank/generic preview card.
++         og:image needs a real ~1200x630 asset added to /public and
++         referenced below — swap the placeholder path once you have one. -->
++    <meta property="og:type" content="website" />
++    <meta property="og:title" content="FocusLearner Pro" />
++    <meta property="og:description" content="A unified, contextual, and gamified learning ecosystem — deep-focus study sessions, subject-aware interactive labs, and an AI study companion." />
++    <meta property="og:url" content="https://focuslearner.pages.dev" />
++    <meta property="og:image" content="%PUBLIC_URL%/og-image.png" />
++    <meta name="twitter:card" content="summary_large_image" />
++    <meta name="twitter:title" content="FocusLearner Pro" />
++    <meta name="twitter:description" content="A unified, contextual, and gamified learning ecosystem for deep-focus study." />
++    <meta name="twitter:image" content="%PUBLIC_URL%/og-image.png" />
++
+     <title>FocusLearner Pro</title>
+   </head>
+   <body>

@@ -8,17 +8,19 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^5.18.0",
     "@mui/material": "^5.18.0",
-    "@react-oauth/google": "^0.11.1",
+    "@react-oauth/google": "^0.13.5",
     "axios": "^1.18.0",
     "baseline-browser-mapping": "^2.10.43",
     "caniuse-lite": "^1.0.30001806",
+    "baseline-browser-mapping": "^2.11.12",
+    "caniuse-lite": "^1.0.30001805",
     "framer-motion": "^12.23.26",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-page-visibility": "^7.0.0",
     "react-router-dom": "^6.20.0",
     "react-youtube": "^10.1.0",
-    "recharts": "^3.6.0"
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
