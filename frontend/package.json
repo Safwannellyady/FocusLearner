@@ -10,7 +10,7 @@
     "@mui/material": "^5.18.0",
     "@react-oauth/google": "^0.13.5",
     "axios": "^1.18.0",
-    "baseline-browser-mapping": "^2.10.43",
+    "baseline-browser-mapping": "^2.11.12",
     "caniuse-lite": "^1.0.30001805",
     "framer-motion": "^12.23.26",
     "react": "^18.2.0",
