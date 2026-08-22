@@ -12,7 +12,7 @@
     "axios": "^1.18.0",
     "baseline-browser-mapping": "^2.10.43",
     "caniuse-lite": "^1.0.30001806",
-    "baseline-browser-mapping": "^2.11.12",
+    "baseline-browser-mapping": "^2.11.15",
     "caniuse-lite": "^1.0.30001805",
     "framer-motion": "^12.23.26",
     "react": "^18.2.0",
