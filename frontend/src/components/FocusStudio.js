@@ -30,9 +30,6 @@ import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
 import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
 import MoreVertRoundedIcon     from "@mui/icons-material/MoreVertRounded";
 
-import CloudDoneRoundedIcon    from "@mui/icons-material/CloudDoneRounded";
-import CloudSyncRoundedIcon    from "@mui/icons-material/CloudSyncRounded";
-import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import { focusAPI, lectureAPI } from "../services/api";
 import SubjectLabs from "./labs/SubjectLabs";
 
@@ -599,7 +596,6 @@ const FocusStudio = () => {
   const [phase,     setPhase]    = useState("focus");   // focus | break
   const [remaining, setRemaining] = useState((session.focus_minutes || 25) * 60);
   const [running,   setRunning]  = useState(true);
-  const [sessionCount, setSessionCount] = useState(1);
   const intervalRef = useRef(null);
   const focusMin = session.focus_minutes || 25;
   const breakMin = session.break_minutes || 5;
@@ -619,7 +615,6 @@ const FocusStudio = () => {
           if (r <= 1) {
             const next = phase === "focus" ? "break" : "focus";
             setPhase(next);
-            if (next === "focus") setSessionCount(c => c + 1);
             return (next === "focus" ? focusMin : breakMin) * 60;
           }
           return r - 1;
@@ -764,25 +759,11 @@ const FocusStudio = () => {
             <Typography sx={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.85rem", fontWeight: 800, color: accent }}>
               {fmtTime(remaining)}
             </Typography>
-            <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              {phase}
-            </Typography>
           </Box>
 
-          <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", fontFamily: "JetBrains Mono, monospace" }}>
-            #{sessionCount}
-          </Typography>
-
-          {/* Autosave Status Badge */}
+          {/* Compact sync state */}
           <Tooltip title={saveStatus === "saved" ? "Session synced with PostgreSQL cloud" : saveStatus === "saving" ? "Autosaving session..." : "Autosave failed — retrying"}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, px: 1, py: 0.3, borderRadius: "100px", bgcolor: saveStatus === "saved" ? "rgba(16,185,129,0.1)" : saveStatus === "saving" ? "rgba(99,102,241,0.1)" : "rgba(239,68,68,0.1)", border: `1px solid ${saveStatus === "saved" ? "rgba(16,185,129,0.25)" : saveStatus === "saving" ? "rgba(99,102,241,0.25)" : "rgba(239,68,68,0.25)"}` }}>
-              {saveStatus === "saved" && <CloudDoneRoundedIcon sx={{ fontSize: 13, color: "var(--emerald)" }} />}
-              {saveStatus === "saving" && <CloudSyncRoundedIcon sx={{ fontSize: 13, color: "var(--indigo-lt)" }} />}
-              {saveStatus === "error" && <ErrorOutlineRoundedIcon sx={{ fontSize: 13, color: "var(--rose)" }} />}
-              <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: saveStatus === "saved" ? "var(--emerald)" : saveStatus === "saving" ? "var(--indigo-lt)" : "var(--rose)" }}>
-                {saveStatus === "saved" ? "Saved" : saveStatus === "saving" ? "Saving..." : "Save Failed"}
-              </Typography>
-            </Box>
+            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: saveStatus === "saved" ? "var(--emerald)" : saveStatus === "saving" ? "var(--indigo-lt)" : "var(--rose)", boxShadow: `0 0 7px ${saveStatus === "saved" ? "var(--emerald)" : saveStatus === "saving" ? "var(--indigo-lt)" : "var(--rose)"}` }} />
           </Tooltip>
         </Box>
 
@@ -790,7 +771,7 @@ const FocusStudio = () => {
         {/* Controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
           {/* Milestone indicator */}
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.75, px: 1.25, py: 0.4, borderRadius: "var(--r-md)", bgcolor: elapsedMin >= 30 ? "rgba(16,185,129,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${elapsedMin >= 30 ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.08)"}` }}>
+          <Box sx={{ display: "none" }}>
             <BoltRoundedIcon sx={{ fontSize: 15, color: elapsedMin >= 30 ? "var(--emerald)" : "var(--amber)" }} />
             <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: elapsedMin >= 30 ? "var(--emerald)" : "var(--text-mid)" }}>
               {elapsedMin < 30 ? `${elapsedMin}m / 30m min` : `${elapsedMin}m (${getScaledXP(elapsedMin).xp} XP • ${getScaledXP(elapsedMin).label})`}
@@ -836,18 +817,11 @@ const FocusStudio = () => {
             </Box>
           )}
 
-          <Box
-            onClick={handleEndSession}
-            sx={{
-              display: "flex", alignItems: "center", gap: 0.5, px: 1.25, py: 0.5,
-              borderRadius: "var(--r-md)", bgcolor: "rgba(244,63,94,0.1)",
-              border: "1px solid rgba(244,63,94,0.25)", cursor: "pointer",
-              "&:hover": { bgcolor: "rgba(244,63,94,0.18)" }, ml: 0.5,
-            }}
-          >
-            <StopRoundedIcon sx={{ fontSize: 14, color: "var(--rose)" }} />
-            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--rose)" }}>End</Typography>
-          </Box>
+          <Tooltip title="End session">
+            <IconButton size="small" onClick={handleEndSession} sx={{ color: "var(--rose)", bgcolor: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.25)", width: 30, height: 30, borderRadius: "var(--r-sm)", ml: 0.5, "&:hover": { bgcolor: "rgba(244,63,94,0.18)" } }}>
+              <StopRoundedIcon sx={{ fontSize: 14 }} />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
