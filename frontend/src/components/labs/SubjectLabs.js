@@ -16,11 +16,32 @@ import FinanceLab from "./FinanceLab";
 import PhysicsSim from "./PhysicsSim";
 import BiologyLab from "./BiologyLab";
 
+const StudyWorkspace = ({ subjectFocus, topic }) => (
+  <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", p: 3, textAlign: "center", bgcolor: "#090d16" }}>
+    <Box sx={{ maxWidth: 520 }}>
+      <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.1rem", color: "#f1f5f9", mb: 1 }}>
+        Study workspace ready
+      </Typography>
+      <Typography sx={{ color: "var(--text-dim)", fontSize: "0.86rem", lineHeight: 1.65 }}>
+        {topic ? `${topic} is best supported by notes, search, chat, and summaries—not a coding terminal.` : `${subjectFocus || "This subject"} does not require a technical lab.`}
+      </Typography>
+    </Box>
+  </Box>
+);
+
 /**
  * Dynamic Subject Lab Registry Engine
  * Maps ANY subject to its corresponding interactive practice lab environment.
  */
 export const LAB_REGISTRY = [
+  {
+    id: "study",
+    label: "Study Workspace",
+    icon: ScienceRoundedIcon,
+    color: "#818cf8",
+    keywords: ["neuroscience", "neuro", "psychology", "behavioral", "cognitive", "mental", "sociology", "history", "literature", "language", "philosophy"],
+    component: StudyWorkspace,
+  },
   {
     id: "python",
     label: "Python Compiler & REPL",
@@ -81,18 +102,27 @@ export const LAB_REGISTRY = [
 
 export const resolveLabForSubject = (subjectStr = "", topicStr = "") => {
   const text = `${subjectStr} ${topicStr}`.toLowerCase();
-  for (const lab of LAB_REGISTRY) {
-    if (lab.keywords.some((kw) => text.includes(kw))) {
-      return lab.id;
-    }
-  }
-  return "python";
+  const matchesKeyword = (keyword) => {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(^|[^a-z0-9+])${escaped}($|[^a-z0-9+])`, "i").test(text);
+  };
+  const scoredLabs = LAB_REGISTRY
+    .map((lab) => ({ lab, score: lab.keywords.reduce((score, keyword) => score + (matchesKeyword(keyword) ? keyword.length : 0), 0) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  // Never force a technical sandbox for a subject that has no appropriate
+  // hands-on environment.  The study workspace keeps the session coherent.
+  return scoredLabs[0]?.lab.id || "study";
 };
 
 const SubjectLabs = ({ subjectFocus = "", topic = "", initialLabId = null }) => {
-  const resolvedDefault = initialLabId || resolveLabForSubject(subjectFocus, topic);
+  const resolvedDefault = LAB_REGISTRY.some((lab) => lab.id === initialLabId)
+    ? initialLabId
+    : resolveLabForSubject(subjectFocus, topic);
   const [activeLabId, setActiveLabId] = useState(resolvedDefault);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [isManuallySelected, setIsManuallySelected] = useState(Boolean(initialLabId));
 
   const activeLab = LAB_REGISTRY.find((l) => l.id === activeLabId) || LAB_REGISTRY[0];
   const ActiveComponent = activeLab.component;
@@ -118,7 +148,7 @@ const SubjectLabs = ({ subjectFocus = "", topic = "", initialLabId = null }) => 
               {activeLab.label}
             </Typography>
             <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>
-              Auto-matched to: <span style={{ color: "var(--indigo-lt)", fontWeight: 600 }}>{subjectFocus || "General Study"}</span>
+              {isManuallySelected ? "Selected manually" : "Recommended for"}: <span style={{ color: "var(--indigo-lt)", fontWeight: 600 }}>{subjectFocus || "General Study"}</span>
             </Typography>
           </Box>
         </Box>
@@ -135,7 +165,7 @@ const SubjectLabs = ({ subjectFocus = "", topic = "", initialLabId = null }) => 
             "&:hover": { bgcolor: "rgba(99,102,241,0.12)", borderColor: "rgba(99,102,241,0.3)" }
           }}
         >
-          Switch Lab ({LAB_REGISTRY.length})
+          Change workspace
         </Button>
 
         <Menu
@@ -149,7 +179,7 @@ const SubjectLabs = ({ subjectFocus = "", topic = "", initialLabId = null }) => 
           {LAB_REGISTRY.map((lab) => (
             <MenuItem
               key={lab.id}
-              onClick={() => { setActiveLabId(lab.id); setAnchorEl(null); }}
+              onClick={() => { setActiveLabId(lab.id); setIsManuallySelected(true); setAnchorEl(null); }}
               selected={lab.id === activeLabId}
               sx={{ gap: 1.5, py: 1, px: 2, fontSize: "0.8rem", color: lab.id === activeLabId ? lab.color : "#f1f5f9" }}
             >

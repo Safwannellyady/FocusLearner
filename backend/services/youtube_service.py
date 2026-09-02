@@ -103,13 +103,25 @@ class YouTubeService:
                 }
                 videos.append(video)
             
-            return self._rank_and_filter(videos, subject_focus, query, max_results)
+            ranked_videos = self._rank_and_filter(videos, subject_focus, query, max_results)
+            if ranked_videos:
+                return ranked_videos
+            return self._safe_curated_fallback(query, subject_focus, max_results)
         
         except Exception as e:
             print(f"Error fetching YouTube videos: {e}")
-            # A failed live search should be visible to the UI, not replaced by
-            # unrelated videos that appear to be valid recommendations.
-            return []
+            # Keep the focus screen usable during a transient API failure, but
+            # only with curated results that pass the exact same topic gate.
+            return self._safe_curated_fallback(query, subject_focus, max_results)
+
+    def _safe_curated_fallback(self, query: str, subject_focus: str, max_results: int) -> List[Dict]:
+        """Use only topic-matching development fixtures; otherwise return none."""
+        return self._rank_and_filter(
+            self._get_mock_videos(query, subject_focus, max_results),
+            subject_focus,
+            query,
+            max_results,
+        )
 
     def _build_search_query(self, subject_focus: str, topic: str) -> str:
         """Build a deterministic, intent-preserving educational query."""
