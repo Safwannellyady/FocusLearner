@@ -172,8 +172,8 @@ export const focusAPI = {
       timestamp,
     }),
 
-  getContent: (query) =>
-    api.get('/focus/content', { params: { query } }),
+  getContent: (query, subjectFocus) =>
+    api.get('/focus/content', { params: { query, subject_focus: subjectFocus } }),
 
   logDistraction: (duration, reason, timestamp) =>
     api.post('/focus/distraction/log', { duration, reason, timestamp }),

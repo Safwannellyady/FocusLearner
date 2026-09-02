@@ -235,13 +235,17 @@ def get_focused_content():
     """Get filtered content for the current focus session or custom search query"""
     user_id = request.current_user_id
     query = request.args.get('query', '').strip()
+    requested_subject = request.args.get('subject_focus', '').strip()
     
     session = FocusSession.query.filter_by(
         user_id=user_id,
         is_locked=True
     ).first()
     
-    subject_focus = session.subject_focus if session else (query or "General Science")
+    # The browser keeps the current session's intended subject.  Accept it as
+    # a fallback for resumed sessions where the active-session record no longer
+    # exists, rather than treating a topic-only query as the whole subject.
+    subject_focus = session.subject_focus if session else (requested_subject or query or "General Science")
     search_term = query or subject_focus
     
     # Get filtered YouTube videos (up to 20 items)

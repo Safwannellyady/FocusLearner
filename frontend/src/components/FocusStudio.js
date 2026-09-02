@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, IconButton, Tooltip, CircularProgress } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
+import YouTube from "react-youtube";
 
 // Icons — dock tabs
 import ScienceRoundedIcon       from "@mui/icons-material/ScienceRounded";
@@ -519,38 +520,79 @@ const FocusStudio = () => {
   const [completionModal, setCompletionModal] = useState({ open: false, xp: 0, label: "", minutes: 0 });
   const [sidebarSearch, setSidebarSearch] = useState("");
   const [isSearchingSidebar, setIsSearchingSidebar] = useState(false);
+  const [videoError, setVideoError] = useState("");
+  const [videosLoaded, setVideosLoaded] = useState(false);
+
+  const subjectFocus = session.subject_focus || session.subjectName || "";
 
   useEffect(() => {
-    const query = session.topic || session.subject_focus || session.subjectName || session.title || "Neurosciences";
-    focusAPI.getContent(query)
+    const query = session.topic || session.title || subjectFocus;
+    focusAPI.getContent(query, subjectFocus)
       .then(res => {
         const results = res?.data?.results || res?.data?.videos || [];
         setVideoList(results);
+        setVideosLoaded(true);
         if (results.length > 0) {
           const currentClean = extractYouTubeId(videoId);
-          // If videoId is empty or points to default/unavailable study tips video, auto-sync to first result
-          if (!currentClean || currentClean === "inWWhN5EWM4" || currentClean === "p60rN9JEapg" || currentClean === "-w-V3hC_rJ0") {
-
+          // Never replace a video supplied by the learner.  Only choose the
+          // best verified result when no video is selected yet.
+          if (!currentClean) {
             const rawVid = results[0].video_id || results[0].id || results[0].url || "";
             const vid = extractYouTubeId(rawVid);
             if (vid) setVideoId(vid);
           }
         }
       })
-      .catch(err => console.error("Video search fallback error:", err));
-  }, [session.topic, session.subject_focus, session.subjectName, session.title]);
+      .catch(err => {
+        console.error("Video search error:", err);
+        setVideoList([]);
+        setVideosLoaded(true);
+      });
+  }, [session.topic, session.title, subjectFocus]);
 
   const handleSidebarSearchSubmit = (e) => {
     if (e) e.preventDefault();
-    const q = sidebarSearch.trim() || session.topic || session.subject_focus || "Neurosciences";
+    const q = sidebarSearch.trim() || session.topic || subjectFocus;
     setIsSearchingSidebar(true);
-    focusAPI.getContent(q)
+    focusAPI.getContent(q, subjectFocus)
       .then(res => {
         const results = res?.data?.results || res?.data?.videos || [];
-        if (results.length > 0) setVideoList(results);
+        setVideoList(results);
+        setVideosLoaded(true);
       })
       .catch(err => console.error("Sidebar search error:", err))
       .finally(() => setIsSearchingSidebar(false));
+  };
+
+  const selectVideo = (candidate) => {
+    const nextVideoId = extractYouTubeId(candidate);
+    if (nextVideoId) {
+      setVideoId(nextVideoId);
+      setVideoError("");
+    }
+  };
+
+  const renderVideo = () => {
+    const selectedVideoId = extractYouTubeId(videoId);
+    if (!selectedVideoId) {
+      return <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1.5 }}>
+        <TimerRoundedIcon sx={{ fontSize: 36, color: accent }} />
+        <Typography sx={{ fontSize: "0.88rem", color: "var(--text-mid)" }}>Select a verified video from the sidebar</Typography>
+      </Box>;
+    }
+    if (videoError) {
+      return <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1.5, px: 3, textAlign: "center" }}>
+        <Typography sx={{ fontWeight: 700, color: "#fda4af" }}>This video cannot play in the Focus Studio.</Typography>
+        <Typography sx={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>{videoError} Select another verified recommendation.</Typography>
+      </Box>;
+    }
+    return <YouTube
+      videoId={selectedVideoId}
+      opts={{ width: "100%", height: "100%", playerVars: { autoplay: 1, rel: 0 } }}
+      style={{ width: "100%", height: "100%" }}
+      iframeClassName="focus-studio-player"
+      onError={(event) => setVideoError(event.data === 101 || event.data === 150 ? "The video owner has disabled embedded playback." : "YouTube could not load this video.")}
+    />;
   };
 
   /* Timer state */
@@ -816,15 +858,7 @@ const FocusStudio = () => {
         <Box sx={{ height: `${topPct}%`, flexShrink: 0, bgcolor: "#000", position: "relative", overflow: "hidden" }}>
           {theaterMode ? (
             /* Theater Mode: 100% width video */
-            extractYouTubeId(videoId) ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${extractYouTubeId(videoId)}?autoplay=1&rel=0`}
-                style={{ width: "100%", height: "100%", border: "none" }}
-                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title="Session Video"
-              />
-            ) : (
+            extractYouTubeId(videoId) ? renderVideo() : (
               <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
                 <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 3, repeat: Infinity }}>
                   <Box sx={{ width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle,${accent}44,transparent)`, border: `2px solid ${accent}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -844,15 +878,7 @@ const FocusStudio = () => {
             <Box sx={{ display: "flex", width: "100%", height: "100%" }}>
               {/* Left Video Player */}
               <Box sx={{ flex: "1 1 70%", height: "100%", bgcolor: "#000" }}>
-                {extractYouTubeId(videoId) ? (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${extractYouTubeId(videoId)}?autoplay=1&rel=0`}
-                    style={{ width: "100%", height: "100%", border: "none" }}
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="Session Video"
-                  />
-                ) : (
+                {extractYouTubeId(videoId) ? renderVideo() : (
                   <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1.5 }}>
                     <TimerRoundedIcon sx={{ fontSize: 36, color: accent }} />
                     <Typography sx={{ fontSize: "0.88rem", color: "var(--text-mid)" }}>Select a video from the sidebar list</Typography>
@@ -916,7 +942,7 @@ const FocusStudio = () => {
                       return (
                         <Box
                           key={vId || v.title}
-                          onClick={() => vId && setVideoId(vId)}
+                          onClick={() => selectVideo(vId)}
                           sx={{
                             display: "flex", gap: 1, p: 0.75, borderRadius: "var(--r-md)",
                             cursor: "pointer", transition: "all 0.15s",
@@ -952,6 +978,10 @@ const FocusStudio = () => {
                         </Box>
                       );
                     })
+                  ) : videosLoaded ? (
+                    <Box sx={{ p: 2, textAlign: "center" }}>
+                      <Typography sx={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>No verified videos matched these keywords. Refine the topic or try another search.</Typography>
+                    </Box>
                   ) : (
                     <Box sx={{ p: 2, textAlign: "center" }}>
                       <CircularProgress size={20} sx={{ color: "var(--indigo)", mb: 1 }} />

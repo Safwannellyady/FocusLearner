@@ -4,6 +4,7 @@ Service for fetching and managing YouTube content
 """
 
 import os
+import re
 import requests
 from typing import List, Dict, Optional
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -33,13 +34,26 @@ class YouTubeService:
         Returns:
             List of filtered video dictionaries
         """
+        query = (query or '').strip()
+        subject_focus = (subject_focus or '').strip()
+        if not query and not subject_focus:
+            return []
+
+        # Preserve every user-supplied keyword.  An LLM-generated replacement
+        # query was allowed to drop the actual topic, which is why unrelated
+        # videos could enter a focus session.
+        refined_query = self._build_search_query(subject_focus, query)
+
         if not self.api_key:
-            # Return mock data for development
-            return self._get_mock_videos(query, subject_focus, max_results)
-        
-        # Use AI to refine the search query for better educational relevance
-        refined_query = self.ai_service.refine_search_query(subject_focus, query)
-        print(f"Original Query: {subject_focus} {query} -> Refined: {refined_query}")
+            # Development data must never silently turn an unknown subject into
+            # generic productivity content.  It is only returned when it can
+            # pass the same relevance gate as live YouTube results.
+            return self._rank_and_filter(
+                self._get_mock_videos(query, subject_focus, max_results),
+                subject_focus,
+                query,
+                max_results,
+            )
         
         params = {
             'part': 'snippet',
@@ -47,27 +61,41 @@ class YouTubeService:
             'type': 'video',
             'videoEmbeddable': 'true',
             'videoSyndicated': 'true',
-            'maxResults': max_results * 2,  # Get more to filter
+            'maxResults': min(max_results * 5, 50),  # Fetch enough candidates to rank safely
             'key': self.api_key,
             'videoCategoryId': '27',  # Education category
             'order': 'relevance'
         }
 
         try:
-            response = requests.get(f"{self.base_url}/search", params=params)
+            response = requests.get(f"{self.base_url}/search", params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
             
+            search_items = data.get('items', [])
+            video_ids = [item.get('id', {}).get('videoId') for item in search_items]
+            video_ids = [video_id for video_id in video_ids if video_id]
+            details_by_id = self._get_video_details(video_ids)
+
             videos = []
-            for item in data.get('items', []):
+            for item in search_items:
+                video_id = item.get('id', {}).get('videoId')
+                details = details_by_id.get(video_id, {})
+                status = details.get('status', {})
+                # The search endpoint's embeddable hint is not sufficient by
+                # itself; verify the current video metadata before returning it.
+                if not status.get('embeddable') or status.get('privacyStatus') != 'public':
+                    continue
+                snippet = item.get('snippet', {})
+                thumbnails = snippet.get('thumbnails', {})
                 video = {
-                    'video_id': item['id']['videoId'],
-                    'title': item['snippet']['title'],
-                    'description': item['snippet']['description'],
-                    'thumbnail': item['snippet']['thumbnails']['medium']['url'],
-                    'channel': item['snippet']['channelTitle'],
-                    'published_at': item['snippet']['publishedAt'],
-                    'url': f"https://www.youtube.com/watch?v={item['id']['videoId']}",
+                    'video_id': video_id,
+                    'title': snippet.get('title', ''),
+                    'description': snippet.get('description', ''),
+                    'thumbnail': (thumbnails.get('medium') or thumbnails.get('high') or thumbnails.get('default') or {}).get('url', ''),
+                    'channel': snippet.get('channelTitle', ''),
+                    'published_at': snippet.get('publishedAt', ''),
+                    'url': f"https://www.youtube.com/watch?v={video_id}",
                     'source': 'youtube',
                     'subject_focus': subject_focus,
                     'topic_context': query,
@@ -75,14 +103,84 @@ class YouTubeService:
                 }
                 videos.append(video)
             
-            # Filter videos using content filter
-            filtered_videos = self.content_filter.filter_video_list(videos)
-            
-            return filtered_videos[:max_results]
+            return self._rank_and_filter(videos, subject_focus, query, max_results)
         
         except Exception as e:
             print(f"Error fetching YouTube videos: {e}")
-            return self._get_mock_videos(query, subject_focus, max_results)
+            # A failed live search should be visible to the UI, not replaced by
+            # unrelated videos that appear to be valid recommendations.
+            return []
+
+    def _build_search_query(self, subject_focus: str, topic: str) -> str:
+        """Build a deterministic, intent-preserving educational query."""
+        terms = ' '.join(part for part in (subject_focus, topic) if part).strip()
+        return f'{terms} lecture tutorial'.strip()
+
+    def _get_video_details(self, video_ids: List[str]) -> Dict[str, Dict]:
+        """Return authoritative metadata used to reject unavailable embeds."""
+        if not video_ids:
+            return {}
+        response = requests.get(
+            f"{self.base_url}/videos",
+            params={
+                'part': 'status,contentDetails',
+                'id': ','.join(video_ids),
+                'key': self.api_key,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        return {item.get('id'): item for item in response.json().get('items', [])}
+
+    @staticmethod
+    def _keywords(value: str) -> List[str]:
+        stop_words = {
+            'about', 'after', 'and', 'are', 'for', 'from', 'how', 'into',
+            'learn', 'lesson', 'the', 'this', 'to', 'tutorial', 'using', 'with'
+        }
+        return [
+            token for token in re.findall(r"[a-z0-9+#.]+", (value or '').lower())
+            if len(token) > 2 and token not in stop_words
+        ]
+
+    def _rank_and_filter(self, videos: List[Dict], subject_focus: str, topic: str, max_results: int) -> List[Dict]:
+        """Reject weak matches and rank the remaining educational candidates."""
+        topic_terms = set(self._keywords(topic))
+        subject_terms = set(self._keywords(subject_focus))
+        ranked = []
+
+        for video in videos:
+            title = video.get('title', '')
+            description = video.get('description', '')
+            is_filtered, reason = self.content_filter.filter_content(
+                title, description, video.get('tags', []), subject_focus, topic
+            )
+            if is_filtered:
+                continue
+
+            title_terms = set(self._keywords(title))
+            description_terms = set(self._keywords(description))
+            title_topic_matches = topic_terms & title_terms
+            topic_matches = title_topic_matches | (topic_terms & description_terms)
+            subject_matches = subject_terms & (title_terms | description_terms)
+
+            # A focus recommendation must mention the requested topic. Subject
+            # terms improve ranking, but are not mandatory because learners use
+            # broad labels such as "Math" while accurate titles say "Calculus".
+            if topic_terms and not topic_matches:
+                continue
+            # Mock descriptions are generated by this application and cannot
+            # serve as evidence that a real video covers the learner's topic.
+            if video.get('source') == 'mock' and topic_terms and not title_topic_matches:
+                continue
+
+            score = (len(title_topic_matches) * 8) + (len(topic_matches) * 3) + (len(subject_matches) * 2)
+            video['relevance_score'] = score
+            video['is_filtered'] = False
+            video['filter_reason'] = 'Verified educational and topic-relevant'
+            ranked.append(video)
+
+        return sorted(ranked, key=lambda item: item['relevance_score'], reverse=True)[:max_results]
     
     def get_video_transcript(self, video_id: str) -> Optional[List[Dict]]:
         """
@@ -287,7 +385,7 @@ class YouTubeService:
              mock_videos.append({
                 'video_id': vid,
                 'title': f'{title}',
-                'description': f'Recommended educational content for {subject_focus}. This is a popular resource for studying {query or "this topic"}.',
+                'description': f'Recommended educational content for {subject_focus}.',
                 'thumbnail': f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg',
                 'channel': channel,
                 'published_at': '2024-01-01T00:00:00Z',
