@@ -280,6 +280,51 @@ class AIService:
              return mock_fallback
         return parsed
 
+    def generate_flashcards(self, subject: str, topic: str, content_text: str = '') -> List[Dict[str, str]]:
+        """
+        Generate 5 key Q&A flashcards from subject, topic, and optional study notes/transcripts.
+        """
+        mock_flashcards = [
+            {"question": f"What is the foundational definition of {topic} in {subject}?", "answer": f"{topic} represents key core principles and structured execution in {subject}."},
+            {"question": f"How do you apply {topic} to resolve analytical problems?", "answer": f"By isolating core variables, establishing boundary conditions, and systematically evaluating steps."},
+            {"question": f"What is a common pitfall when working with {topic}?", "answer": f"Ignoring edge cases or omitting critical initial setup verification."},
+            {"question": f"Why is {topic} essential in modern {subject} applications?", "answer": f"It provides reliable efficiency, scalability, and deterministic problem-solving capabilities."},
+            {"question": f"How do you verify correctness in {topic} exercises?", "answer": f"Cross-check calculated results against known theoretical benchmarks and empirical outputs."}
+        ]
+
+        if not self.api_key:
+            return mock_flashcards
+
+        prompt = f"""
+        Generate 5 high-quality flashcards for studying:
+        Subject: {subject}
+        Topic: {topic}
+        Context Notes/Transcript: {content_text[:1500] if content_text else 'N/A'}
+
+        Return JSON array of 5 objects:
+        [
+          {{ "question": "Clear, specific question", "answer": "Concise, precise answer" }}, ...
+        ]
+        """
+        try:
+            raw = self._call_gemini(prompt)
+            if raw:
+                text = raw.strip()
+                if text.startswith("```json"):
+                    text = text[7:]
+                elif text.startswith("```"):
+                    text = text[3:]
+                if text.endswith("```"):
+                    text = text[:-3]
+                parsed = json.loads(text.strip())
+                if isinstance(parsed, list) and len(parsed) > 0:
+                    return parsed
+        except Exception as e:
+            print(f"Generate flashcards parse warning: {e}")
+
+        return mock_flashcards
+
+
     def _parse_json_response(self, text_response: str, fallback_type: str) -> Dict[str, Any]:
         """
         Safely parse JSON from Gemini response, handling markdown blocks.

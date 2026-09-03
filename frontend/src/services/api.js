@@ -339,4 +339,23 @@ export const supportAPI = {
   getFaqs: () => api.get('/support/faqs'),
 };
 
+// Spaced Repetition (SRS) Flashcards API
+export const srsAPI = {
+  getDue: (limit = 20) => api.get('/srs/due', { params: { limit } }),
+  submitReview: (cardId, quality) => api.post('/srs/review', { card_id: cardId, quality }),
+  createCard: (data) => api.post('/srs/create', data),
+  generateCards: (subject, topic, notes) => api.post('/srs/generate', { subject, topic, notes }),
+  getStats: () => api.get('/srs/stats'),
+};
+
+// Multiplayer Study Room API
+export const roomAPI = {
+  create: (data) => api.post('/rooms/create', data),
+  join: (roomCode) => api.post('/rooms/join', { room_code: roomCode }),
+  getStatus: (code) => api.get(`/rooms/${code}/status`),
+  getMessages: (code) => api.get(`/rooms/${code}/messages`),
+  sendMessage: (code, message) => api.post(`/rooms/${code}/messages`, { message }),
+};
+
 export default api;
+

@@ -97,3 +97,37 @@ def get_srs_stats():
         'due_cards': due_cards,
         'mastered_cards': mastered_cards
     }), 200
+
+
+from services.ai_service import AIService
+ai_service = AIService()
+
+@srs_routes.route('/generate', methods=['POST'])
+@token_required
+def generate_ai_cards():
+    """Auto-generate SRS flashcards using Gemini AI"""
+    user_id = request.current_user_id
+    data = request.get_json() or {}
+
+    subject = data.get('subject') or 'General Science'
+    topic = data.get('topic') or 'Core Concepts'
+    notes = data.get('notes') or data.get('content') or ''
+
+    cards_data = ai_service.generate_flashcards(subject=subject, topic=topic, content_text=notes)
+    created_cards = []
+
+    for item in cards_data:
+        card = SRSService.create_card(
+            user_id=user_id,
+            subject=subject,
+            topic=topic,
+            question=item.get('question', f'Core principle of {topic}'),
+            answer=item.get('answer', f'Key definition and usage of {topic} in {subject}.')
+        )
+        created_cards.append(card.to_dict())
+
+    return jsonify({
+        'message': f'Generated {len(created_cards)} flashcards successfully',
+        'cards': created_cards
+    }), 201
+

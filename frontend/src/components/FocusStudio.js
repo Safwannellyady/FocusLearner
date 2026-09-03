@@ -29,9 +29,13 @@ import FullscreenRoundedIcon    from "@mui/icons-material/FullscreenRounded";
 import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
 import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
 import MoreVertRoundedIcon     from "@mui/icons-material/MoreVertRounded";
+import StyleRoundedIcon        from "@mui/icons-material/StyleRounded";
+import GroupsRoundedIcon       from "@mui/icons-material/GroupsRounded";
 
 import { focusAPI, lectureAPI } from "../services/api";
 import SubjectLabs from "./labs/SubjectLabs";
+import FlashcardsDeck from "./FlashcardsDeck";
+import StudyRoom from "./StudyRoom";
 
 
 const extractYouTubeId = (url) => {
@@ -49,12 +53,14 @@ const fmtTime = (s) =>
 
 /* ── Tab definitions ────────────────────────────────────────────────────────── */
 const TABS = [
-  { id: "lab",       icon: ScienceRoundedIcon,      label: "Lab"        },
-  { id: "notes",     icon: NoteAltRoundedIcon,       label: "Notes"      },
-  { id: "search",    icon: ManageSearchRoundedIcon,  label: "Search"     },
-  { id: "chat",      icon: SmartToyRoundedIcon,      label: "Chat"       },
-  { id: "summarize", icon: SummarizeRoundedIcon,     label: "Summarize"  },
-  { id: "materials", icon: FolderRoundedIcon,        label: "Materials"  },
+  { id: "lab",        icon: ScienceRoundedIcon,      label: "Lab"        },
+  { id: "notes",      icon: NoteAltRoundedIcon,       label: "Notes"      },
+  { id: "flashcards", icon: StyleRoundedIcon,         label: "Flashcards" },
+  { id: "rooms",      icon: GroupsRoundedIcon,        label: "Study Room" },
+  { id: "search",     icon: ManageSearchRoundedIcon,  label: "Search"     },
+  { id: "chat",       icon: SmartToyRoundedIcon,      label: "Chat"       },
+  { id: "summarize",  icon: SummarizeRoundedIcon,     label: "Summarize"  },
+  { id: "materials",  icon: FolderRoundedIcon,        label: "Materials"  },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -569,6 +575,28 @@ const FocusStudio = () => {
     }
   };
 
+  const handleVideoEmbedError = (event) => {
+    const isRestricted = event.data === 101 || event.data === 150;
+    setVideoError(isRestricted ? "Embedded playback restricted by video owner. Switching to fallback video..." : "YouTube playback error. Switching video...");
+
+    if (videoList && videoList.length > 1) {
+      const curId = extractYouTubeId(videoId);
+      const nextObj = videoList.find(v => {
+        const vid = extractYouTubeId(v.video_id || v.id || v.url);
+        return vid && vid !== curId;
+      });
+      if (nextObj) {
+        const nextId = extractYouTubeId(nextObj.video_id || nextObj.id || nextObj.url);
+        if (nextId) {
+          setTimeout(() => {
+            setVideoId(nextId);
+            setVideoError("");
+          }, 1500);
+        }
+      }
+    }
+  };
+
   const renderVideo = () => {
     const selectedVideoId = extractYouTubeId(videoId);
     if (!selectedVideoId) {
@@ -580,7 +608,7 @@ const FocusStudio = () => {
     if (videoError) {
       return <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1.5, px: 3, textAlign: "center" }}>
         <Typography sx={{ fontWeight: 700, color: "#fda4af" }}>This video cannot play in the Focus Studio.</Typography>
-        <Typography sx={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>{videoError} Select another verified recommendation.</Typography>
+        <Typography sx={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>{videoError}</Typography>
       </Box>;
     }
     return <YouTube
@@ -588,9 +616,10 @@ const FocusStudio = () => {
       opts={{ width: "100%", height: "100%", playerVars: { autoplay: 1, rel: 0 } }}
       style={{ width: "100%", height: "100%" }}
       iframeClassName="focus-studio-player"
-      onError={(event) => setVideoError(event.data === 101 || event.data === 150 ? "The video owner has disabled embedded playback." : "YouTube could not load this video.")}
+      onError={handleVideoEmbedError}
     />;
   };
+
 
   /* Timer state */
   const [phase,     setPhase]    = useState("focus");   // focus | break
@@ -711,14 +740,15 @@ const FocusStudio = () => {
 
   const renderTab = () => {
     switch (activeTab) {
-      case "lab":       return <SubjectLabs subjectFocus={session.subject_focus} topic={session.topic} initialLabId={session.selected_lab} />;
-
-      case "notes":     return <NotesPanel session={session} />;
-      case "search":    return <SearchPanel session={session} />;
-      case "chat":      return <ChatPanel session={session} />;
-      case "summarize": return <SummarizePanel session={session} />;
-      case "materials": return <MaterialsPanel session={session} />;
-      default:          return null;
+      case "lab":        return <SubjectLabs subjectFocus={session.subject_focus} topic={session.topic} initialLabId={session.selected_lab} />;
+      case "notes":      return <NotesPanel session={session} />;
+      case "flashcards": return <FlashcardsDeck subject={session.subject_focus} topic={session.topic} notes={session.notes} />;
+      case "rooms":      return <StudyRoom />;
+      case "search":     return <SearchPanel session={session} />;
+      case "chat":       return <ChatPanel session={session} />;
+      case "summarize":  return <SummarizePanel session={session} />;
+      case "materials":  return <MaterialsPanel session={session} />;
+      default:           return null;
     }
   };
 
