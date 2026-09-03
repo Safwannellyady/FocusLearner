@@ -12,7 +12,8 @@ dist/
 build/
 
 # Environment variables — NEVER commit real secrets
-# .env.example is the only .env file that belongs in version control
+.env.example 
+#is the only .env file that belongs in version control
 .env
 .env.local
 .env.*.local
