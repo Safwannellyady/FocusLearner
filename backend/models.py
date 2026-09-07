@@ -823,7 +823,9 @@ class RoomMessage(db.Model):
     message = db.Column(db.Text, nullable=False)
     is_review_note = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    
+
+    user = db.relationship('User', backref='room_messages', lazy='joined')
+
     def to_dict(self):
         return {
             'id': self.id,

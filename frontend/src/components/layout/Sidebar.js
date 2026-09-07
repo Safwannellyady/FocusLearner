@@ -9,11 +9,11 @@ import GroupsRoundedIcon        from "@mui/icons-material/GroupsRounded";
 import SchoolRoundedIcon         from "@mui/icons-material/SchoolRounded";
 import SportsEsportsRoundedIcon  from "@mui/icons-material/SportsEsportsRounded";
 import ShowChartRoundedIcon      from "@mui/icons-material/ShowChartRounded";
-import SettingsRoundedIcon       from "@mui/icons-material/SettingsRounded";
+import DashboardRoundedIcon      from "@mui/icons-material/DashboardRounded";
+import EmojiEventsRoundedIcon    from "@mui/icons-material/EmojiEventsRounded";
 import LogoutRoundedIcon         from "@mui/icons-material/LogoutRounded";
 import ChevronLeftIcon           from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon          from "@mui/icons-material/ChevronRight";
-import AutoAwesomeIcon           from "@mui/icons-material/AutoAwesome";
 
 const NAV = [
   { label: "Dashboard",    icon: DashboardRoundedIcon,     path: "/dashboard"    },

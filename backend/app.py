@@ -11,8 +11,10 @@ from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
+from sqlalchemy import text
 from config import get_config
 from extensions import limiter
+from models import db, TokenBlacklist
 
 load_dotenv()
 
@@ -41,6 +43,8 @@ if getattr(config_class, '_SECRET_KEY_IS_EPHEMERAL', False):
 limiter.init_app(app)
 if not app.config.get('RATELIMIT_ENABLED', True):
     limiter.enabled = False
+
+db.init_app(app)
 
 # NOTE: never print the full SQLALCHEMY_DATABASE_URI — it contains the DB
 # password and Railway captures stdout as logs. If you need to sanity-check
