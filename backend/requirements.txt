@@ -15,7 +15,7 @@ psycopg2-binary==2.9.9
 python-dotenv==1.2.3
 
 # HTTP client
-requests==2.31.0
+requests==2.34.2
 
 # YouTube transcript extraction
 youtube-transcript-api==0.6.1
