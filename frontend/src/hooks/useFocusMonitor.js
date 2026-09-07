@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const useFocusMonitor = (isActive = true) => {
     const [isFocused, setIsFocused] = useState(true);
     const [violationCount, setViolationCount] = useState(0);
+    const lastViolationRef = useRef(0);
 
     useEffect(() => {
         if (!isActive) return;
@@ -12,18 +13,20 @@ const useFocusMonitor = (isActive = true) => {
                 setIsFocused(false);
                 setViolationCount(prev => prev + 1);
             } else {
-                // We don't auto-resume; user must manually acknowledge
+                setIsFocused(true);
             }
         };
 
         const handleBlur = () => {
+            const now = Date.now();
+            if (now - lastViolationRef.current < 1000) return;
+            lastViolationRef.current = now;
             setIsFocused(false);
             setViolationCount(prev => prev + 1);
         };
 
         const handleFocus = () => {
-            // Optional: Auto-resume? No, let's keep it manual for specific UI enforcement
-            // But we might want to know when they are back
+            setIsFocused(true);
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);

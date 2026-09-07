@@ -5,11 +5,8 @@ import {
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import DashboardRoundedIcon      from "@mui/icons-material/DashboardRounded";
-import AutoStoriesIcon           from "@mui/icons-material/AutoStories";
+import GroupsRoundedIcon        from "@mui/icons-material/GroupsRounded";
 import SchoolRoundedIcon         from "@mui/icons-material/SchoolRounded";
-import TimerRoundedIcon          from "@mui/icons-material/TimerRounded";
-import EmojiEventsRoundedIcon    from "@mui/icons-material/EmojiEventsRounded";
 import SportsEsportsRoundedIcon  from "@mui/icons-material/SportsEsportsRounded";
 import ShowChartRoundedIcon      from "@mui/icons-material/ShowChartRounded";
 import SettingsRoundedIcon       from "@mui/icons-material/SettingsRounded";
@@ -21,7 +18,7 @@ import AutoAwesomeIcon           from "@mui/icons-material/AutoAwesome";
 const NAV = [
   { label: "Dashboard",    icon: DashboardRoundedIcon,     path: "/dashboard"    },
   { label: "My Sessions",  icon: SchoolRoundedIcon,        path: "/my-courses"   },
-  { label: "Focus Timer",  icon: TimerRoundedIcon,         path: "/manage-focus" },
+  { label: "Study Room",   icon: GroupsRoundedIcon,        path: "/study-room"   },
   { label: "Game Lab",     icon: SportsEsportsRoundedIcon, path: "/games"        },
   { label: "Analytics",    icon: ShowChartRoundedIcon,     path: "/analytics"    },
   { label: "Badges",       icon: EmojiEventsRoundedIcon,   path: "/badges"       },

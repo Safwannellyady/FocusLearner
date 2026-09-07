@@ -1,18 +1,18 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Snackbar, Alert } from '@mui/material';
+import { focusAPI } from '../services/api';
 
 const FocusContext = createContext();
 
 export const useFocusTimer = () => useContext(FocusContext);
 
 export const FocusProvider = ({ children }) => {
-    const [studyDuration, setStudyDuration] = useState(25 * 60); // 25 mins by default
-    const [breakDuration, setBreakDuration] = useState(5 * 60); // 5 mins by default
+    const [studyDuration, setStudyDuration] = useState(25 * 60);
+    const [breakDuration, setBreakDuration] = useState(5 * 60);
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [timerActive, setTimerActive] = useState(false);
-    const [isStudying, setIsStudying] = useState(true); // true = study, false = break
+    const [isStudying, setIsStudying] = useState(true);
     
-    // Toast notification state
     const [toastMessage, setToastMessage] = useState('');
     const [toastOpen, setToastOpen] = useState(false);
     const [toastSeverity, setToastSeverity] = useState('info');
@@ -40,23 +40,38 @@ export const FocusProvider = ({ children }) => {
                 setTimeLeft(prev => prev - 1);
             }, 1000);
         } else if (timerActive && timeLeft === 0) {
-            // Switch modes
             if (isStudying) {
-                // Time for a break!
                 setIsStudying(false);
                 setTimeLeft(breakDuration);
-                showToast(`🎯 Focus session complete! It's Break Time — status immediately turned to B=${formatCountdownHelper(breakDuration)} ☕`, "success");
+                showToast(`Focus session complete! It's Break Time — status immediately turned to B=${formatCountdownHelper(breakDuration)}`, "success");
             } else {
-                // Break is over, back to study
                 setIsStudying(true);
                 setTimeLeft(studyDuration);
-                showToast(`⚡ Break is over! Starting Focus Session — status turned to F=${formatCountdownHelper(studyDuration)} 🚀`, "info");
+                showToast(`Break is over! Starting Focus Session — status turned to F=${formatCountdownHelper(studyDuration)}`, "info");
             }
         }
         return () => {
             if (interval) clearInterval(interval);
         };
     }, [timerActive, timeLeft, isStudying, studyDuration, breakDuration]);
+
+    useEffect(() => {
+        let cancelled = false;
+        focusAPI.getCurrent().then(res => {
+            if (cancelled) return;
+            const session = res?.data?.session;
+            if (session && session.is_locked) {
+                const elapsed = session.elapsed_seconds || 0;
+                const remaining = Math.max(0, (session.duration_minutes || 30) * 60 - elapsed);
+                setTimeLeft(remaining);
+                setTimerActive(true);
+                setIsStudying(true);
+                setStudyDuration((session.duration_minutes || 30) * 60);
+                setBreakDuration(5 * 60);
+            }
+        }).catch(() => {});
+        return () => { cancelled = true; };
+    }, []);
 
     const startTimer = () => setTimerActive(true);
     const pauseTimer = () => setTimerActive(false);
@@ -72,7 +87,7 @@ export const FocusProvider = ({ children }) => {
         setBreakDuration(newBreakSec);
         if (isStudying) setTimeLeft(newStudySec);
         else setTimeLeft(newBreakSec);
-        setTimerActive(false); // pause to apply
+        setTimerActive(false);
     };
 
     return (

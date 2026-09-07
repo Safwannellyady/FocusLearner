@@ -64,18 +64,8 @@ CORS(
 )
 
 @app.before_request
-def handle_preflight():
-    """Handle CORS preflight OPTIONS requests cleanly before middleware.
-
-    SECURITY: origins must be checked with an EXACT match against the
-    allow-list. The previous check accepted any origin containing the
-    substring "localhost" (e.g. https://localhost.attacker.com) and any
-    origin ending in ".pages.dev" — which is shared public Cloudflare Pages
-    hosting, so that accepted every other project on the platform too, not
-    just this one. Combined with Access-Control-Allow-Credentials: true,
-    that let any such origin make authenticated, cookie/credential-bearing
-    requests against this API.
-    """
+def global_before_request():
+    """Handle CORS preflight and log request information."""
     if request.method == "OPTIONS":
         response = make_response()
         origin = request.headers.get("Origin")
@@ -86,11 +76,10 @@ def handle_preflight():
             response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
             response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
             response.headers.add("Access-Control-Allow-Credentials", "true")
-        # If the origin isn't on the allow-list, we simply don't add any
-        # Access-Control-Allow-* headers — the browser will then correctly
-        # block the response on the caller's side.
         return response, 200
 
+    if app.debug:
+        app.logger.debug(f'{request.method} {request.path} - {request.remote_addr}')
 
 # Configure logging
 if not app.debug:
@@ -108,11 +97,6 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL']))
     app.logger.info('FocusLearner Pro startup')
-
-# Import models and initialize db
-from models import db, TokenBlacklist
-from sqlalchemy import text
-db.init_app(app)
 
 with app.app_context():
     try:
@@ -291,13 +275,6 @@ def api_info():
             'taxonomy': '/api/taxonomy'
         }
     })
-
-
-@app.before_request
-def before_request():
-    """Log request information"""
-    if app.debug:
-        app.logger.debug(f'{request.method} {request.path} - {request.remote_addr}')
 
 
 @app.after_request

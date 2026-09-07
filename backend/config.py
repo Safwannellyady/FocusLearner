@@ -155,6 +155,8 @@ class ProductionConfig(Config):
     # still worked, causing preflight to pass but the actual GET/POST to
     # fail CORS. Rebuild it the same defensive way the base class does.
     _prod_origins = [o.strip() for o in os.getenv('CORS_ORIGINS', '').split(',') if o.strip()]
+    if not _prod_origins:
+        _prod_origins = ['http://localhost:3000', 'http://localhost:5000', 'https://focuslearner.pages.dev']
     if 'https://focuslearner.pages.dev' not in _prod_origins:
         _prod_origins.append('https://focuslearner.pages.dev')
     CORS_ORIGINS = _prod_origins
