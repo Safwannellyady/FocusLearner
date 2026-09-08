@@ -463,6 +463,16 @@ def google_login():
             )
             db.session.add(preferences)
             db.session.commit()
+        else:
+            # Ensure returning Google user has preferences
+            if not user.preferences:
+                db.session.add(UserPreferences(
+                    user_id=user.id,
+                    preferred_subjects='[]',
+                    preferred_topics='[]',
+                    difficulty_level='intermediate'
+                ))
+                db.session.commit()
         
         # Update Streak
         from datetime import datetime

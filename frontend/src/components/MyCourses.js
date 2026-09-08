@@ -20,15 +20,6 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 
 /* ── Fallback demo data ────────────────────────────────────────────────────── */
-const DEMO = [
-  { id: 1, title: "AI & Adaptive Learning Systems",     subject: "Computer Science", topic: "Machine Learning",   duration: 45, xp: 120, progress: 45, status: "in_progress", date: "2026-08-03" },
-  { id: 2, title: "Cognitive Neurobiology & Memory",    subject: "Neurosciences",    topic: "Neuroplasticity",     duration: 60, xp: 180, progress: 80, status: "active",      date: "2026-08-04" },
-  { id: 3, title: "Quantum Algorithms & Cryptography",  subject: "Physics",          topic: "Quantum Mechanics",   duration: 30, xp: 75,  progress: 15, status: "in_progress", date: "2026-08-02" },
-  { id: 4, title: "Organic Reaction Mechanisms",        subject: "Chemistry",        topic: "Organic Chemistry",   duration: 90, xp: 240, progress: 0,  status: "not_started", date: "2026-08-01" },
-  { id: 5, title: "DeFi Protocols & Smart Contracts",   subject: "Financial Tech",   topic: "Smart Contracts",     duration: 25, xp: 60,  progress: 100,status: "completed",   date: "2026-07-30" },
-  { id: 6, title: "Reinforcement Learning Deep Dive",   subject: "Data Science & AI",topic: "Deep Learning",       duration: 50, xp: 140, progress: 62, status: "in_progress", date: "2026-08-03" },
-];
-
 const SUBJECT_COLORS = {
   "Computer Science": "#6366f1", "Neurosciences": "#a78bfa", "Physics": "#3b82f6",
   "Chemistry": "#10b981", "Financial Tech": "#f59e0b", "Data Science & AI": "#ec4899",
@@ -416,10 +407,11 @@ const MyCourses = () => {
         if (combined.length > 0) {
           setSessions(combined);
         } else {
-          setSessions(DEMO);
+          setSessions([]);
         }
       } catch (err) {
-        setSessions(DEMO);
+        console.error("Failed to load sessions:", err);
+        setSessions([]);
       } finally {
         setLoading(false);
       }

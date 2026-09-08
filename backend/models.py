@@ -364,6 +364,13 @@ class Lecture(db.Model):
     
     def to_dict(self):
         import json
+        def safe_loads(val, fallback):
+            if not val:
+                return fallback
+            try:
+                return json.loads(val)
+            except Exception:
+                return fallback
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -372,10 +379,10 @@ class Lecture(db.Model):
             'subject': self.subject,
             'topic': self.topic,
             'description': self.description,
-            'video_ids': json.loads(self.video_ids) if self.video_ids else [],
-            'lab_config': json.loads(self.lab_config) if self.lab_config else None,
-            'game_config': json.loads(self.game_config) if self.game_config else None,
-            'quiz_config': json.loads(self.quiz_config) if self.quiz_config else None,
+            'video_ids': safe_loads(self.video_ids, []),
+            'lab_config': safe_loads(self.lab_config, None),
+            'game_config': safe_loads(self.game_config, None),
+            'quiz_config': safe_loads(self.quiz_config, None),
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
             'is_active': self.is_active,
@@ -499,6 +506,20 @@ class ActivityResult(db.Model):
     __table_args__ = (
         db.Index('idx_result_user_challenge', 'user_id', 'challenge_id', 'created_at'),
     )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'challenge_id': self.challenge_id,
+            'user_answer': self.user_answer,
+            'is_correct': self.is_correct,
+            'score_raw': self.score_raw,
+            'xp_earned': self.xp_earned,
+            'focus_violations': self.focus_violations,
+            'feedback': self.feedback,
+            'created_at': self.created_at.isoformat()
+        }
 
 class LearningIntent(db.Model):
     """Centralized Learning Intent Object (Taxonomy)"""
@@ -802,13 +823,15 @@ class RoomMessage(db.Model):
     message = db.Column(db.Text, nullable=False)
     is_review_note = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    
+
+    user = db.relationship('User', backref='room_messages', lazy='joined')
+
     def to_dict(self):
         return {
             'id': self.id,
             'room_id': self.room_id,
             'user_id': self.user_id,
-            'username': self.room.participants[0].user.username if self.room and self.room.participants else f"User {self.user_id}",
+            'username': self.user.username if self.user else f"User {self.user_id}",
             'message': self.message,
             'is_review_note': self.is_review_note,
             'created_at': self.created_at.isoformat()

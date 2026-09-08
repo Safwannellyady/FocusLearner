@@ -153,48 +153,80 @@ const FlashcardsDeck = ({ subject = "General Science", topic = "Core Principles"
             </Button>
           </Box>
         ) : (
-          <Box sx={{ width: "100%", maxWidth: 580, perspective: 1000 }}>
-            {/* 3D Flip Card Container */}
-            <motion.div
-              onClick={() => setFlipped(p => !p)}
-              animate={{ rotateY: flipped ? 180 : 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              style={{ transformStyle: "preserve-3d", cursor: "pointer", position: "relative" }}
-            >
-              <Box
-                sx={{
-                  minHeight: 240, p: 4, borderRadius: "var(--r-xl)",
-                  bgcolor: "#0b1320", border: `1px solid ${flipped ? "rgba(16,185,129,0.4)" : "rgba(99,102,241,0.3)"}`,
-                  boxShadow: flipped ? "0 20px 50px rgba(16,185,129,0.15)" : "0 20px 50px rgba(99,102,241,0.15)",
-                  display: "flex", flexDirection: "column", justifyContent: "space-between",
-                  transition: "border-color 0.3s"
-                }}
-              >
-                {/* Top Badge */}
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <Chip
-                    label={currentCard.subject || subject}
-                    size="small"
-                    sx={{ fontSize: "0.68rem", fontWeight: 700, bgcolor: "rgba(99,102,241,0.15)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.3)" }}
-                  />
-                  <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)", textTransform: "uppercase", fontWeight: 700 }}>
-                    {flipped ? "Answer Side (Click to flip)" : "Question Side (Click to flip)"}
-                  </Typography>
-                </Box>
+           <Box sx={{ width: "100%", maxWidth: 580, perspective: 1000 }}>
+             {/* 3D Flip Card Container */}
+             <motion.div
+               onClick={() => setFlipped(p => !p)}
+               animate={{ rotateY: flipped ? 180 : 0 }}
+               transition={{ duration: 0.5, ease: "easeInOut" }}
+               style={{ transformStyle: "preserve-3d", cursor: "pointer", position: "relative", width: "100%", height: "100%" }}
+             >
+               {/* Front face — Question side */}
+               <Box
+                 sx={{
+                   position: "absolute", inset: 0,
+                   minHeight: 240, p: 4, borderRadius: "var(--r-xl)",
+                   bgcolor: "#0b1320", border: "1px solid rgba(99,102,241,0.3)",
+                   display: "flex", flexDirection: "column", justifyContent: "space-between",
+                   backfaceVisibility: "hidden",
+                 }}
+               >
+                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                   <Chip
+                     label={currentCard.subject || subject}
+                     size="small"
+                     sx={{ fontSize: "0.68rem", fontWeight: 700, bgcolor: "rgba(99,102,241,0.15)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.3)" }}
+                   />
+                   <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)", textTransform: "uppercase", fontWeight: 700 }}>
+                     Question Side (Click to flip)
+                   </Typography>
+                 </Box>
 
-                {/* Main Card Text */}
-                <Box sx={{ py: 3, textAlign: "center" }}>
-                  <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: flipped ? "1.05rem" : "1.2rem", color: flipped ? "#34d399" : "#f1f5f9", lineHeight: 1.5 }}>
-                    {flipped ? (currentCard.answer || "No answer text available.") : (currentCard.question || currentCard.title)}
-                  </Typography>
-                </Box>
+                 <Box sx={{ py: 3, textAlign: "center" }}>
+                   <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "1.2rem", color: "#f1f5f9", lineHeight: 1.5 }}>
+                     {currentCard.question || currentCard.title}
+                   </Typography>
+                 </Box>
 
-                {/* Bottom hint */}
-                <Typography sx={{ textAlign: "center", fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>
-                  {flipped ? "Rate your memory recall below ↓" : "Click anywhere on card to reveal answer"}
-                </Typography>
-              </Box>
-            </motion.div>
+                 <Typography sx={{ textAlign: "center", fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>
+                   Click anywhere on card to reveal answer
+                 </Typography>
+               </Box>
+
+               {/* Back face — Answer side (rotated 180° to hide during front) */}
+               <Box
+                 sx={{
+                   position: "absolute", inset: 0,
+                   minHeight: 240, p: 4, borderRadius: "var(--r-xl)",
+                   bgcolor: "#0b1320", border: `1px solid rgba(16,185,129,0.4)`,
+                   display: "flex", flexDirection: "column", justifyContent: "space-between",
+                   backfaceVisibility: "hidden",
+                   transform: "rotateY(180deg)",
+                   boxShadow: "0 20px 50px rgba(16,185,129,0.15)",
+                 }}
+               >
+                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                   <Chip
+                     label={currentCard.subject || subject}
+                     size="small"
+                     sx={{ fontSize: "0.68rem", fontWeight: 700, bgcolor: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(16,185,129,0.3)" }}
+                   />
+                   <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)", textTransform: "uppercase", fontWeight: 700 }}>
+                     Answer Side (Click to flip)
+                   </Typography>
+                 </Box>
+
+                 <Box sx={{ py: 3, textAlign: "center" }}>
+                   <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "1.05rem", color: "var(--emerald)", lineHeight: 1.5 }}>
+                     {currentCard.answer || "No answer text available."}
+                   </Typography>
+                 </Box>
+
+                 <Typography sx={{ textAlign: "center", fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>
+                   Rate your memory recall below ↓
+                 </Typography>
+               </Box>
+             </motion.div>
 
             {/* SM-2 Quality Rating Buttons */}
             {flipped && (

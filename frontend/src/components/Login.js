@@ -342,12 +342,11 @@ const Login = () => {
             />
 
             <Box sx={{ textAlign: "right", mb: 2.5, mt: -1 }}>
-              <Typography
-                component="span"
-                sx={{ fontSize: "0.78rem", color: "var(--indigo-lt)", cursor: "pointer", fontWeight: 600, "&:hover": { color: "#f1f5f9" } }}
-              >
-                Forgot password?
-              </Typography>
+              <Link to="/forgot-password" style={{ textDecoration: "none" }}>
+                <Typography sx={{ fontSize: "0.78rem", color: "var(--indigo-lt)", fontWeight: 600, cursor: "pointer", "&:hover": { color: "#f1f5f9" } }}>
+                  Forgot password?
+                </Typography>
+              </Link>
             </Box>
 
             <Button

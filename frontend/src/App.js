@@ -12,6 +12,7 @@ import { FocusProvider } from './context/FocusContext';
 // Eager loaded core routes for instant initial render
 import Login from './components/Login';
 import Signup from './components/Signup';
+import ForgotPassword from './components/ForgotPassword';
 
 // Lazy loaded page components for bundle size & main-thread optimization
 const Dashboard          = lazy(() => import('./components/Dashboard'));
@@ -32,6 +33,7 @@ const ManageFocus        = lazy(() => import('./components/ManageFocus'));
 const Badges             = lazy(() => import('./components/Badges'));
 const FocusArena         = lazy(() => import('./components/FocusArena'));
 const KnowledgeGraph     = lazy(() => import('./components/common/KnowledgeGraph'));
+const StudyRoom          = lazy(() => import('./components/StudyRoom'));
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '141636012206-oviq8cma0p7pkmvlatc54dia781ov87m.apps.googleusercontent.com';
 
@@ -87,6 +89,7 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
@@ -148,6 +151,14 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <ManageFocus />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+                />
+                <Route path="/study-room" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <StudyRoom />
                     </Layout>
                   </ProtectedRoute>
                 }

@@ -15,7 +15,6 @@ import FolderRoundedIcon        from "@mui/icons-material/FolderRounded";
 import PlayArrowRoundedIcon     from "@mui/icons-material/PlayArrowRounded";
 import PauseRoundedIcon         from "@mui/icons-material/PauseRounded";
 import StopRoundedIcon          from "@mui/icons-material/StopRounded";
-import SkipNextRoundedIcon      from "@mui/icons-material/SkipNextRounded";
 import TimerRoundedIcon         from "@mui/icons-material/TimerRounded";
 import SendRoundedIcon          from "@mui/icons-material/SendRounded";
 import SearchRoundedIcon        from "@mui/icons-material/SearchRounded";
@@ -27,15 +26,11 @@ import CheckCircleRoundedIcon   from "@mui/icons-material/CheckCircleRounded";
 import ViewSidebarRoundedIcon   from "@mui/icons-material/ViewSidebarRounded";
 import FullscreenRoundedIcon    from "@mui/icons-material/FullscreenRounded";
 import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
-import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
-import MoreVertRoundedIcon     from "@mui/icons-material/MoreVertRounded";
 import StyleRoundedIcon        from "@mui/icons-material/StyleRounded";
-import GroupsRoundedIcon       from "@mui/icons-material/GroupsRounded";
 
 import { focusAPI, lectureAPI } from "../services/api";
 import SubjectLabs from "./labs/SubjectLabs";
 import FlashcardsDeck from "./FlashcardsDeck";
-import StudyRoom from "./StudyRoom";
 
 
 const extractYouTubeId = (url) => {
@@ -56,7 +51,6 @@ const TABS = [
   { id: "lab",        icon: ScienceRoundedIcon,      label: "Lab"        },
   { id: "notes",      icon: NoteAltRoundedIcon,       label: "Notes"      },
   { id: "flashcards", icon: StyleRoundedIcon,         label: "Flashcards" },
-  { id: "rooms",      icon: GroupsRoundedIcon,        label: "Study Room" },
   { id: "search",     icon: ManageSearchRoundedIcon,  label: "Search"     },
   { id: "chat",       icon: SmartToyRoundedIcon,      label: "Chat"       },
   { id: "summarize",  icon: SummarizeRoundedIcon,     label: "Summarize"  },
@@ -91,14 +85,12 @@ const LabPanel = ({ session }) => {
   useEffect(() => { roll(); }, []);
 
   return (
-    <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 2, height: "100%", overflow: "hidden" }}>
+    <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.5, height: "100%", overflow: "hidden" }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "#f1f5f9" }}>
-          🧪 Lab Challenge
-        </Typography>
+        <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>🧪 Lab Challenge</Typography>
         <Tooltip title="New prompt">
-          <IconButton size="small" onClick={roll} sx={{ color: "var(--text-dim)" }}>
-            <RefreshRoundedIcon sx={{ fontSize: 18 }} />
+          <IconButton size="small" onClick={roll} sx={{ color: "var(--text-dim)", p: 0.5 }}>
+            <RefreshRoundedIcon sx={{ fontSize: 16 }} />
           </IconButton>
         </Tooltip>
       </Box>
@@ -169,13 +161,11 @@ const NotesPanel = ({ session }) => {
   };
 
   return (
-    <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 1.5, height: "100%" }}>
+    <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1, height: "100%", overflow: "hidden" }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "#f1f5f9" }}>
-          📝 Notes
-        </Typography>
+        <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>📝 Notes</Typography>
         <Typography sx={{ fontSize: "0.68rem", color: saved ? "var(--emerald)" : "var(--text-dim)", fontWeight: 600 }}>
-          {saved ? "✓ Auto-saved" : "Editing…"}
+          {saved ? "✓ Saved" : "Editing…"}
         </Typography>
       </Box>
       <Box
@@ -226,10 +216,8 @@ const SearchPanel = ({ session }) => {
   const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 
   return (
-    <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 1.5, height: "100%", overflow: "hidden" }}>
-      <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "#f1f5f9" }}>
-        🔍 Search
-      </Typography>
+    <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1, height: "100%", overflow: "hidden" }}>
+      <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>🔍 Search</Typography>
 
       <Box sx={{ display: "flex", gap: 0.75 }}>
         <Box sx={{ position: "relative", flex: 1 }}>
@@ -328,10 +316,10 @@ const ChatPanel = ({ session }) => {
     setMessages(m => [...m, { role: "user", text }]);
     setInput(""); setLoading(true);
     try {
-      const res = await fetch("/api/chat/message", {
+      const res = await fetch("/api/chat/send", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify({ message: text, context: session?.subjectName, topic: session?.topic }),
+        body: JSON.stringify({ message: text, context: session?.subjectName, videoId: session?.youtubeId || session?.youtube_id }),
       });
       const data = await res.json();
       setMessages(m => [...m, { role: "assistant", text: data.response || data.message || "I'm not sure — try rephrasing." }]);
@@ -344,11 +332,9 @@ const ChatPanel = ({ session }) => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, borderBottom: "1px solid var(--border)" }}>
-        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "#f1f5f9" }}>
-          🤖 AI Tutor Chat
-        </Typography>
-        <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>Context: {session?.subjectName} — {session?.topic}</Typography>
+      <Box sx={{ px: 2, pt: 2, pb: 1, borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>🤖 AI Tutor</Typography>
+        <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>{session?.subjectName} — {session?.topic}</Typography>
       </Box>
 
       <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.25 }}>
@@ -415,37 +401,35 @@ const SummarizePanel = ({ session }) => {
   const generate = async () => {
     setLoading(true); setSummary("");
     try {
-      const res = await fetch("/api/chat/summarize", {
+      const res = await fetch("/api/chat/send", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify({ subject: session?.subjectName, topic: session?.topic }),
+        body: JSON.stringify({ message: "Please provide a concise summary of the key concepts covered in this topic.", context: session?.subjectName, videoId: session?.youtubeId || session?.youtube_id }),
       });
       const data = await res.json();
-      setSummary(data.summary || data.response || "Summary generated.");
+      setSummary(data.response || data.message || "Summary generated.");
     } catch {
-      setSummary("⚠️ Could not connect to AI service. Check the backend.");
+      setSummary("Could not connect to AI service. Check the backend.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 1.5, height: "100%", overflow: "hidden" }}>
+    <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1, height: "100%", overflow: "hidden" }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "#f1f5f9" }}>
-          📄 AI Summarizer
-        </Typography>
+        <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>📄 AI Summarizer</Typography>
         <Box
           onClick={generate}
           sx={{
-            display: "flex", alignItems: "center", gap: 0.5, px: 1.25, py: 0.6,
+            display: "flex", alignItems: "center", gap: 0.5, px: 1, py: 0.4,
             borderRadius: "var(--r-md)", bgcolor: "rgba(99,102,241,0.12)",
             border: "1px solid rgba(99,102,241,0.25)", cursor: "pointer",
             "&:hover": { bgcolor: "rgba(99,102,241,0.22)" },
           }}
         >
           {loading ? <CircularProgress size={12} sx={{ color: "var(--indigo-lt)" }} /> : <RefreshRoundedIcon sx={{ fontSize: 14, color: "var(--indigo-lt)" }} />}
-          <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--indigo-lt)" }}>
+          <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--indigo-lt)" }}>
             {summary ? "Regenerate" : "Generate"}
           </Typography>
         </Box>
@@ -480,10 +464,8 @@ const SummarizePanel = ({ session }) => {
 const MaterialsPanel = ({ session }) => {
   const files = session?.files || [];
   return (
-    <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 1.5, height: "100%" }}>
-      <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "#f1f5f9" }}>
-        📋 Materials
-      </Typography>
+    <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1, height: "100%", overflow: "hidden" }}>
+      <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>📋 Materials</Typography>
       {files.length === 0 ? (
         <Box sx={{ textAlign: "center", mt: 4 }}>
           <FolderRoundedIcon sx={{ fontSize: 36, color: "rgba(255,255,255,0.1)", mb: 1 }} />
@@ -743,7 +725,6 @@ const FocusStudio = () => {
       case "lab":        return <SubjectLabs subjectFocus={session.subject_focus} topic={session.topic} initialLabId={session.selected_lab} />;
       case "notes":      return <NotesPanel session={session} />;
       case "flashcards": return <FlashcardsDeck subject={session.subject_focus} topic={session.topic} notes={session.notes} />;
-      case "rooms":      return <StudyRoom />;
       case "search":     return <SearchPanel session={session} />;
       case "chat":       return <ChatPanel session={session} />;
       case "summarize":  return <SummarizePanel session={session} />;
@@ -755,9 +736,6 @@ const FocusStudio = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", overflow: "hidden", bgcolor: "var(--bg)", position: "relative" }}>
 
-      {/* ── Phase accent strip ── */}
-      <Box sx={{ height: 3, background: `linear-gradient(90deg,${accent} 0%,transparent ${pct}%)`, transition: "background 0.5s" }} />
-
       {/* ── Top bar ── */}
       <Box sx={{
         display: "flex", alignItems: "center", gap: 1.5, px: 2, py: 1,
@@ -766,27 +744,20 @@ const FocusStudio = () => {
         {/* Subject + topic */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-            <Box sx={{ px: 1, py: 0.25, bgcolor: "rgba(99,102,241,0.15)", borderRadius: "100px", border: "1px solid rgba(99,102,241,0.3)" }}>
-              <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--indigo-lt)" }}>
-                {session.subject_focus || "Session"}
-              </Typography>
-            </Box>
-            <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }} noWrap>
+            <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--indigo-lt)" }}>
+              {session.subject_focus || "Session"}
+            </Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)" }} noWrap>
               / {session.topic || "Focus Studio"}
             </Typography>
           </Box>
         </Box>
 
         {/* Live timer */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{
-            px: 1.5, py: 0.5, borderRadius: "100px",
-            bgcolor: phase === "focus" ? "rgba(99,102,241,0.12)" : "rgba(16,185,129,0.12)",
-            border: `1px solid ${phase === "focus" ? "rgba(99,102,241,0.35)" : "rgba(16,185,129,0.35)"}`,
-            display: "flex", alignItems: "center", gap: 0.75,
-          }}>
-            <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: accent, boxShadow: `0 0 6px ${accent}`, animation: running ? "pulse-ring 1.5s infinite" : "none" }} />
-            <Typography sx={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.85rem", fontWeight: 800, color: accent }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Box sx={{ px: 1, py: 0.25, borderRadius: "var(--r-sm)", bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: accent }} />
+            <Typography sx={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.78rem", fontWeight: 700, color: accent }}>
               {fmtTime(remaining)}
             </Typography>
           </Box>
@@ -800,14 +771,6 @@ const FocusStudio = () => {
 
         {/* Controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-          {/* Milestone indicator */}
-          <Box sx={{ display: "none" }}>
-            <BoltRoundedIcon sx={{ fontSize: 15, color: elapsedMin >= 30 ? "var(--emerald)" : "var(--amber)" }} />
-            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: elapsedMin >= 30 ? "var(--emerald)" : "var(--text-mid)" }}>
-              {elapsedMin < 30 ? `${elapsedMin}m / 30m min` : `${elapsedMin}m (${getScaledXP(elapsedMin).xp} XP • ${getScaledXP(elapsedMin).label})`}
-            </Typography>
-          </Box>
-
           <Tooltip title={theaterMode ? "Split View (Sidebar)" : "Theater View (Full Video)"}>
             <IconButton size="small" onClick={() => setTheaterMode(t => !t)} sx={{ color: "var(--indigo-lt)", bgcolor: "rgba(99,102,241,0.1)", width: 30, height: 30, borderRadius: "var(--r-sm)" }}>
               {theaterMode ? <ViewSidebarRoundedIcon sx={{ fontSize: 16 }} /> : <FullscreenRoundedIcon sx={{ fontSize: 16 }} />}
@@ -822,33 +785,26 @@ const FocusStudio = () => {
 
           {/* Complete / Done button */}
           {elapsedMin < 30 ? (
-            <Tooltip title={`Study at least 30 minutes to complete session & claim XP (Studied ${elapsedMin}m / 30m)`}>
-              <Box sx={{ display: "inline-block" }}>
-                <Box sx={{ px: 1.5, py: 0.5, borderRadius: "var(--r-md)", bgcolor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "var(--text-dim)", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <CheckCircleRoundedIcon sx={{ fontSize: 14 }} />
-                  Complete ({30 - elapsedMin}m left)
-                </Box>
-              </Box>
-            </Tooltip>
+            <Box sx={{ px: 1, py: 0.25, borderRadius: "var(--r-sm)", bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", color: "var(--text-dim)", fontSize: "0.7rem", fontWeight: 600 }}>
+              Complete ({30 - elapsedMin}m left)
+            </Box>
           ) : (
             <Box
               onClick={handleCompleteSession}
               sx={{
-                px: 1.5, py: 0.5, borderRadius: "var(--r-md)",
+                px: 1, py: 0.25, borderRadius: "var(--r-sm)",
                 background: "linear-gradient(135deg,#10b981,#059669)",
-                color: "#fff", fontSize: "0.75rem", fontWeight: 800,
+                color: "#fff", fontSize: "0.7rem", fontWeight: 700,
                 cursor: "pointer", display: "flex", alignItems: "center", gap: 0.5,
-                boxShadow: "0 2px 10px rgba(16,185,129,0.35)", transition: "all 0.15s",
-                "&:hover": { transform: "translateY(-1px)", boxShadow: "0 4px 14px rgba(16,185,129,0.5)" },
               }}
             >
-              {isCompleting ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : <EmojiEventsRoundedIcon sx={{ fontSize: 15 }} />}
-              Complete & Claim {getScaledXP(elapsedMin).xp} XP 🏆
+              {isCompleting ? <CircularProgress size={12} sx={{ color: "#fff" }} /> : <EmojiEventsRoundedIcon sx={{ fontSize: 13 }} />}
+              Claim {getScaledXP(elapsedMin).xp} XP
             </Box>
           )}
 
           <Tooltip title="End session">
-            <IconButton size="small" onClick={handleEndSession} sx={{ color: "var(--rose)", bgcolor: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.25)", width: 30, height: 30, borderRadius: "var(--r-sm)", ml: 0.5, "&:hover": { bgcolor: "rgba(244,63,94,0.18)" } }}>
+            <IconButton size="small" onClick={handleEndSession} sx={{ color: "var(--rose)", width: 28, height: 28, borderRadius: "var(--r-sm)", ml: 0.5 }}>
               <StopRoundedIcon sx={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
@@ -1036,7 +992,7 @@ const FocusStudio = () => {
           </Box>
 
           {/* Tab content */}
-          <Box sx={{ flex: 1, overflow: "hidden" }}>
+          <Box sx={{ flex: 1, overflow: "auto" }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -1044,7 +1000,7 @@ const FocusStudio = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
-                style={{ height: "100%", overflow: "hidden" }}
+                style={{ height: "100%" }}
               >
                 {renderTab()}
               </motion.div>

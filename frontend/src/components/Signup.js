@@ -174,7 +174,7 @@ const Signup = () => {
     e.preventDefault();
     setError("");
     if (form.password !== form.confirmPassword) return setError("Passwords do not match.");
-    if (form.password.length < 6) return setError("Password must be at least 6 characters.");
+    if (form.password.length < 8) return setError("Password must be at least 8 characters.");
     if (usernameStatus === "taken")    return setError("That username is already taken.");
     if (usernameStatus === "invalid")  return setError("Username can only contain letters, numbers, and underscores.");
     setLoading(true);

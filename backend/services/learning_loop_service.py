@@ -5,8 +5,11 @@ Manages the strict pedagogical flow: Understand -> Apply -> Fail -> Retry -> Mas
 import json
 from models import db, LearningLoopState, LearningIntent, LearningStage
 from datetime import datetime
+from services.ai_service import AIService
 
 class LearningLoopService:
+    def __init__(self):
+        self.ai_service = AIService()
     
     def get_current_stage(self, user_id, intent_id):
         """
