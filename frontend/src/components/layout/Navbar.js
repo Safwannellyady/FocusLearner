@@ -31,8 +31,7 @@ const PAGE_TITLES = {
 
 /* ── Primary nav links (always visible in center) ───────────────────────── */
 const PRIMARY_LINKS = [
-  { label: "Dashboard",   path: "/dashboard" },
-  { label: "My Sessions", path: "/my-courses" },
+  { label: "Dashboard", path: "/dashboard" },
 ];
 
 /* ── "More" dropdown items ──────────────────────────────────────────────── */

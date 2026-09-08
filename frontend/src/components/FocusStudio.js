@@ -42,10 +42,6 @@ const extractYouTubeId = (url) => {
   return "";
 };
 
-/* ── Timer helpers ─────────────────────────────────────────────────────────── */
-const fmtTime = (s) =>
-  `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
-
 /* ── Tab definitions ────────────────────────────────────────────────────────── */
 const TABS = [
   { id: "lab",        icon: ScienceRoundedIcon,      label: "Lab"        },
@@ -638,21 +634,18 @@ const FocusStudio = () => {
   }, [running, phase, focusMin, breakMin]);
 
   const elapsedMin = Math.floor(elapsedSec / 60);
-  const [saveStatus, setSaveStatus] = useState("saved"); // "saved" | "saving" | "error"
 
   /* Incremental Autosave (Every 30 seconds) */
   useEffect(() => {
     const autosaveInterval = setInterval(() => {
       if (elapsedSec > 0) {
-        setSaveStatus("saving");
         focusAPI.autosave({
           session_id: session.id,
           elapsed_seconds: elapsedSec,
           selected_lab: session.selected_lab,
           video_id: videoId
         })
-        .then(() => setSaveStatus("saved"))
-        .catch(() => setSaveStatus("error"));
+        .catch(err => console.error("Autosave failed:", err));
       }
     }, 30000);
     return () => clearInterval(autosaveInterval);
@@ -752,22 +745,6 @@ const FocusStudio = () => {
             </Typography>
           </Box>
         </Box>
-
-        {/* Live timer */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Box sx={{ px: 1, py: 0.25, borderRadius: "var(--r-sm)", bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 0.5 }}>
-            <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: accent }} />
-            <Typography sx={{ fontFamily: "JetBrains Mono, monospace", fontSize: "0.78rem", fontWeight: 700, color: accent }}>
-              {fmtTime(remaining)}
-            </Typography>
-          </Box>
-
-          {/* Compact sync state */}
-          <Tooltip title={saveStatus === "saved" ? "Session synced with PostgreSQL cloud" : saveStatus === "saving" ? "Autosaving session..." : "Autosave failed — retrying"}>
-            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: saveStatus === "saved" ? "var(--emerald)" : saveStatus === "saving" ? "var(--indigo-lt)" : "var(--rose)", boxShadow: `0 0 7px ${saveStatus === "saved" ? "var(--emerald)" : saveStatus === "saving" ? "var(--indigo-lt)" : "var(--rose)"}` }} />
-          </Tooltip>
-        </Box>
-
 
         {/* Controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
