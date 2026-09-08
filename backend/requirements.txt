@@ -40,4 +40,4 @@ PyJWT==2.13.0
 pinecone-client==2.2.4
 
 # Testing (excluded from Docker image via .dockerignore)
-pytest==7.4.0
+pytest==9.1.1
