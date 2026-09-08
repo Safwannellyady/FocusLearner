@@ -37,7 +37,7 @@ numpy
 PyJWT==2.13.0
 
 # Vector database
-pinecone-client==2.2.4
+pinecone-client==6.0.0
 
 # Testing (excluded from Docker image via .dockerignore)
 pytest==7.4.0
