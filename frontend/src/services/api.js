@@ -353,8 +353,39 @@ export const roomAPI = {
   create: (data) => api.post('/rooms/create', data),
   join: (roomCode) => api.post('/rooms/join', { room_code: roomCode }),
   getStatus: (code) => api.get(`/rooms/${code}/status`),
+
+  // Invite-only private rooms
+  invite: (code, username) => api.post(`/rooms/${code}/invite`, { username }),
+  listInvites: (code) => api.get(`/rooms/${code}/invites`),
+  respondInvite: (code, inviteId, action) =>
+    api.post(`/rooms/${code}/invites/${inviteId}`, { action }),
+
+  // Room management — 3-button menu actions
+  updateSettings: (code, data) => api.put(`/rooms/${code}/settings`, data),
+  deleteRoom: (code) => api.delete(`/rooms/${code}`),
+
+  // File upload for chat sharing (image / document)
+  uploadFile: (code, file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post(`/rooms/${code}/upload`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
   getMessages: (code) => api.get(`/rooms/${code}/messages`),
-  sendMessage: (code, message) => api.post(`/rooms/${code}/messages`, { message }),
+  sendMessage: (code, data) => {
+    // data: { message, file? }
+    if (data.file) {
+      const fd = new FormData();
+      fd.append('message', data.message || '');
+      fd.append('file', data.file);
+      return api.post(`/rooms/${code}/messages`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
+    return api.post(`/rooms/${code}/messages`, { message: data.message });
+  },
 };
 
 export default api;

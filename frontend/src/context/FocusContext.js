@@ -57,6 +57,8 @@ export const FocusProvider = ({ children }) => {
 
     useEffect(() => {
         let cancelled = false;
+        const token = localStorage.getItem('token');
+        if (!token) return; // skip when not logged in — prevents reload loop on /login
         focusAPI.getCurrent().then(res => {
             if (cancelled) return;
             const session = res?.data?.session;

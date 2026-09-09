@@ -727,29 +727,33 @@ class SpacedRepetitionCard(db.Model):
 class StudyRoom(db.Model):
     """Multiplayer Study Room with Pomodoro synchronization and scheduled discussion/review sessions"""
     __tablename__ = 'study_rooms'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     room_code = db.Column(db.String(10), unique=True, nullable=False, index=True)
     title = db.Column(db.String(200), nullable=False)
+    avatar = db.Column(db.String(10), default='📚')  # emoji avatar
     subject_focus = db.Column(db.String(100), nullable=False)
     target_duration = db.Column(db.Integer, default=25)  # Pomodoro sprint duration in minutes
     is_active = db.Column(db.Boolean, default=True, index=True)
+    is_private = db.Column(db.Boolean, default=True, index=True)  # invite-only
     created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     participants = db.relationship('StudyRoomParticipant', backref='room', lazy=True, cascade='all, delete-orphan')
     scheduled_discussions = db.relationship('ScheduledDiscussion', backref='room', lazy=True, cascade='all, delete-orphan')
     messages = db.relationship('RoomMessage', backref='room', lazy=True, cascade='all, delete-orphan')
-    
+    invites = db.relationship('RoomInvite', backref='room', lazy=True, cascade='all, delete-orphan')
+
     def to_dict(self, include_participants=False):
         data = {
             'id': self.id,
             'room_code': self.room_code,
             'title': self.title,
+            'avatar': self.avatar,
             'subject_focus': self.subject_focus,
-            'target_duration': self.target_duration,
             'is_active': self.is_active,
+            'is_private': self.is_private,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat(),
             'participant_count': len(self.participants)
@@ -816,13 +820,18 @@ class ScheduledDiscussion(db.Model):
 class RoomMessage(db.Model):
     """Discussion/chat messages inside a Study Room during scheduled review or breaks"""
     __tablename__ = 'room_messages'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    message = db.Column(db.Text, nullable=False)
+    message = db.Column(db.Text, nullable=True)
     is_review_note = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    # Attachment fields — image / document sharing
+    attachment_url = db.Column(db.String(500), nullable=True)
+    attachment_name = db.Column(db.String(255), nullable=True)
+    attachment_type = db.Column(db.String(20), nullable=True)  # 'image' | 'document'
 
     user = db.relationship('User', backref='room_messages', lazy='joined')
 
@@ -834,6 +843,35 @@ class RoomMessage(db.Model):
             'username': self.user.username if self.user else f"User {self.user_id}",
             'message': self.message,
             'is_review_note': self.is_review_note,
+            'attachment_url': self.attachment_url,
+            'attachment_name': self.attachment_name,
+            'attachment_type': self.attachment_type,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class RoomInvite(db.Model):
+    """Pending room invitations — invite-only private study rooms"""
+    __tablename__ = 'room_invites'
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
+    invited_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    invited_by_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    status = db.Column(db.String(20), default='pending', index=True)  # pending | accepted | declined
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('room_id', 'invited_user_id', name='uq_room_invite'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'room_id': self.room_id,
+            'invited_user_id': self.invited_user_id,
+            'invited_by_id': self.invited_by_id,
+            'status': self.status,
             'created_at': self.created_at.isoformat()
         }
 

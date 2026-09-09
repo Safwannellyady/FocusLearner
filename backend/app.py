@@ -117,6 +117,23 @@ with app.app_context():
             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS lab_config TEXT;",
             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS game_config TEXT;",
             "ALTER TABLE lectures ADD COLUMN IF NOT EXISTS quiz_config TEXT;",
+            # Study Room: avatar, private flag, invite-only
+            "ALTER TABLE study_rooms ADD COLUMN IF NOT EXISTS avatar VARCHAR(10) DEFAULT '📚';",
+            "ALTER TABLE study_rooms ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT TRUE;",
+            # Room Message: attachment support (image / document sharing)
+            "ALTER TABLE room_messages ADD COLUMN IF NOT EXISTS attachment_url VARCHAR(500);",
+            "ALTER TABLE room_messages ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(255);",
+            "ALTER TABLE room_messages ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(20);",
+            # Room Invite: invite-only private study rooms
+            """CREATE TABLE IF NOT EXISTS room_invites (
+                id SERIAL PRIMARY KEY,
+                room_id INTEGER REFERENCES study_rooms(id) ON DELETE CASCADE,
+                invited_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                invited_by_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                status VARCHAR(20) DEFAULT 'pending',
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(room_id, invited_user_id)
+            );""",
             # password_reset_tokens: move from storing raw tokens to storing
             # a SHA-256 hash. The old `token` column's NOT NULL constraint is
             # relaxed so new rows (which no longer set it) can still insert;
