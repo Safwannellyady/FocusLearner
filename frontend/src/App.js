@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box, CircularProgress } from '@mui/material';
@@ -77,6 +77,22 @@ const PageFallback = () => (
   </Box>
 );
 
+/**
+ * Inner component that has access to React Router's navigate hook.
+ * Listens for the 'auth:logout' CustomEvent dispatched by api.js when
+ * token refresh fails — redirects to /login without a full page reload,
+ * preserving React context and avoiding infinite reload loops.
+ */
+function AuthLogoutHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handleAuthLogout = () => navigate('/login', { replace: true });
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
+  }, [navigate]);
+  return null;
+}
+
 function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -84,6 +100,7 @@ function App() {
         <CssBaseline />
         <FocusProvider>
           <Router>
+            <AuthLogoutHandler />
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />

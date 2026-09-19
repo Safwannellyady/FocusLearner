@@ -11,7 +11,7 @@ from nltk.tokenize import word_tokenize
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-import pickle
+import joblib
 import numpy as np
 
 # Download required NLTK data safely without raising OSError or LookupError
@@ -234,13 +234,15 @@ class ContentFilter:
         return filtered_videos
     
     def _load_ml_model(self):
-        """Load pre-trained ML model and vectorizer if available"""
+        """Load pre-trained ML model and vectorizer if available.
+
+        SECURITY: Uses joblib instead of pickle to prevent arbitrary code
+        execution (RCE) if model files are tampered with.
+        """
         try:
             if os.path.exists(self.model_path) and os.path.exists(self.vectorizer_path):
-                with open(self.model_path, 'rb') as f:
-                    self.ml_model = pickle.load(f)
-                with open(self.vectorizer_path, 'rb') as f:
-                    self.vectorizer = pickle.load(f)
+                self.ml_model = joblib.load(self.model_path)
+                self.vectorizer = joblib.load(self.vectorizer_path)
                 print("ML content filter model loaded successfully")
         except Exception as e:
             print(f"Could not load ML model: {e}")
@@ -316,13 +318,11 @@ class ContentFilter:
             self.ml_model = LogisticRegression(random_state=42, max_iter=1000)
             self.ml_model.fit(X, labels)
             
-            # Save models
+            # Save models using joblib (safe alternative to pickle)
             os.makedirs('backend/models', exist_ok=True)
-            with open(self.model_path, 'wb') as f:
-                pickle.dump(self.ml_model, f)
-            with open(self.vectorizer_path, 'wb') as f:
-                pickle.dump(self.vectorizer, f)
-            
+            joblib.dump(self.ml_model, self.model_path)
+            joblib.dump(self.vectorizer, self.vectorizer_path)
+
             print("ML model trained and saved successfully")
             
         except Exception as e:

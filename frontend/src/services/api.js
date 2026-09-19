@@ -103,11 +103,12 @@ api.interceptors.response.use(
 
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
-      // No refresh token stored — send straight to login
+      // No refresh token stored — signal logout without a full page reload
+      // so React Router handles navigation and context providers aren't torn down.
       clearAuth();
       isRefreshing = false;
       flushQueue(new Error('No refresh token'));
-      window.location.href = '/login';
+      window.dispatchEvent(new CustomEvent('auth:logout'));
       return Promise.reject(error);
     }
 
@@ -133,11 +134,11 @@ api.interceptors.response.use(
       return api(originalRequest);
 
     } catch (refreshError) {
-      // Refresh itself failed — session is dead, redirect to login
+      // Refresh itself failed — session is dead, signal logout
       flushQueue(refreshError);
       isRefreshing = false;
       clearAuth();
-      window.location.href = '/login';
+      window.dispatchEvent(new CustomEvent('auth:logout'));
       return Promise.reject(refreshError);
     }
   }

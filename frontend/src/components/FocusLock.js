@@ -16,11 +16,8 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Bolt, Headphones, AutoAwesome, PlayArrow, Group, School } from '@mui/icons-material';
-import axios from 'axios';
 import { focusAPI } from '../services/api';
 import FocusTimer from './FocusTimer';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const FocusLock = () => {
   const navigate = useNavigate();
@@ -55,10 +52,7 @@ const FocusLock = () => {
     const fetchRec = async () => {
       setLoadingRec(true);
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_URL}/focus/recommendation`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await focusAPI.getContent('recommendation');
         if (res.data && res.data.recommendation) {
           setRecommendation(res.data.recommendation);
           if (res.data.recommendation.soundscape) {

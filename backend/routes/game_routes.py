@@ -190,7 +190,7 @@ def submit_activity_route():
                 content_data = json.loads(challenge.data)
                 solution_data_local = json.loads(challenge.solution)
                 correct_val = solution_data_local.get('answer') if isinstance(solution_data_local, dict) else solution_data_local
-            except:
+            except (json.JSONDecodeError, TypeError):
                 content_data = {}
                 correct_val = "Unknown"
                 

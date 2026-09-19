@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Typography, Paper, TextField, Button, Grid, Chip, Divider, Tabs, Tab, Alert } from '@mui/material';
 import { Group, AccessTime, Chat, Schedule, Send, EmojiEvents, PlayArrow, AddCircle } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+import api from '../services/api';
 
 const FocusArena = () => {
   const [activeTab, setActiveTab] = useState(0); // 0: Study Room & Pomodoro, 1: Discussion & Scheduled Reviews
@@ -23,10 +21,7 @@ const FocusArena = () => {
 
     const fetchRoomStatus = useCallback(async (code) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/rooms/${code}/status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get(`/rooms/${code}/status`);
       setRoom(res.data.room);
       fetchMessages(code);
     } catch (err) {
@@ -38,10 +33,7 @@ const FocusArena = () => {
 
     const fetchMessages = useCallback(async (code) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/rooms/${code}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get(`/rooms/${code}/messages`);
       setMessages(res.data.messages || []);
     } catch (err) {
       console.error('Error fetching room messages:', err);
@@ -81,12 +73,11 @@ const FocusArena = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API_URL}/rooms/create`, {
+      const res = await api.post('/rooms/create', {
         title: newRoomTitle.trim(),
         subject_focus: newRoomSubject.trim(),
         target_duration: Number(targetDuration)
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setRoom(res.data.room);
       setSuccessMsg(`Room created! Code: ${res.data.room.room_code}`);
@@ -103,10 +94,9 @@ const FocusArena = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API_URL}/rooms/join`, {
+      const res = await api.post('/rooms/join', {
         room_code: joinCodeInput.trim().toUpperCase()
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setRoom(res.data.room);
       setSuccessMsg(`Successfully joined ${res.data.room.title}!`);
@@ -119,11 +109,10 @@ const FocusArena = () => {
     if (!chatInput.trim() || !room || isSending) return;
     setIsSending(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/rooms/${room.room_code}/messages`, {
+      await api.post(`/rooms/${room.room_code}/messages`, {
         message: chatInput.trim(),
         is_review_note: false
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setChatInput('');
       fetchMessages(room.room_code);
@@ -143,12 +132,11 @@ const FocusArena = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/rooms/${room.room_code}/schedule_review`, {
+      await api.post(`/rooms/${room.room_code}/schedule_review`, {
         title: reviewTitleInput.trim(),
         topic_summary: reviewSummaryInput.trim(),
         scheduled_at: `${reviewTimeInput}:00Z`
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setReviewSummaryInput('');
       setSuccessMsg('After-study review discussion scheduled!');

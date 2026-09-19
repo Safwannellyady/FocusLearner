@@ -5,10 +5,13 @@ Service for interacting with Google Gemini AI for content generation
 
 import os
 import json
+import logging
 import requests
 import re
 import uuid
 from typing import List, Dict, Any, Optional
+
+logger = logging.getLogger(__name__)
 
 class AIService:
     """Service for AI-powered content generation using Gemini REST API"""
@@ -47,18 +50,15 @@ class AIService:
             response.raise_for_status()
             result = response.json()
             if 'candidates' not in result or not result['candidates']:
-                with open("gemini_error.log", "w") as f:
-                    f.write(f"Blocked or Empty Result: {json.dumps(result)}")
+                logger.warning("Gemini API: blocked or empty result: %s", json.dumps(result))
                 return None
             return result['candidates'][0]['content']['parts'][0]['text']
         except Exception as e:
-             error_data = f"Exception: {e}\n"
-             if 'response' in locals() and response:
-                 error_data += f"Status: {response.status_code}\nText: {response.text}"
-             with open("gemini_error.log", "a") as f:
-                 f.write(error_data + "\n")
-             print(f"Gemini API Error: {e}")
-             return None
+            error_detail = str(e)
+            if 'response' in locals() and response is not None:
+                error_detail += f" | status={response.status_code} body={response.text[:500]}"
+            logger.error("Gemini API error: %s", error_detail)
+            return None
 
     def generate_quiz(self, subject: str, topic: str, count: int = 5, video_context: dict = None) -> List[Dict[str, Any]]:
         """
@@ -144,8 +144,8 @@ class AIService:
              try:
                  outcome_list = json.loads(intent.required_outcomes)
                  outcomes = f"\nRequired Outcomes: {', '.join(outcome_list)}"
-             except:
-                 pass
+             except (json.JSONDecodeError, TypeError) as e:
+                 logger.debug("Could not parse intent outcomes JSON: %s", e)
              difficulty = intent.difficulty
         
         # Adaptive Logic

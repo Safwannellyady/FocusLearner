@@ -289,7 +289,7 @@ class UserPreferences(db.Model):
         if self.advanced_options:
             try:
                 adv = json.loads(self.advanced_options)
-            except:
+            except (json.JSONDecodeError, TypeError):
                 adv = {}
         return {
             'id': self.id,

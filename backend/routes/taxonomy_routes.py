@@ -67,8 +67,8 @@ def get_loop_status():
             fb_data = json.loads(state.last_feedback)
             feedback_text = fb_data.get('analysis')
             remediation_focus = fb_data.get('remediation_focus')
-        except:
-             feedback_text = state.last_feedback # Fallback
+        except (json.JSONDecodeError, TypeError):
+             feedback_text = state.last_feedback  # Fallback
 
     return jsonify({
         'stage': state.current_stage.value,

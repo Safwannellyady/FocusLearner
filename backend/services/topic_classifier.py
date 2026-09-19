@@ -8,7 +8,7 @@ import os
 from typing import List, Dict, Any, Optional, Tuple
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-import pickle
+import joblib
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -19,7 +19,7 @@ try:
 except LookupError:
     try:
         nltk.download('punkt', quiet=True)
-    except:
+    except Exception:
         pass
 
 try:
@@ -27,7 +27,7 @@ try:
 except LookupError:
     try:
         nltk.download('stopwords', quiet=True)
-    except:
+    except Exception:
         pass
 
 
@@ -85,7 +85,7 @@ class TopicClassifier:
         
         try:
             self.stop_words = set(stopwords.words('english'))
-        except:
+        except Exception:
             self.stop_words = {'the', 'a', 'an', 'in', 'on', 'of', 'and', 'or', 'for', 'to', 'with', 'by'}
     
     def classify_content(self, title: str, description: str = "", tags: List[str] = None, subject: Optional[str] = None) -> Dict[str, Any]:
@@ -248,13 +248,15 @@ class TopicClassifier:
         return list(tags)
     
     def _load_ml_model(self):
-        """Load pre-trained ML model if available"""
+        """Load pre-trained ML model if available.
+
+        SECURITY: Uses joblib instead of pickle to prevent arbitrary code
+        execution (RCE) if model files are tampered with.
+        """
         try:
             if os.path.exists(self.model_path) and os.path.exists(self.vectorizer_path):
-                with open(self.model_path, 'rb') as f:
-                    self.ml_model = pickle.load(f)
-                with open(self.vectorizer_path, 'rb') as f:
-                    self.vectorizer = pickle.load(f)
+                self.ml_model = joblib.load(self.model_path)
+                self.vectorizer = joblib.load(self.vectorizer_path)
                 print("ML topic classifier model loaded successfully")
         except Exception as e:
             print(f"Could not load ML topic classifier: {e}")
@@ -316,13 +318,11 @@ class TopicClassifier:
             self.ml_model = MultinomialNB()
             self.ml_model.fit(X, labels)
             
-            # Save models
+            # Save models using joblib (safe alternative to pickle)
             os.makedirs('backend/models', exist_ok=True)
-            with open(self.model_path, 'wb') as f:
-                pickle.dump(self.ml_model, f)
-            with open(self.vectorizer_path, 'wb') as f:
-                pickle.dump(self.vectorizer, f)
-            
+            joblib.dump(self.ml_model, self.model_path)
+            joblib.dump(self.vectorizer, self.vectorizer_path)
+
             print("Topic classifier ML model trained and saved successfully")
             
         except Exception as e:

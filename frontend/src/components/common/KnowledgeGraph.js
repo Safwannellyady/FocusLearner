@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, CircularProgress, Chip, Button, Divider, Alert } from '@mui/material';
 import { School, CheckCircle, RadioButtonUnchecked, Warning, Lock, ArrowForward, Refresh } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+import api from '../../services/api';
 
 const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
   const [graphData, setGraphData] = useState(null);
@@ -15,10 +13,8 @@ const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/taxonomy/graph`, {
-        params: { subject },
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await api.get('/taxonomy/graph', {
+        params: { subject }
       });
       setGraphData(res.data);
       if (res.data && res.data.nodes && res.data.nodes.length > 0) {

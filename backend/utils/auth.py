@@ -18,19 +18,39 @@ from typing import Optional, Dict, Any
 
 
 def get_jwt_config() -> Dict[str, Any]:
-    """Get JWT configuration from app config"""
+    """Get JWT configuration from app config.
+
+    SECURITY: Raises RuntimeError if no JWT secret is configured rather than
+    falling back to a hardcoded insecure string that would allow token forgery.
+    """
     try:
         from flask import current_app
+        secret_key = (
+            current_app.config.get('JWT_SECRET_KEY')
+            or os.getenv('JWT_SECRET_KEY')
+            or current_app.config.get('SECRET_KEY')
+        )
+        if not secret_key:
+            raise RuntimeError(
+                "JWT_SECRET_KEY is not configured. Set it as an environment variable "
+                "to prevent token forgery vulnerabilities."
+            )
         return {
-            'secret_key': current_app.config.get('JWT_SECRET_KEY', os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production')),
+            'secret_key': secret_key,
             'algorithm': current_app.config.get('JWT_ALGORITHM', 'HS256'),
             'expiration': current_app.config.get('JWT_ACCESS_TOKEN_EXPIRES', timedelta(days=7)),
             'refresh_expiration': current_app.config.get('JWT_REFRESH_TOKEN_EXPIRES', timedelta(days=30))
         }
     except RuntimeError:
-        # Fallback when outside app context
+        # Fallback when outside app context (e.g. CLI scripts, tests)
+        secret_key = os.getenv('JWT_SECRET_KEY') or os.getenv('SECRET_KEY')
+        if not secret_key:
+            raise RuntimeError(
+                "JWT_SECRET_KEY (or SECRET_KEY) environment variable must be set. "
+                "Refusing to start with an insecure fallback."
+            )
         return {
-            'secret_key': os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production'),
+            'secret_key': secret_key,
             'algorithm': 'HS256',
             'expiration': timedelta(days=7),
             'refresh_expiration': timedelta(days=30)
@@ -130,8 +150,10 @@ def blacklist_token(token: str) -> None:
             )
             expires_at = datetime.fromtimestamp(payload.get('exp', 0))
             user_id = payload.get('user_id')
-        except:
-            # If we can't decode, default to 30 days from now
+        except Exception as e:
+            # If we can't decode the token header, default to 30 days from now.
+            # Log at WARNING so forged/malformed tokens are visible in logs.
+            current_app.logger.warning(f'Could not decode token for blacklist expiry: {e}')
             expires_at = datetime.utcnow() + timedelta(days=30)
             user_id = None
         

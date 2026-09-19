@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, Box, TextField, Typography, Chip, IconButton, CircularProgress, Divider, Paper } from '@mui/material';
 import { Search, AutoAwesome, School, Launch, Close, ArrowForward, Bolt } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+import api from '../../services/api';
 
 const CommandPalette = ({ isOpen, onClose, onNavigate }) => {
   const [query, setQuery] = useState('');
@@ -40,11 +38,10 @@ const CommandPalette = ({ isOpen, onClose, onNavigate }) => {
     setLoadingAi(true);
     setAiAnswer(null);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API_URL}/chat/send`, {
+      const res = await api.post('/chat/send', {
         message: query.trim(),
         context: 'Quick Command Palette Instant RAG Query'
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setAiAnswer(res.data.response || res.data.message || 'No instant response generated.');
     } catch (err) {

@@ -69,19 +69,12 @@ CORS(
 
 @app.before_request
 def global_before_request():
-    """Handle CORS preflight and log request information."""
-    if request.method == "OPTIONS":
-        response = make_response()
-        origin = request.headers.get("Origin")
-        allowed = set(app.config.get('CORS_ORIGINS', []))
-        allowed.add('https://focuslearner.pages.dev')
-        if origin and origin in allowed:
-            response.headers.add("Access-Control-Allow-Origin", origin)
-            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-            response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-            response.headers.add("Access-Control-Allow-Credentials", "true")
-        return response, 200
+    """Log request information in debug mode.
 
+    NOTE: Flask-CORS (configured above) handles all CORS preflight (OPTIONS)
+    requests automatically. The manual OPTIONS response that previously lived
+    here was redundant and caused header-duplication conflicts — removed.
+    """
     if app.debug:
         app.logger.debug(f'{request.method} {request.path} - {request.remote_addr}')
 
@@ -313,10 +306,34 @@ def after_request(response):
     return response
 
 from flask import send_from_directory
+from utils.auth import verify_token
 
 @app.route('/uploads/<path:filename>')
 def serve_uploads(filename):
-    """Serve uploaded static files"""
+    """Serve uploaded static files.
+
+    SECURITY: Requires a valid JWT supplied either via the Authorization header
+    (for API clients) or via a `?token=` query parameter (for browser <img>
+    and direct media links which cannot send custom headers).
+    The token is verified server-side; expired or invalid tokens are rejected
+    with HTTP 401 before any file bytes are sent.
+    """
+    # 1. Try Authorization: Bearer <token> header
+    auth_header = request.headers.get('Authorization', '')
+    token = None
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ', 1)[1]
+
+    # 2. Fallback: ?token= query parameter (browser image/video tags)
+    if not token:
+        token = request.args.get('token')
+
+    if not token or not verify_token(token):
+        return jsonify({
+            'error': 'Authentication required',
+            'message': 'A valid token is required to access uploaded files'
+        }), 401
+
     upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
     return send_from_directory(os.path.abspath(upload_folder), filename)
 

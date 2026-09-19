@@ -18,8 +18,11 @@ import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import FolderIcon from '@mui/icons-material/Folder';
 import { materialAPI } from '../services/api';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, ''); // Remove trailing /api
+// Derive backend origin from the configured API URL (strips any /api suffix).
+// No localhost fallback — in production REACT_APP_API_URL must be set;
+// in development the CRA proxy handles /uploads/* automatically.
+const _rawApiUrl = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, '');
+const BACKEND_URL = _rawApiUrl.replace(/\/api\/?$/, '');
 
 const FocusVault = ({ subjectFocus }) => {
   const [activeTab, setActiveTab] = useState(0); // 0: Vault, 1: Wikipedia, 2: Google
@@ -411,7 +414,9 @@ const FocusVault = ({ subjectFocus }) => {
                           Save
                         </Button>
                       </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }} dangerouslySetInnerHTML={{ __html: item.snippet + '...' }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                        {item.snippet}...
+                      </Typography>
                       <Button size="small" href={wikiUrl} target="_blank" endIcon={<OpenInNewIcon />}>Read Full Article</Button>
                     </CardContent>
                   </Card>
