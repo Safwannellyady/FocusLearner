@@ -115,6 +115,10 @@ const LabPanel = ({ session }) => {
       <Box sx={{ display: "flex", gap: 1 }}>
         <Box
           onClick={() => { if (answer.trim()) setSaved(true); }}
+          role="button"
+          aria-label="Save your answer"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && answer.trim() && setSaved(true)}
           sx={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75,
             py: 0.9, borderRadius: "var(--r-md)",
@@ -373,17 +377,21 @@ const ChatPanel = ({ session }) => {
             outline: "none", "&:focus": { borderColor: "rgba(99,102,241,0.5)" },
           }}
         />
-        <Box
+        <IconButton
           onClick={send}
+          aria-label="Send message"
+          size="small"
           sx={{
-            px: 1.25, py: 0.75, borderRadius: "var(--r-md)",
-            bgcolor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)",
-            cursor: "pointer", display: "flex", alignItems: "center",
+            width: 34, height: 34,
+            borderRadius: "var(--r-md)",
+            color: "#f1f5f9",
+            bgcolor: loading ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.12)",
+            border: "1px solid rgba(99,102,241,0.3)",
             "&:hover": { bgcolor: "rgba(99,102,241,0.25)" },
           }}
         >
           <SendRoundedIcon sx={{ fontSize: 16, color: "var(--indigo-lt)" }} />
-        </Box>
+        </IconButton>
       </Box>
     </Box>
   );
@@ -417,6 +425,10 @@ const SummarizePanel = ({ session }) => {
         <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>📄 AI Summarizer</Typography>
         <Box
           onClick={generate}
+          role="button"
+          aria-label={summary ? "Regenerate summary" : "Generate AI summary"}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && generate()}
           sx={{
             display: "flex", alignItems: "center", gap: 0.5, px: 1, py: 0.4,
             borderRadius: "var(--r-md)", bgcolor: "rgba(99,102,241,0.12)",
@@ -863,8 +875,8 @@ const FocusStudio = () => {
                     {isSearchingSidebar ? (
                       <CircularProgress size={12} sx={{ color: "var(--indigo)" }} />
                     ) : (
-                      <IconButton size="small" type="submit" sx={{ p: 0.2, color: "var(--text-dim)" }}>
-                        <SendRoundedIcon sx={{ fontSize: 12 }} />
+                      <IconButton size="small" type="submit" aria-label="Search" sx={{ p: 0.75, color: "var(--text-dim)", minWidth: 32, minHeight: 32 }}>
+                        <SendRoundedIcon sx={{ fontSize: 14 }} />
                       </IconButton>
                     )}
                   </Box>
@@ -955,7 +967,7 @@ const FocusStudio = () => {
                   display: "flex", alignItems: "center", gap: 0.5,
                   px: 1.25, py: 0.85, cursor: "pointer",
                   borderBottom: `2px solid ${activeTab === id ? accent : "transparent"}`,
-                  color: activeTab === id ? accent : "var(--text-dim)",
+                  color: activeTab === id ? "#a5b4fc" : "var(--text-dim)",
                   transition: "all 0.15s", whiteSpace: "nowrap",
                   "&:hover": { color: "#f1f5f9" },
                 }}
