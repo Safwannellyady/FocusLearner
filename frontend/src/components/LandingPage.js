@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import SportsEsportsRoundedIcon from "@mui/icons-material/SportsEsportsRounded";
 import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
@@ -214,6 +215,40 @@ const LandingPage = () => {
             </Box>
           ))}
         </Box>
+      </motion.div>
+
+      {/* Buy me a coffee */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
+      >
+        <Button
+          component="a"
+          href="https://buymeacoffee.com/Safwan_ms"
+          target="_blank"
+          rel="noopener noreferrer"
+          startIcon={<LocalCafeIcon />}
+          sx={{
+            mt: 4,
+            fontFamily: "Plus Jakarta Sans, sans-serif",
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            px: 2.5, py: 1,
+            borderRadius: "var(--r-md)",
+            textTransform: "none",
+            background: "#FFDD00",
+            color: "#000000",
+            boxShadow: "0 6px 18px rgba(255,221,0,0.25)",
+            "&:hover": {
+              background: "#ffe033",
+              transform: "translateY(-1px)",
+              boxShadow: "0 10px 24px rgba(255,221,0,0.4)",
+            },
+          }}
+        >
+          Buy me a coffee
+        </Button>
       </motion.div>
     </Box>
   );
