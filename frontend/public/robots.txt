@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://focuslearner.pages.dev/sitemap.xml
