@@ -17,7 +17,7 @@ def make_service(api_key='test-key'):
     return service
 
 
-def test_rank_and_filter_keeps_only_requested_topic_matches():
+def test_rank_and_filter_tiers_topic_matches_first():
     service = make_service()
     videos = [
         {
@@ -36,8 +36,12 @@ def test_rank_and_filter_keeps_only_requested_topic_matches():
 
     results = service._rank_and_filter(videos, 'Computer Science', 'Binary Search Trees', 10)
 
-    assert [video['video_id'] for video in results] == ['relevant123']
-    assert results[0]['relevance_score'] > 0
+    # Tiered best-effort ranking: the exact topic match ranks first, and
+    # blacklist-passing videos are kept below it instead of hard-rejected.
+    assert [video['video_id'] for video in results] == ['relevant123', 'unrelated12']
+    assert results[0]['relevance_score'] >= 1000
+    assert results[1]['relevance_score'] < results[0]['relevance_score']
+    assert all(not video['is_filtered'] for video in results)
 
 
 def test_search_excludes_private_or_non_embeddable_videos():
@@ -65,10 +69,14 @@ def test_search_excludes_private_or_non_embeddable_videos():
     assert [video['video_id'] for video in results] == ['playable123']
 
 
-def test_unknown_development_topic_does_not_become_generic_study_videos():
+def test_unknown_topic_falls_back_to_curated_videos():
     service = make_service(api_key=None)
     service.api_key = None
 
     results = service.search_videos('Photosynthesis', 'Biology', 10)
 
-    assert results == []
+    # No empty "no related videos" state: curated per-subject videos are
+    # served instead, clearly labelled as curated.
+    assert len(results) > 0
+    assert all(video.get('is_curated') for video in results)
+    assert all(not video['is_filtered'] for video in results)
