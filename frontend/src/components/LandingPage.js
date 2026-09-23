@@ -1,7 +1,8 @@
-﻿import React from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Link } from "@mui/material";
 import { motion } from "framer-motion";
+import { supportAPI } from "../services/api";
 
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -9,6 +10,7 @@ import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import SportsEsportsRoundedIcon from "@mui/icons-material/SportsEsportsRounded";
 import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 const FEATURES = [
   { icon: SchoolRoundedIcon,          label: "AI Tutor",           desc: "Context-aware answers while you study"   },
@@ -18,11 +20,55 @@ const FEATURES = [
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [legalDoc, setLegalDoc] = useState(null); // null | "privacy" | "terms"
 
   return (
-    <Box
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* ── Top nav ── */}
+      <Box
+        component="nav"
+        aria-label="Primary"
+        sx={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          px: { xs: 2, md: 4 }, py: 1.75, position: "sticky", top: 0, zIndex: 10,
+          bgcolor: "rgba(10,14,28,0.75)", backdropFilter: "blur(12px)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }} onClick={() => navigate("/")}>
+          <AutoAwesomeIcon sx={{ fontSize: 20, color: "#818cf8" }} />
+          <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.05rem", color: "#f1f5f9" }}>
+            FocusLearner
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Button
+            onClick={() => setWaitlistOpen(true)}
+            sx={{ textTransform: "none", fontWeight: 600, fontSize: "0.85rem", color: "var(--text-mid)", "&:hover": { color: "#f1f5f9" } }}
+          >
+            Join waitlist
+          </Button>
+          <Button
+            onClick={() => navigate("/login")}
+            sx={{ textTransform: "none", fontWeight: 600, fontSize: "0.85rem", color: "var(--text-mid)", "&:hover": { color: "#f1f5f9" } }}
+          >
+            Sign in
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => navigate("/signup")}
+            sx={{ textTransform: "none", fontWeight: 700, fontSize: "0.85rem", borderRadius: "var(--r-md)", background: "var(--grad-primary)", px: 2 }}
+          >
+            Get started
+          </Button>
+        </Box>
+      </Box>
+
+      {/* ── Hero ── */}
+      <Box
       sx={{
-        minHeight: "100vh",
+        flex: 1,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -250,7 +296,169 @@ const LandingPage = () => {
           Buy me a coffee
         </Button>
       </motion.div>
+      </Box>
+
+      {/* ── Footer ── */}
+      <Box
+        component="footer"
+        sx={{
+          borderTop: "1px solid var(--border)",
+          px: { xs: 2, md: 4 }, py: 2.5,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexWrap: "wrap", gap: 1,
+        }}
+      >
+        <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>
+          © 2026 FocusLearner. Study deeply.
+        </Typography>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Link
+            component="button"
+            type="button"
+            onClick={() => setLegalDoc("privacy")}
+            sx={{ fontSize: "0.78rem", color: "var(--text-dim)", textDecoration: "none", cursor: "pointer", "&:hover": { color: "#f1f5f9" } }}
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            component="button"
+            type="button"
+            onClick={() => setLegalDoc("terms")}
+            sx={{ fontSize: "0.78rem", color: "var(--text-dim)", textDecoration: "none", cursor: "pointer", "&:hover": { color: "#f1f5f9" } }}
+          >
+            Terms of Service
+          </Link>
+        </Box>
+      </Box>
+
+      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+
+      {/* ── Legal dialogs ── */}
+      <Dialog open={legalDoc === "privacy"} onClose={() => setLegalDoc(null)} aria-labelledby="privacy-title" maxWidth="sm" fullWidth>
+        <DialogTitle id="privacy-title">Privacy Policy</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ fontSize: "0.88rem", color: "var(--text-mid)", lineHeight: 1.7, whiteSpace: "pre-line" }}>
+            {`FocusLearner stores the account details you provide (username, email) and the study data you create (sessions, notes, progress) so the app can function.
+
+• We never sell your data.
+• Study content and analytics are visible only to your account.
+• Google sign-in shares only your basic profile (name, email) with us.
+• You can request deletion of your account and data at any time via the support form.
+
+This is a concise summary — a full policy will be published before public launch.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLegalDoc(null)} sx={{ textTransform: "none" }}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={legalDoc === "terms"} onClose={() => setLegalDoc(null)} aria-labelledby="terms-title" maxWidth="sm" fullWidth>
+        <DialogTitle id="terms-title">Terms of Service</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ fontSize: "0.88rem", color: "var(--text-mid)", lineHeight: 1.7, whiteSpace: "pre-line" }}>
+            {`By using FocusLearner you agree to:
+
+• Use the service for lawful personal study purposes.
+• Not attempt to disrupt the service or other users' accounts.
+• Understand the service is provided "as is" during its beta period.
+
+AI-generated summaries, video suggestions and study plans may contain mistakes — always verify against your own study material.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLegalDoc(null)} sx={{ textTransform: "none" }}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
+  );
+};
+
+/* ── Re-triggerable waitlist modal ────────────────────────────────────────────
+   Submits a real ticket to the backend support queue (category "waitlist"),
+   so signups are actually recorded instead of vanishing into localStorage. */
+const WaitlistModal = ({ open, onClose }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | done | error
+  const [error, setError] = useState("");
+
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => { setStatus("idle"); setError(""); }, 300);
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    setStatus("sending"); setError("");
+    try {
+      await supportAPI.submitTicket({
+        category: "waitlist",
+        subject: `Beta waitlist signup — ${email.trim()}`,
+        message: `Name: ${name.trim() || "(not provided)"}\nEmail: ${email.trim()}\nWants early access to FocusLearner.`,
+      });
+      setStatus("done");
+    } catch {
+      setStatus("error");
+      setError("Couldn't submit right now. Please try again in a moment.");
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={handleClose} aria-labelledby="waitlist-title" maxWidth="xs" fullWidth>
+      <DialogTitle id="waitlist-title" sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        Join the waitlist
+        <Button onClick={handleClose} aria-label="Close" sx={{ minWidth: 32, p: 0.5 }}>
+          <CloseRoundedIcon fontSize="small" />
+        </Button>
+      </DialogTitle>
+      <DialogContent>
+        {status === "done" ? (
+          <Box sx={{ textAlign: "center", py: 2 }}>
+            <Typography sx={{ fontSize: "2rem", mb: 1 }}>🎉</Typography>
+            <Typography sx={{ fontWeight: 700, color: "#f1f5f9", mb: 0.5 }}>You're on the list!</Typography>
+            <Typography sx={{ fontSize: "0.85rem", color: "var(--text-dim)" }}>
+              We'll email you when your invite is ready.
+            </Typography>
+          </Box>
+        ) : (
+          <Box component="form" onSubmit={submit} sx={{ display: "flex", flexDirection: "column", gap: 1.5, pt: 0.5 }}>
+            <Typography sx={{ fontSize: "0.85rem", color: "var(--text-dim)" }}>
+              Get early access to new FocusLearner features before public launch.
+            </Typography>
+            <TextField
+              label="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              fullWidth
+              size="small"
+            />
+            <TextField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              fullWidth
+              size="small"
+              required
+            />
+            {error && <Typography sx={{ fontSize: "0.8rem", color: "#fda4af" }}>{error}</Typography>}
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={status === "sending"}
+              sx={{ textTransform: "none", fontWeight: 700, borderRadius: "var(--r-md)", background: "var(--grad-primary)", mt: 0.5 }}
+            >
+              {status === "sending" ? "Joining…" : "Notify me"}
+            </Button>
+          </Box>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

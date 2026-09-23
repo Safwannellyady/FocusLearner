@@ -1,15 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, CircularProgress, Chip, Button, Divider, Alert } from '@mui/material';
 import { School, CheckCircle, RadioButtonUnchecked, Warning, Lock, ArrowForward, Refresh } from '@mui/icons-material';
-import api from '../../services/api';
+import api, { focusAPI } from '../../services/api';
 
-const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
+const KnowledgeGraph = ({ subject: subjectProp, onSelectTopic }) => {
+  const [subject, setSubject] = useState(subjectProp || null);
   const [graphData, setGraphData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState(null);
   const [error, setError] = useState(null);
 
+  // Default to the user's most-studied subject — never a hardcoded demo
+  // subject that has nothing to do with them.
+  useEffect(() => {
+    if (subjectProp) { setSubject(subjectProp); return; }
+    let cancelled = false;
+    focusAPI.getSessions()
+      .then(res => {
+        if (cancelled) return;
+        const sessions = res?.data?.sessions || [];
+        const counts = {};
+        sessions.forEach(s => {
+          const key = (s.subject_focus || '').trim();
+          if (key) counts[key] = (counts[key] || 0) + 1;
+        });
+        const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        setSubject(top ? top[0] : 'General');
+      })
+      .catch(() => { if (!cancelled) setSubject('General'); });
+    return () => { cancelled = true; };
+  }, [subjectProp]);
+
   const fetchGraph = async () => {
+    if (!subject) return;
     setLoading(true);
     setError(null);
     try {
@@ -19,27 +42,15 @@ const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
       setGraphData(res.data);
       if (res.data && res.data.nodes && res.data.nodes.length > 0) {
         setSelectedNode(res.data.nodes[0]);
+      } else {
+        setSelectedNode(null);
       }
     } catch (err) {
       console.error('Error fetching knowledge graph:', err);
-      setError('Could not load knowledge graph data. Showing local concept tree.');
-      // Local fallback if offline
-      setGraphData({
-        subject,
-        nodes: [
-          { id: 101, label: 'Vector Spaces & Subspaces', status: 'Mastered', description: 'Foundational axioms and closed under linear combinations.', level: 1 },
-          { id: 102, label: 'Linear Independence & Basis', status: 'Mastered', description: 'Spanning sets and minimal generators for vector spaces.', level: 2 },
-          { id: 103, label: 'Matrix Transformations', status: 'In Progress', description: 'Linear mappings between spaces using matrix multiplication.', level: 3 },
-          { id: 104, label: 'Eigenvalues & Eigenvectors', status: 'Weak Spot', description: 'Characteristic polynomial det(A - lambda*I) = 0 and diagonal form.', level: 4 },
-          { id: 105, label: 'Singular Value Decomposition', status: 'Locked', description: 'Advanced factorization A = U * Sigma * V^T for data compression.', level: 5 }
-        ],
-        links: [
-          { source: 101, target: 102 },
-          { source: 102, target: 103 },
-          { source: 103, target: 104 },
-          { source: 104, target: 105 }
-        ]
-      });
+      // No canned demo data: an error is an error, shown honestly with retry.
+      setError('Could not load your knowledge graph. Check your connection and try again.');
+      setGraphData({ subject, nodes: [], links: [] });
+      setSelectedNode(null);
     } finally {
       setLoading(false);
     }
@@ -47,6 +58,7 @@ const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
 
   useEffect(() => {
     fetchGraph();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subject]);
 
   const getStatusColor = (status) => {
@@ -100,6 +112,28 @@ const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
 
       {error && <Alert severity="warning" sx={{ mb: 2, background: 'rgba(245, 158, 11, 0.1)', color: '#fcd34d' }}>{error}</Alert>}
 
+      {!loading && (!graphData?.nodes || graphData.nodes.length === 0) && !error && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 5, textAlign: 'center',
+            background: 'rgba(15, 23, 42, 0.65)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 3,
+          }}
+        >
+          <School sx={{ fontSize: 40, color: '#64748b', mb: 1.5 }} />
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#f8fafc', mb: 1 }}>
+            No concept map yet for {graphData?.subject || subject}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8', maxWidth: 440, mx: 'auto' }}>
+            Your knowledge graph is built from your real study activity. Complete a few
+            focus sessions in this subject and your personal concept map will appear here.
+          </Typography>
+        </Paper>
+      )}
+
+      {graphData?.nodes?.length > 0 && (
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.6fr 1fr' }, gap: 3 }}>
         {/* SVG Concept Map Visualization Area */}
         <Paper
@@ -280,6 +314,7 @@ const KnowledgeGraph = ({ subject = 'Math/Linear Algebra', onSelectTopic }) => {
           )}
         </Paper>
       </Box>
+      )}
     </Box>
   );
 };

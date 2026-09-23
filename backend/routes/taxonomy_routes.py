@@ -115,21 +115,36 @@ def get_knowledge_graph():
                 'type': 'prerequisite'
             })
             
-    # If no intents in DB for this subject yet, provide canonical fallback node tree
+    # If no intents in DB for this subject yet, derive the tree from the
+    # user's real sessions for that subject instead of showing canned
+    # demo data for an unrelated subject. If the user has no sessions at
+    # all, return an empty graph so the UI can show an honest empty state.
     if not nodes:
-        nodes = [
-            {'id': 101, 'label': 'Vector Spaces & Subspaces', 'subject': subject, 'status': 'Mastered', 'level': 1},
-            {'id': 102, 'label': 'Linear Independence & Basis', 'subject': subject, 'status': 'Mastered', 'level': 2},
-            {'id': 103, 'label': 'Matrix Transformations', 'subject': subject, 'status': 'In Progress', 'level': 3},
-            {'id': 104, 'label': 'Eigenvalues & Eigenvectors', 'subject': subject, 'status': 'Weak Spot', 'level': 4},
-            {'id': 105, 'label': 'Singular Value Decomposition (SVD)', 'subject': subject, 'status': 'Locked', 'level': 5}
-        ]
-        links = [
-            {'source': 101, 'target': 102, 'type': 'prerequisite'},
-            {'source': 102, 'target': 103, 'type': 'prerequisite'},
-            {'source': 103, 'target': 104, 'type': 'prerequisite'},
-            {'source': 104, 'target': 105, 'type': 'prerequisite'}
-        ]
+        from models import FocusSession
+        sessions = (FocusSession.query
+                    .filter_by(user_id=user_id, subject_focus=subject, status='completed')
+                    .order_by(FocusSession.started_at.asc())
+                    .all())
+        seen_topics = []
+        for s in sessions:
+            topic = (s.topic or '').strip() or 'General review'
+            if topic not in seen_topics:
+                seen_topics.append(topic)
+        for idx, topic in enumerate(seen_topics):
+            nodes.append({
+                'id': 1000 + idx,
+                'label': topic,
+                'subject': subject,
+                'status': 'In Progress' if idx == len(seen_topics) - 1 else 'Mastered',
+                'description': f'Practiced in {subject} focus sessions.',
+                'level': idx + 1
+            })
+            if idx > 0:
+                links.append({
+                    'source': 1000 + idx - 1,
+                    'target': 1000 + idx,
+                    'type': 'prerequisite'
+                })
         
     return jsonify({
         'subject': subject,

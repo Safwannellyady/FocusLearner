@@ -495,7 +495,15 @@ const CreateFocusSession = () => {
   };
 
   const handleStart = async () => {
+    // Guard against double submission (double-click, keyboard repeat):
+    // without this, two lock requests could create two sessions.
+    if (loading) return;
     setError(""); setLoading(true);
+    // Idempotency key: retries / double-clicks with the same key are
+    // deduplicated by the backend instead of creating a second session.
+    const idempotencyKey = (typeof crypto !== "undefined" && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     try {
       const ytId = data.youtubeId || (data.youtubeUrl ? extractYouTubeId(data.youtubeUrl) : null);
       
@@ -547,7 +555,8 @@ const CreateFocusSession = () => {
         topic: data.topic,
         selected_lab: data.selectedLab || "",
         duration_minutes: data.totalMin || 30,
-        youtube_id: finalVideoId || ""
+        youtube_id: finalVideoId || "",
+        idempotency_key: idempotencyKey
       });
       localStorage.setItem("activeSession", JSON.stringify({ ...payload, sessionId: res?.data?.session?.id || res?.data?.session_id }));
       navigate("/focus");

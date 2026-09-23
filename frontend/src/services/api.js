@@ -145,6 +145,12 @@ api.interceptors.response.use(
 );
 
 // ── Focus Session API ─────────────────────────────────────────────────────────
+// Backend health probe — used to render graceful "backend unavailable" states
+// instead of letting every action fail one by one.
+export const healthAPI = {
+  check: (config) => api.get('/health', { timeout: 8000, ...config }),
+};
+
 export const focusAPI = {
   lock: (data) =>
     api.post('/focus/lock', typeof data === 'string' ? { subject_focus: data } : data),
@@ -163,6 +169,10 @@ export const focusAPI = {
 
   unlock: () =>
     api.post('/focus/unlock'),
+
+  // Persist completion (status, elapsed time, XP) BEFORE navigating away.
+  endSession: (sessionId, elapsedSeconds) =>
+    api.post('/focus/unlock', { session_id: sessionId, elapsed_seconds: elapsedSeconds }),
 
   getCurrent: () =>
     api.get('/focus/current'),
@@ -263,8 +273,8 @@ export const authAPI = {
   resetPassword: (data) =>
     api.post('/auth/reset-password', data),
 
-  checkUsername: (username) =>
-    api.get('/auth/check-username', { params: { username } }),
+  checkUsername: (username, config) =>
+    api.get('/auth/check-username', { params: { username }, timeout: 8000, ...config }),
 };
 
 

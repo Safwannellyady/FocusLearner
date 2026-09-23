@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box, Typography, Chip, LinearProgress, CircularProgress, IconButton, Menu, MenuItem,
@@ -45,45 +45,27 @@ const SessionCard = ({ session, index, onResume, onModify, onDelete }) => {
   const [editTopic, setEditTopic] = useState(session.topic || session.title || "");
   const [editSubject, setEditSubject] = useState(session.subject || "");
   const [editDuration, setEditDuration] = useState(session.duration || 30);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const color  = subjectColor(session.subject);
   const status = STATUS_META[session.status] || STATUS_META.in_progress;
-  const xp     = session.xp || Math.round((session.duration || 30) * 2.5);
+  // XP is backend-computed (FocusSession.xp_earned / Lecture xp_earned).
+  const xp     = session.xp || 0;
 
   const handleSaveEdit = async (e) => {
     e.stopPropagation();
-    try {
-      if (session.db_id) {
-        await focusAPI.updateSession(session.db_id, {
-          topic: editTopic,
-          subject_focus: editSubject,
-          duration_minutes: editDuration
-        });
-      }
-      onModify && onModify(session.id, { topic: editTopic, subject: editSubject, duration: editDuration, title: editTopic });
-    } catch (err) {
-      console.error("Modify error:", err);
-    } finally {
-      setEditOpen(false);
-      setAnchorEl(null);
-    }
+    // The parent performs the API call (routed to the right endpoint for
+    // focus sessions vs lectures) and refetches authoritative data.
+    await onModify(session, { topic: editTopic, subject: editSubject, duration: editDuration, title: editTopic });
+    setEditOpen(false);
+    setAnchorEl(null);
   };
 
   const handleDelete = async (e) => {
     e.stopPropagation();
-    setIsDeleting(true);
-    try {
-      if (session.db_id) {
-        await focusAPI.deleteSession(session.db_id);
-      }
-      onDelete && onDelete(session.id);
-    } catch (err) {
-      console.error("Delete error:", err);
-    } finally {
-      setIsDeleting(false);
-      setAnchorEl(null);
-    }
+    setAnchorEl(null);
+    // Parent shows a confirmation dialog first; the actual delete happens
+    // only after the user confirms.
+    onDelete && onDelete(session);
   };
 
   return (
@@ -173,11 +155,10 @@ const SessionCard = ({ session, index, onResume, onModify, onDelete }) => {
             </MenuItem>
             <MenuItem
               onClick={handleDelete}
-              disabled={isDeleting}
               sx={{ gap: 1.25, py: 0.8, px: 2, fontSize: "0.8rem", color: "var(--rose)" }}
             >
               <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: "var(--rose)" }} />
-              {isDeleting ? "Deleting..." : "Delete Session"}
+              Delete Session
             </MenuItem>
           </Menu>
 
@@ -358,66 +339,70 @@ const MyCourses = () => {
   const [filterSubj,  setFilterSubj]  = useState("All");
   const [sortBy,      setSortBy]      = useState("Recent");
   const [filterOpen,  setFilterOpen]  = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // session object pending delete confirmation
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [focusRes, lecRes] = await Promise.allSettled([
-          focusAPI.getSessions(),
-          lectureAPI.getAll ? lectureAPI.getAll() : lectureAPI.getLectures(),
-        ]);
+  // Reusable loader: refetch authoritative data after any mutation so the
+  // list never shows stale local edits.
+  const loadSessions = useCallback(async () => {
+    try {
+      const [focusRes, lecRes] = await Promise.allSettled([
+        focusAPI.getSessions(),
+        lectureAPI.getAll ? lectureAPI.getAll() : lectureAPI.getLectures(),
+      ]);
 
-        let combined = [];
+      let combined = [];
 
-        if (focusRes.status === "fulfilled") {
-          const rawFocus = focusRes.value?.data?.sessions || [];
-          rawFocus.forEach((fs) => {
+      if (focusRes.status === "fulfilled") {
+        const rawFocus = focusRes.value?.data?.sessions || [];
+        rawFocus.forEach((fs) => {
+          combined.push({
+            id: `focus-${fs.id}`,
+            db_id: fs.id,
+            kind: "focus",
+            title: fs.topic || fs.subject_focus || "Focus Session",
+            subject: fs.subject_focus || "General Study",
+            topic: fs.topic || fs.subject_focus,
+            selected_lab: fs.selected_lab,
+            duration: fs.duration_minutes || 30,
+            // XP comes from the backend (FocusSession.xp_earned) — never a
+            // local estimate, so every surface shows the same number.
+            xp: fs.xp_earned || 0,
+            progress: fs.status === "completed" ? 100 : Math.min(100, Math.round(((fs.elapsed_seconds || 0) / ((fs.duration_minutes || 30) * 60)) * 100)),
+            status: fs.status || (fs.is_locked ? "active" : "in_progress"),
+            date: fs.started_at ? new Date(fs.started_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+            youtube_id: fs.current_video_id,
+          });
+        });
+      }
+
+      if (lecRes.status === "fulfilled") {
+        const rawLec = lecRes.value?.data?.lectures || lecRes.value?.data || [];
+        if (Array.isArray(rawLec)) {
+          rawLec.forEach((l) => {
             combined.push({
-              id: `focus-${fs.id}`,
-              db_id: fs.id,
-              title: fs.topic || fs.subject_focus || "Focus Session",
-              subject: fs.subject_focus || "General Study",
-              topic: fs.topic || fs.subject_focus,
-              selected_lab: fs.selected_lab,
-              duration: fs.duration_minutes || 30,
-              xp: Math.round((fs.elapsed_seconds || 0) / 60 * 5),
-              progress: fs.status === "completed" ? 100 : Math.min(100, Math.round(((fs.elapsed_seconds || 0) / ((fs.duration_minutes || 30) * 60)) * 100)),
-              status: fs.status || (fs.is_locked ? "active" : "in_progress"),
-              date: fs.started_at ? new Date(fs.started_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-              youtube_id: fs.current_video_id,
+              ...l,
+              id: `lec-${l.id}`,
+              db_id: l.id,
+              kind: "lecture",
+              subject: l.subject || "General Study",
+              duration: l.duration || 30,
+              // Backend-computed canonical XP (Lecture.to_dict → xp_earned).
+              xp: l.xp_earned || 0,
             });
           });
         }
-
-        if (lecRes.status === "fulfilled") {
-          const rawLec = lecRes.value?.data?.lectures || lecRes.value?.data || [];
-          if (Array.isArray(rawLec)) {
-            rawLec.forEach((l) => {
-              combined.push({
-                ...l,
-                id: `lec-${l.id}`,
-                db_id: l.id,
-                subject: l.subject || "General Study",
-                duration: l.duration || 30,
-              });
-            });
-          }
-        }
-
-        if (combined.length > 0) {
-          setSessions(combined);
-        } else {
-          setSessions([]);
-        }
-      } catch (err) {
-        console.error("Failed to load sessions:", err);
-        setSessions([]);
-      } finally {
-        setLoading(false);
       }
-    };
-    load();
+
+      setSessions(combined);
+    } catch (err) {
+      console.error("Failed to load sessions:", err);
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { loadSessions(); }, [loadSessions]);
 
 
   const handleResume = (session) => {
@@ -445,12 +430,54 @@ const MyCourses = () => {
     navigate("/focus");
   };
 
-  const handleModifySession = (sessionId, updatedData) => {
-    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updatedData, topic: updatedData.topic, subject: updatedData.subject, duration: updatedData.duration } : s));
+  const handleModifySession = async (session, updatedData) => {
+    try {
+      if (session.db_id) {
+        if (session.kind === "lecture") {
+          await lectureAPI.update(session.db_id, {
+            topic: updatedData.topic,
+            subject: updatedData.subject,
+            title: updatedData.title || updatedData.topic,
+          });
+        } else {
+          await focusAPI.updateSession(session.db_id, {
+            topic: updatedData.topic,
+            subject_focus: updatedData.subject,
+            duration_minutes: updatedData.duration
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Modify error:", err);
+    } finally {
+      // Refetch authoritative data so the card reflects the backend state.
+      await loadSessions();
+    }
   };
 
-  const handleDeleteSession = (sessionId) => {
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
+  // Delete is a two-step flow: the card requests it, this opens the
+  // confirmation dialog, and only the confirmed action deletes.
+  const handleDeleteSession = (session) => {
+    setDeleteTarget(session);
+  };
+
+  const confirmDeleteSession = async () => {
+    const session = deleteTarget;
+    setDeleteTarget(null);
+    if (!session) return;
+    try {
+      if (session.db_id) {
+        if (session.kind === "lecture") {
+          await lectureAPI.delete(session.db_id);
+        } else {
+          await focusAPI.deleteSession(session.db_id);
+        }
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+    } finally {
+      await loadSessions();
+    }
   };
 
 
@@ -621,6 +648,35 @@ const MyCourses = () => {
           </AnimatePresence>
         </Box>
       )}
+
+      {/* Delete confirmation — destructive action requires explicit consent */}
+      <Dialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        aria-labelledby="delete-session-title"
+      >
+        <DialogTitle id="delete-session-title">Delete this session?</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ fontSize: "0.9rem", color: "var(--text-mid)" }}>
+            "{deleteTarget?.title || deleteTarget?.topic}" will be permanently deleted,
+            including its tracked time and XP. This can't be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)} sx={{ textTransform: "none" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteSession}
+            color="error"
+            variant="contained"
+            sx={{ textTransform: "none" }}
+            autoFocus
+          >
+            Delete session
+          </Button>
+        </DialogActions>
+      </Dialog>
 
     </Box>
   );
