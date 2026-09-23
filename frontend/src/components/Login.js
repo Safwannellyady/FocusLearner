@@ -171,7 +171,10 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.error || "Invalid credentials. Please try again.");
+      // Surface the backend's lockout detail (429: "Try again in N minute(s)")
+      // instead of a generic failure message.
+      const data = err.response?.data || {};
+      setError(data.message || data.error || "Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }

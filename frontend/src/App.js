@@ -6,6 +6,8 @@ import { Box, CircularProgress } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import NotFound from './components/NotFound';
 import Layout from './components/layout/Layout';
 import { FocusProvider } from './context/FocusContext';
 
@@ -93,6 +95,19 @@ function AuthLogoutHandler() {
   return null;
 }
 
+
+/**
+ * Wraps an authenticated page: per-page error boundary (a crash in one page
+ * can no longer blank the whole app) around the shared layout.
+ */
+const GuardedPage = ({ children }) => (
+  <ProtectedRoute>
+    <ErrorBoundary>
+      <Layout>{children}</Layout>
+    </ErrorBoundary>
+  </ProtectedRoute>
+);
+
 function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -103,166 +118,32 @@ function App() {
             <AuthLogoutHandler />
             <Suspense fallback={<PageFallback />}>
               <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/" element={<ErrorBoundary><LandingPage /></ErrorBoundary>} />
+                <Route path="/login" element={<ErrorBoundary><Login /></ErrorBoundary>} />
+                <Route path="/signup" element={<ErrorBoundary><Signup /></ErrorBoundary>} />
+                <Route path="/forgot-password" element={<ErrorBoundary><ForgotPassword /></ErrorBoundary>} />
 
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/my-courses" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <MyCourses />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/lecture/:id" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <LectureDetail />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/preferences" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Preferences />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/courses" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <CreateFocusSession />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/create-focus-session" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <CreateFocusSession />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/enrollments" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <MyEnrollments />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/manage-focus" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ManageFocus />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/study-room" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <StudyRoom />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/badges" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Badges />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/focus" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <FocusStudio />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
+                <Route path="/dashboard" element={<GuardedPage><Dashboard /></GuardedPage>} />
+                <Route path="/my-courses" element={<GuardedPage><MyCourses /></GuardedPage>} />
+                <Route path="/lecture/:id" element={<GuardedPage><LectureDetail /></GuardedPage>} />
+                <Route path="/preferences" element={<GuardedPage><Preferences /></GuardedPage>} />
+                <Route path="/courses" element={<GuardedPage><CreateFocusSession /></GuardedPage>} />
+                <Route path="/create-focus-session" element={<GuardedPage><CreateFocusSession /></GuardedPage>} />
+                <Route path="/enrollments" element={<GuardedPage><MyEnrollments /></GuardedPage>} />
+                <Route path="/manage-focus" element={<GuardedPage><ManageFocus /></GuardedPage>} />
+                <Route path="/study-room" element={<GuardedPage><StudyRoom /></GuardedPage>} />
+                <Route path="/badges" element={<GuardedPage><Badges /></GuardedPage>} />
+                <Route path="/focus" element={<GuardedPage><FocusStudio /></GuardedPage>} />
 
-                <Route path="/player" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <VideoPlayer />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/games" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <GameLab />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/games/kcl" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <KCLChallenge />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/games/ai-challenge" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AIChallenge />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/analytics" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AnalyticsDashboard />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/progress" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ProgressDashboard />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/arena" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <FocusArena />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
-                <Route path="/knowledge-graph" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Box sx={{ p: { xs: 2, md: 4 } }}>
-                        <KnowledgeGraph />
-                      </Box>
-                    </Layout>
-                  </ProtectedRoute>
-                }
-                />
+                <Route path="/player" element={<GuardedPage><VideoPlayer /></GuardedPage>} />
+                <Route path="/games" element={<GuardedPage><GameLab /></GuardedPage>} />
+                <Route path="/games/kcl" element={<GuardedPage><KCLChallenge /></GuardedPage>} />
+                <Route path="/games/ai-challenge" element={<GuardedPage><AIChallenge /></GuardedPage>} />
+                <Route path="/analytics" element={<GuardedPage><AnalyticsDashboard /></GuardedPage>} />
+                <Route path="/progress" element={<GuardedPage><ProgressDashboard /></GuardedPage>} />
+                <Route path="/arena" element={<GuardedPage><FocusArena /></GuardedPage>} />
+                <Route path="/knowledge-graph" element={<GuardedPage><Box sx={{ p: { xs: 2, md: 4 } }}> <KnowledgeGraph /> </Box></GuardedPage>} />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
           </Router>

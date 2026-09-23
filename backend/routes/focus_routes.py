@@ -16,6 +16,7 @@ if parent_dir not in sys.path:
 from models import FocusSession, User, db
 from services.youtube_service import YouTubeService
 from utils.auth import token_required
+from utils.xp import calculate_session_xp
 
 focus_routes = Blueprint('focus', __name__, url_prefix='/api/focus')
 youtube_service = YouTubeService()
@@ -32,11 +33,28 @@ def lock_focus():
     selected_lab = data.get('selected_lab') or data.get('selectedLab') or ''
     duration_minutes = data.get('duration_minutes') or data.get('duration') or 30
     youtube_id = data.get('youtube_id') or data.get('youtubeId') or ''
+    idempotency_key = (data.get('idempotency_key') or data.get('idempotencyKey') or '').strip() or None
     
     # Verify user exists
     user = User.query.get(user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
+
+    # Idempotency: a retried request with the same key must not create a second
+    # session. Return the most recent matching session instead (within 10 min).
+    if idempotency_key:
+        recent = FocusSession.query.filter_by(
+            user_id=user_id,
+            idempotency_key=idempotency_key
+        ).filter(
+            FocusSession.started_at >= datetime.utcnow() - timedelta(minutes=10)
+        ).order_by(FocusSession.id.desc()).first()
+        if recent:
+            return jsonify({
+                'message': 'Focus session already created (idempotent replay)',
+                'session': recent.to_dict(),
+                'deduplicated': True
+            }), 200
     
     # End any existing active sessions
     active_sessions = FocusSession.query.filter_by(
@@ -57,7 +75,8 @@ def lock_focus():
         duration_minutes=int(duration_minutes),
         current_video_id=youtube_id,
         is_locked=True,
-        status='active'
+        status='active',
+        idempotency_key=idempotency_key
     )
     
     db.session.add(new_session)
@@ -112,6 +131,20 @@ def get_user_sessions():
     user_id = request.current_user_id
     sessions = FocusSession.query.filter_by(user_id=user_id)\
         .order_by(FocusSession.started_at.desc()).all()
+
+    # One-time backfill: completed sessions created before xp_earned existed
+    # get the canonical value so the column stays the single source of truth.
+    dirty = False
+    for s in sessions:
+        if s.status == 'completed' and not (s.xp_earned or 0):
+            seconds = s.elapsed_seconds or 0
+            if not seconds and s.ended_at and s.started_at:
+                seconds = (s.ended_at - s.started_at).total_seconds()
+            s.xp_earned = calculate_session_xp(seconds)
+            dirty = True
+    if dirty:
+        db.session.commit()
+
     return jsonify({'sessions': [s.to_dict() for s in sessions]}), 200
 
 
@@ -158,22 +191,51 @@ def delete_session(session_id):
 @focus_routes.route('/unlock', methods=['POST'])
 @token_required
 def unlock_focus():
-    """Unlock the current focus session"""
+    """Unlock/end a focus session, persisting completion, XP and final elapsed time.
+
+    Accepts an optional session_id and elapsed_seconds. The completion is
+    recorded atomically BEFORE the client is told to navigate away, so a
+    session can never be lost between End Session and the redirect.
+    """
+    data = request.get_json() or {}
     user_id = request.current_user_id
-    
-    # Find active session
-    session = FocusSession.query.filter_by(
-        user_id=user_id,
-        is_locked=True
-    ).first()
-    
+    session_id = data.get('session_id') or data.get('sessionId')
+    elapsed_seconds = data.get('elapsed_seconds')
+    if elapsed_seconds is None:
+        elapsed_seconds = data.get('elapsedSeconds')
+    if elapsed_seconds is None:
+        elapsed_seconds = data.get('elapsedSec')
+    elapsed_seconds = int(elapsed_seconds or 0)
+
+    session = None
+    if session_id:
+        session = FocusSession.query.filter_by(
+            id=session_id,
+            user_id=user_id
+        ).first()
+    if not session:
+        # Fallback: the currently locked session for this user
+        session = FocusSession.query.filter_by(
+            user_id=user_id,
+            is_locked=True
+        ).first()
+
     if not session:
         return jsonify({'error': 'No active focus session found'}), 404
-    
+
+    xp = calculate_session_xp(elapsed_seconds)
+
     session.is_locked = False
     session.ended_at = datetime.utcnow()
+    session.elapsed_seconds = elapsed_seconds
+    session.status = 'completed'
+    session.xp_earned = xp
+
+    # XP is stored on the session itself (FocusSession.xp_earned), which is the
+    # single source of truth consumed by analytics and the session cards.
+
     db.session.commit()
-    
+
     return jsonify({
         'message': 'Focus unlocked successfully',
         'session': session.to_dict()

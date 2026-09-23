@@ -285,7 +285,7 @@ def generate_quiz():
 
 
 from datetime import datetime
-from models import ActivityResult
+from utils.xp import calculate_session_xp
 from services.learning_loop_service import LearningLoopService
 loop_service = LearningLoopService()
 
@@ -309,33 +309,24 @@ def complete_lecture(lecture_id):
     if elapsed_minutes < 30:
         return jsonify({'error': 'Minimum 30 minutes required to complete session'}), 400
 
-    # Calculate scaled XP reward
-    if elapsed_minutes >= 90:
-        xp_earned = 650
-        label = "Elite Focus!"
-    elif elapsed_minutes >= 60:
-        xp_earned = 400
-        label = "Brilliant!"
-    elif elapsed_minutes >= 45:
-        xp_earned = 250
-        label = "Deep Focus!"
-    else:
-        xp_earned = 150
-        label = "Solid Session!"
+    # Canonical session-XP tiers (single source of truth lives in utils.xp).
+    xp_earned = calculate_session_xp(elapsed_minutes * 60)
+    label = (
+        "Elite Focus!" if elapsed_minutes >= 90 else
+        "Brilliant!" if elapsed_minutes >= 60 else
+        "Deep Focus!" if elapsed_minutes >= 45 else
+        "Solid Session!"
+    )
 
     lecture.is_completed = True
     lecture.completed_at = datetime.utcnow()
     lecture.study_minutes_logged = elapsed_minutes
-    
-    # Save activity result for XP credit
-    act = ActivityResult(
-        user_id=user_id,
-        module_id="focus_session",
-        score=100,
-        xp_earned=xp_earned,
-        summary=f"Completed {lecture.subject}: {lecture.topic} ({elapsed_minutes}m) - {label}"
-    )
-    db.session.add(act)
+
+    # NOTE: lecture XP is derived from study_minutes_logged with the canonical
+    # tier formula wherever it is displayed (see MyCourses). It is not written
+    # to ActivityResult: that table models game-challenge results (it requires
+    # a challenge_id FK), so writing lecture rows there would violate the
+    # schema and crash this endpoint.
 
     loop_status = None
     if lecture.learning_intent_id:

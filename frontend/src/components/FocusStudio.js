@@ -28,7 +28,7 @@ import FullscreenRoundedIcon    from "@mui/icons-material/FullscreenRounded";
 import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
 import StyleRoundedIcon        from "@mui/icons-material/StyleRounded";
 
-import { focusAPI, lectureAPI } from "../services/api";
+import { focusAPI, lectureAPI, chatAPI, healthAPI } from "../services/api";
 import SubjectLabs from "./labs/SubjectLabs";
 import FlashcardsDeck from "./FlashcardsDeck";
 
@@ -306,9 +306,21 @@ const ChatPanel = ({ session }) => {
   ]);
   const [input, setInput]   = useState("");
   const [loading, setLoading] = useState(false);
+  // null = not yet probed, true = backend reachable, false = unreachable
+  const [backendUp, setBackendUp] = useState(null);
   const bottomRef = useRef(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  // Probe backend reachability once, so an undeployed/misconfigured backend
+  // renders a graceful banner instead of failing every message silently.
+  useEffect(() => {
+    let cancelled = false;
+    healthAPI.check()
+      .then(() => { if (!cancelled) setBackendUp(true); })
+      .catch(() => { if (!cancelled) setBackendUp(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const send = async () => {
     const text = input.trim();
@@ -316,15 +328,16 @@ const ChatPanel = ({ session }) => {
     setMessages(m => [...m, { role: "user", text }]);
     setInput(""); setLoading(true);
     try {
-      const res = await fetch("/api/chat/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify({ message: text, context: session?.subjectName, videoId: session?.youtubeId || session?.youtube_id }),
-      });
-      const data = await res.json();
+      // Routed through the centralized API client so REACT_APP_API_URL and
+      // token refresh are honoured (raw fetch("/api/...") hit the wrong
+      // origin in production and always failed with "Connection error").
+      const res = await chatAPI.send(text, session?.subjectName, session?.youtubeId || session?.youtube_id);
+      const data = res.data || {};
+      setBackendUp(true);
       setMessages(m => [...m, { role: "assistant", text: data.response || data.message || "I'm not sure — try rephrasing." }]);
     } catch {
-      setMessages(m => [...m, { role: "assistant", text: "Connection error. Please check the backend is running." }]);
+      setBackendUp(false);
+      setMessages(m => [...m, { role: "assistant", text: "I couldn't reach the AI service right now. Your session timer and notes are unaffected — try again in a moment." }]);
     } finally {
       setLoading(false);
     }
@@ -336,6 +349,14 @@ const ChatPanel = ({ session }) => {
         <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>🤖 AI Tutor</Typography>
         <Typography sx={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>{session?.subjectName} — {session?.topic}</Typography>
       </Box>
+
+      {backendUp === false && (
+        <Box sx={{ mx: 2, mt: 1.5, p: 1.25, borderRadius: "var(--r-md)", bgcolor: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)" }}>
+          <Typography sx={{ fontSize: "0.78rem", color: "#fcd34d", lineHeight: 1.5 }}>
+            ⚠️ The AI Tutor can't reach the backend right now. Your focus timer keeps running — I'll reconnect automatically when it's back.
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.25 }}>
         {messages.map((m, i) => (
@@ -405,15 +426,16 @@ const SummarizePanel = ({ session }) => {
   const generate = async () => {
     setLoading(true); setSummary("");
     try {
-      const res = await fetch("/api/chat/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify({ message: "Please provide a concise summary of the key concepts covered in this topic.", context: session?.subjectName, videoId: session?.youtubeId || session?.youtube_id }),
-      });
-      const data = await res.json();
+      // Same centralized client as chat: honours REACT_APP_API_URL + token refresh.
+      const res = await chatAPI.send(
+        "Please provide a concise summary of the key concepts covered in this topic.",
+        session?.subjectName,
+        session?.youtubeId || session?.youtube_id
+      );
+      const data = res.data || {};
       setSummary(data.response || data.message || "Summary generated.");
     } catch {
-      setSummary("Could not connect to AI service. Check the backend.");
+      setSummary("Could not reach the AI service right now. Your session is unaffected — try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -424,15 +446,15 @@ const SummarizePanel = ({ session }) => {
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-mid)" }}>📄 AI Summarizer</Typography>
         <Box
+          component="button"
+          type="button"
           onClick={generate}
-          role="button"
           aria-label={summary ? "Regenerate summary" : "Generate AI summary"}
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && generate()}
           sx={{
             display: "flex", alignItems: "center", gap: 0.5, px: 1, py: 0.4,
+            minHeight: 32, cursor: "pointer", fontFamily: "inherit",
             borderRadius: "var(--r-md)", bgcolor: "rgba(99,102,241,0.12)",
-            border: "1px solid rgba(99,102,241,0.25)", cursor: "pointer",
+            border: "1px solid rgba(99,102,241,0.25)",
             "&:hover": { bgcolor: "rgba(99,102,241,0.22)" },
           }}
         >
@@ -518,43 +540,66 @@ const FocusStudio = () => {
 
   const subjectFocus = session.subject_focus || session.subjectName || "";
 
+  const [videoSearchError, setVideoSearchError] = useState("");
+
+  // Bounded retry for video search: up to 2 extra attempts with a short
+  // backoff and a refined subject+topic query, then a clear message.
+  const fetchVideos = useCallback(async (query, opts = {}) => {
+    const { refined = false } = opts;
+    const attempts = 3;
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        const q = refined && attempt > 1 ? `${subjectFocus} ${query} lecture tutorial` : query;
+        const res = await focusAPI.getContent(q, subjectFocus);
+        const results = res?.data?.results || res?.data?.videos || [];
+        return { results, error: results.length ? "" : "empty" };
+      } catch (err) {
+        if (attempt === attempts) return { results: [], error: "failed" };
+        await new Promise(r => setTimeout(r, 600 * attempt));
+      }
+    }
+    return { results: [], error: "failed" };
+  }, [subjectFocus]);
+
   useEffect(() => {
     const query = session.topic || session.title || subjectFocus;
-    focusAPI.getContent(query, subjectFocus)
-      .then(res => {
-        const results = res?.data?.results || res?.data?.videos || [];
-        setVideoList(results);
-        setVideosLoaded(true);
-        if (results.length > 0) {
-          const currentClean = extractYouTubeId(videoId);
-          // Never replace a video supplied by the learner.  Only choose the
-          // best verified result when no video is selected yet.
-          if (!currentClean) {
-            const rawVid = results[0].video_id || results[0].id || results[0].url || "";
-            const vid = extractYouTubeId(rawVid);
-            if (vid) setVideoId(vid);
-          }
+    setVideoSearchError("");
+    fetchVideos(query, { refined: true }).then(({ results, error }) => {
+      setVideoList(results);
+      setVideosLoaded(true);
+      if (error === "failed") {
+        setVideoSearchError("Video search is unavailable right now. Check your connection, then use the sidebar search to try again.");
+      } else if (error === "empty") {
+        setVideoSearchError(`No verified videos matched "${query}". Try a different keyword in the sidebar search.`);
+      }
+      if (results.length > 0) {
+        const currentClean = extractYouTubeId(videoId);
+        // Never replace a video supplied by the learner.  Only choose the
+        // best verified result when no video is selected yet.
+        if (!currentClean) {
+          const rawVid = results[0].video_id || results[0].id || results[0].url || "";
+          const vid = extractYouTubeId(rawVid);
+          if (vid) setVideoId(vid);
         }
-      })
-      .catch(err => {
-        console.error("Video search error:", err);
-        setVideoList([]);
-        setVideosLoaded(true);
-      });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.topic, session.title, subjectFocus]);
 
-  const handleSidebarSearchSubmit = (e) => {
+  const handleSidebarSearchSubmit = async (e) => {
     if (e) e.preventDefault();
     const q = sidebarSearch.trim() || session.topic || subjectFocus;
     setIsSearchingSidebar(true);
-    focusAPI.getContent(q, subjectFocus)
-      .then(res => {
-        const results = res?.data?.results || res?.data?.videos || [];
-        setVideoList(results);
-        setVideosLoaded(true);
-      })
-      .catch(err => console.error("Sidebar search error:", err))
-      .finally(() => setIsSearchingSidebar(false));
+    setVideoSearchError("");
+    const { results, error } = await fetchVideos(q, { refined: true });
+    setVideoList(results);
+    setVideosLoaded(true);
+    if (error === "failed") {
+      setVideoSearchError("Search failed after 3 attempts. Check your connection and try again.");
+    } else if (error === "empty") {
+      setVideoSearchError(`No verified videos matched "${q}". Try different keywords.`);
+    }
+    setIsSearchingSidebar(false);
   };
 
   const selectVideo = (candidate) => {
@@ -565,26 +610,42 @@ const FocusStudio = () => {
     }
   };
 
+  // A fallback candidate is only eligible if it is topically related to the
+  // session (subject/topic keywords appear in its title, channel or
+  // description). Falling back to an unrelated video (e.g. a biology TED-Ed
+  // in a physics session) is worse than showing an honest empty state.
+  const isTopicalVideo = useCallback((candidate) => {
+    const text = [candidate?.title, candidate?.channelTitle, candidate?.channel,
+                  candidate?.description, candidate?.subject]
+      .filter(Boolean).join(" ").toLowerCase();
+    if (!text) return false;
+    const keywords = `${subjectFocus} ${session.topic || session.title || ""}`
+      .toLowerCase().split(/[^a-z0-9+]+/).filter(w => w.length > 2);
+    if (keywords.length === 0) return true;
+    return keywords.some(k => text.includes(k));
+  }, [subjectFocus, session.topic, session.title]);
+
   const handleVideoEmbedError = (event) => {
     const isRestricted = event.data === 101 || event.data === 150;
-    setVideoError(isRestricted ? "Embedded playback restricted by video owner. Switching to fallback video..." : "YouTube playback error. Switching video...");
+    const curId = extractYouTubeId(videoId);
 
     if (videoList && videoList.length > 1) {
-      const curId = extractYouTubeId(videoId);
       const nextObj = videoList.find(v => {
         const vid = extractYouTubeId(v.video_id || v.id || v.url);
-        return vid && vid !== curId;
+        return vid && vid !== curId && isTopicalVideo(v);
       });
       if (nextObj) {
         const nextId = extractYouTubeId(nextObj.video_id || nextObj.id || nextObj.url);
         if (nextId) {
-          setTimeout(() => {
-            setVideoId(nextId);
-            setVideoError("");
-          }, 1500);
+          setVideoError(isRestricted ? "Embedded playback restricted by video owner. Switching to a related video..." : "YouTube playback error. Switching to a related video...");
+          setTimeout(() => { setVideoId(nextId); setVideoError(""); }, 1500);
+          return;
         }
       }
     }
+    // No related, playable fallback: say so honestly instead of auto-playing
+    // something off-topic.
+    setVideoError("This video can't play here, and no other related video in the list is playable. Pick another video from the sidebar.");
   };
 
   const renderVideo = () => {
@@ -648,11 +709,13 @@ const FocusStudio = () => {
   const elapsedMin = Math.floor(elapsedSec / 60);
 
   /* Incremental Autosave (Every 30 seconds) */
+  // The create flow stores the backend row id as sessionId; fall back to id.
+  const backendSessionId = session.id || session.sessionId;
   useEffect(() => {
     const autosaveInterval = setInterval(() => {
-      if (elapsedSec > 0) {
+      if (elapsedSec > 0 && backendSessionId) {
         focusAPI.autosave({
-          session_id: session.id,
+          session_id: backendSessionId,
           elapsed_seconds: elapsedSec,
           selected_lab: session.selected_lab,
           video_id: videoId
@@ -661,39 +724,48 @@ const FocusStudio = () => {
       }
     }, 30000);
     return () => clearInterval(autosaveInterval);
-  }, [elapsedSec, session.id, session.selected_lab, videoId]);
+  }, [elapsedSec, backendSessionId, session.selected_lab, videoId]);
 
 
-  const getScaledXP = (mins) => {
-    if (mins >= 90) return { xp: 650, label: "Elite Focus!" };
-    if (mins >= 60) return { xp: 400, label: "Brilliant!" };
-    if (mins >= 45) return { xp: 250, label: "Deep Focus!" };
-    if (mins >= 30) return { xp: 150, label: "Solid Session!" };
-    return { xp: 0, label: "Below 30m" };
+  // Display labels mirror the backend tiers (utils.xp); the XP number itself
+  // always comes from the backend response, never from here.
+  const getCompleteLabel = (mins) => {
+    if (mins >= 90) return "Elite Focus!";
+    if (mins >= 60) return "Brilliant!";
+    if (mins >= 45) return "Deep Focus!";
+    if (mins >= 30) return "Solid Session!";
+    return "Good effort!";
   };
 
   const handleCompleteSession = async () => {
-    if (elapsedMin < 30) return;
+    if (elapsedMin < 30 || isCompleting) return;
     setIsCompleting(true);
+    setRunning(false);
+    clearInterval(intervalRef.current);
     try {
       const lectureId = session.lectureId;
+      let xp = 0;
+      let label = getCompleteLabel(elapsedMin);
       if (lectureId) {
         const res = await lectureAPI.complete(lectureId, { elapsed_minutes: elapsedMin });
         const data = res?.data || {};
-        setCompletionModal({
-          open: true,
-          xp: data.xp_earned || getScaledXP(elapsedMin).xp,
-          label: data.label || getScaledXP(elapsedMin).label,
-          minutes: elapsedMin
-        });
-      } else {
-        const { xp, label } = getScaledXP(elapsedMin);
-        setCompletionModal({ open: true, xp, label, minutes: elapsedMin });
+        xp = data.xp_earned ?? xp;
+        label = data.label || label;
       }
+      // End the focus session itself too: persist completed status, elapsed
+      // time and XP before showing the completion modal.
+      const sessionId = session.id || session.sessionId;
+      if (sessionId) {
+        const endRes = await focusAPI.endSession(sessionId, elapsedSec);
+        xp = endRes?.data?.session?.xp_earned ?? xp;
+      } else {
+        await focusAPI.unlock();
+      }
+      localStorage.removeItem("activeSession");
+      setCompletionModal({ open: true, xp, label, minutes: elapsedMin });
     } catch (err) {
       console.error("Completion error:", err);
-      const { xp, label } = getScaledXP(elapsedMin);
-      setCompletionModal({ open: true, xp, label, minutes: elapsedMin });
+      setCompletionModal({ open: true, xp: 0, label: "Session couldn't be saved — check your connection.", minutes: elapsedMin, saveFailed: true });
     } finally {
       setIsCompleting(false);
     }
@@ -719,10 +791,38 @@ const FocusStudio = () => {
   const total  = (phase === "focus" ? focusMin : breakMin) * 60;
   const pct    = ((total - remaining) / total) * 100;
 
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
+    if (isCompleting) return;
+    setIsCompleting(true);
+    // Stop the clock first so no further ticks/autosaves fire.
+    setRunning(false);
     clearInterval(intervalRef.current);
+
+    const sessionId = session.id || session.sessionId;
+    let savedXP = 0;
+    try {
+      // Persist completion on the backend (status, elapsed time, XP) BEFORE
+      // navigating away, so the session is never lost between End and the
+      // redirect. Falls back to unlock() when the id is unknown.
+      const res = sessionId
+        ? await focusAPI.endSession(sessionId, elapsedSec)
+        : await focusAPI.unlock();
+      // Use the XP the backend computed and stored — never a local estimate.
+      savedXP = res?.data?.session?.xp_earned ?? 0;
+    } catch (err) {
+      console.error("Failed to persist completed session:", err);
+      // Continue to the completion screen anyway; the session remains in
+      // localStorage only in this failure path and the user is told.
+      setCompletionModal({ open: true, xp: 0, label: "Session couldn't be saved — check your connection.", minutes: elapsedMin, saveFailed: true });
+      setIsCompleting(false);
+      return;
+    }
+
     localStorage.removeItem("activeSession");
-    navigate("/my-courses");
+    const mins = elapsedSec / 60;
+    const label = mins >= 90 ? "Elite Focus!" : mins >= 60 ? "Brilliant!" : mins >= 45 ? "Deep Focus!" : mins >= 30 ? "Solid Session!" : "Good effort!";
+    setCompletionModal({ open: true, xp: savedXP, label, minutes: elapsedMin });
+    setIsCompleting(false);
   };
 
   const renderTab = () => {
@@ -779,16 +879,21 @@ const FocusStudio = () => {
             </Box>
           ) : (
             <Box
+              component="button"
+              type="button"
               onClick={handleCompleteSession}
+              disabled={isCompleting}
               sx={{
-                px: 1, py: 0.25, borderRadius: "var(--r-sm)",
+                px: 1, py: 0.25, minHeight: 32, border: "none",
+                borderRadius: "var(--r-sm)",
                 background: "linear-gradient(135deg,#10b981,#059669)",
-                color: "#fff", fontSize: "0.7rem", fontWeight: 700,
+                color: "#fff", fontSize: "0.7rem", fontWeight: 700, fontFamily: "inherit",
                 cursor: "pointer", display: "flex", alignItems: "center", gap: 0.5,
+                "&:disabled": { opacity: 0.6, cursor: "wait" },
               }}
             >
               {isCompleting ? <CircularProgress size={12} sx={{ color: "#fff" }} /> : <EmojiEventsRoundedIcon sx={{ fontSize: 13 }} />}
-              Claim {getScaledXP(elapsedMin).xp} XP
+              Claim XP
             </Box>
           )}
 
@@ -883,6 +988,11 @@ const FocusStudio = () => {
                 </Box>
 
                 <Box sx={{ flex: 1, overflowY: "auto", p: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                  {videoSearchError && (
+                    <Box sx={{ p: 1.25, borderRadius: "var(--r-md)", bgcolor: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.25)" }}>
+                      <Typography sx={{ fontSize: "0.75rem", color: "#fcd34d", lineHeight: 1.5 }}>{videoSearchError}</Typography>
+                    </Box>
+                  )}
                   {videoList.length > 0 ? (
                     videoList.map((v) => {
                       const vId = extractYouTubeId(v.video_id || v.id || v.url);
@@ -957,23 +1067,31 @@ const FocusStudio = () => {
 
         {/* BOTTOM — Tool dock */}
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", bgcolor: "var(--bg-card)" }}>
-          {/* Tab bar */}
-          <Box sx={{ display: "flex", borderBottom: "1px solid var(--border)", px: 1, gap: 0.25, flexShrink: 0, overflowX: "auto" }}>
+          {/* Tab bar — real buttons: keyboard-focusable, 44px targets, ARIA tabs */}
+          <Box role="tablist" aria-label="Focus studio tools" sx={{ display: "flex", borderBottom: "1px solid var(--border)", px: 1, gap: 0.25, flexShrink: 0, overflowX: "auto" }}>
             {TABS.map(({ id, icon: Icon, label }) => (
               <Box
                 key={id}
+                component="button"
+                type="button"
+                role="tab"
+                aria-selected={activeTab === id}
+                aria-controls={`tab-panel-${id}`}
+                id={`tab-${id}`}
                 onClick={() => setActiveTab(id)}
                 sx={{
                   display: "flex", alignItems: "center", gap: 0.5,
-                  px: 1.25, py: 0.85, cursor: "pointer",
+                  px: 1.25, py: 0.85, minHeight: 44, cursor: "pointer",
+                  fontFamily: "inherit", background: "none", border: "none",
                   borderBottom: `2px solid ${activeTab === id ? accent : "transparent"}`,
                   color: activeTab === id ? "#a5b4fc" : "var(--text-dim)",
                   transition: "all 0.15s", whiteSpace: "nowrap",
                   "&:hover": { color: "#f1f5f9" },
+                  "&:focus-visible": { outline: "2px solid var(--indigo-lt)", outlineOffset: -2 },
                 }}
               >
                 <Icon sx={{ fontSize: 15 }} />
-                <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                <Typography component="span" sx={{ fontSize: "0.78rem", fontWeight: 700, fontFamily: "Plus Jakarta Sans, sans-serif" }}>
                   {label}
                 </Typography>
               </Box>
@@ -981,7 +1099,7 @@ const FocusStudio = () => {
           </Box>
 
           {/* Tab content */}
-          <Box sx={{ flex: 1, overflow: "auto" }}>
+          <Box role="tabpanel" id={`tab-panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} sx={{ flex: 1, overflow: "auto" }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}

@@ -184,7 +184,7 @@ def login():
         if not user or not user.check_password(password):
             # Record the failure (applies lockout if threshold reached)
             if user:
-                user.record_failed_login(max_attempts=5, lockout_minutes=15)
+                user.record_failed_login(max_attempts=5, base_lockout_minutes=5)
                 db.session.commit()
             current_app.logger.warning(f'Failed login attempt for: {username}')
             return jsonify({'error': 'Invalid username or password'}), 401

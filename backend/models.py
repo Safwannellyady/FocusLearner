@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from enum import Enum
 from werkzeug.security import generate_password_hash, check_password_hash
+from utils.xp import calculate_session_xp
 
 db = SQLAlchemy()
 
@@ -76,12 +77,23 @@ class User(db.Model):
             return False
         return datetime.utcnow() < self.locked_until
 
-    def record_failed_login(self, max_attempts: int = 5, lockout_minutes: int = 15) -> None:
-        """Increment failed attempt counter; lock the account when threshold is hit."""
+    def record_failed_login(self, max_attempts: int = 5, base_lockout_minutes: int = 5,
+                            max_lockout_minutes: int = 240) -> None:
+        """Increment the failed-attempt counter; lock the account with
+        exponential backoff once the threshold is hit.
+
+        Lockout duration doubles with every consecutive threshold breach
+        (5 min -> 10 -> 20 -> 40 ... capped at max_lockout_minutes), so a
+        brute-force campaign against one account gets progressively more
+        expensive. A successful login resets the counter via
+        clear_failed_logins().
+        """
         from datetime import timedelta
         self.failed_login_attempts = (self.failed_login_attempts or 0) + 1
         if self.failed_login_attempts >= max_attempts:
-            self.locked_until = datetime.utcnow() + timedelta(minutes=lockout_minutes)
+            breaches = (self.failed_login_attempts - max_attempts) // max_attempts
+            lockout = min(base_lockout_minutes * (2 ** breaches), max_lockout_minutes)
+            self.locked_until = datetime.utcnow() + timedelta(minutes=lockout)
 
     def clear_failed_logins(self) -> None:
         """Reset failed attempt counter and remove any lockout after a successful login."""
@@ -119,6 +131,8 @@ class FocusSession(db.Model):
     duration_minutes = db.Column(db.Integer, default=30)
     notes = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), default='active', index=True)  # 'active', 'completed', 'abandoned'
+    xp_earned = db.Column(db.Integer, default=0)  # Canonical XP computed by the backend on completion
+    idempotency_key = db.Column(db.String(64), index=True)  # Client-supplied key; guards duplicate creation
     
     # Relationships
     distraction_logs = db.relationship('DistractionLog', backref='focus_session', lazy=True, cascade='all, delete-orphan')
@@ -144,7 +158,8 @@ class FocusSession(db.Model):
             'elapsed_seconds': self.elapsed_seconds or 0,
             'duration_minutes': self.duration_minutes or 30,
             'notes': self.notes or '',
-            'status': self.status or 'active'
+            'status': self.status or 'active',
+            'xp_earned': self.xp_earned or 0
         }
 
 
@@ -388,7 +403,10 @@ class Lecture(db.Model):
             'is_active': self.is_active,
             'is_completed': self.is_completed or False,
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
-            'study_minutes_logged': self.study_minutes_logged or 0
+            'study_minutes_logged': self.study_minutes_logged or 0,
+            # Canonical XP (backend-computed with the same tiers as focus
+            # sessions). The frontend must display this, not a local estimate.
+            'xp_earned': calculate_session_xp((self.study_minutes_logged or 0) * 60) if self.is_completed else 0
         }
 
 

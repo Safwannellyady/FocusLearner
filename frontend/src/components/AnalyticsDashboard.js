@@ -6,37 +6,8 @@ import { analyticsAPI } from "../services/api";
 import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
 import AccessTimeRoundedIcon   from "@mui/icons-material/AccessTimeRounded";
 import TrendingUpRoundedIcon   from "@mui/icons-material/TrendingUpRounded";
-import EmojiEventsRoundedIcon  from "@mui/icons-material/EmojiEventsRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import LocalFireDepartmentRoundedIcon from "@mui/icons-material/LocalFireDepartmentRounded";
-
-/* ── Demo fallback data ─────────────────────────────────────────────────────── */
-const DEMO_STATS = {
-  total_sessions: 23,
-  total_minutes:  840,
-  xp:             1430,
-  streak:         5,
-  completed:      18,
-  avg_per_day:    42,
-};
-
-const DEMO_WEEKLY = [
-  { day: "Mon", min: 45 },
-  { day: "Tue", min: 30 },
-  { day: "Wed", min: 60 },
-  { day: "Thu", min: 25 },
-  { day: "Fri", min: 90 },
-  { day: "Sat", min: 55 },
-  { day: "Sun", min: 20 },
-];
-
-const DEMO_SUBJECTS = [
-  { name: "Computer Science", min: 320, color: "#6366f1" },
-  { name: "Data Science & AI",min: 240, color: "#ec4899" },
-  { name: "Neurosciences",    min: 150, color: "#a78bfa" },
-  { name: "Chemistry",        min: 90,  color: "#10b981" },
-  { name: "Physics",          min: 40,  color: "#3b82f6" },
-];
 
 /* ── Stat card ──────────────────────────────────────────────────────────────── */
 const StatCard = ({ icon: Icon, label, value, sub, color, delay }) => (
@@ -251,9 +222,10 @@ const AnalyticsDashboard = () => {
 
           if (Array.isArray(d.distribution) && d.distribution.length > 0) {
             const colors = ["#6366f1", "#ec4899", "#a78bfa", "#10b981", "#3b82f6"];
+            // Backend now returns actual focus minutes per subject (no proxy).
             const formattedSubj = d.distribution.map((item, idx) => ({
               name: item.name || "General",
-              min: item.value * 30, // proxy minutes per session
+              min: Math.round(item.value || 0),
               color: colors[idx % colors.length]
             }));
             setSubjects(formattedSubj);
@@ -292,13 +264,12 @@ const AnalyticsDashboard = () => {
       </Box>
 
       {/* Stats grid */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3,1fr)", md: "repeat(6,1fr)" }, gap: 1.5, mb: 2.5 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3,1fr)", md: "repeat(5,1fr)" }, gap: 1.5, mb: 2.5 }}>
         <StatCard icon={AccessTimeRoundedIcon}              label="Total Focus"  value={`${Math.floor(s.total_minutes / 60)}h ${s.total_minutes % 60}m`} sub="all-time"            color="#6366f1" delay={0}    />
         <StatCard icon={CalendarMonthRoundedIcon}            label="Sessions"     value={s.total_sessions}                                                 sub="completed"          color="#a78bfa" delay={0.05} />
         <StatCard icon={BoltRoundedIcon}                     label="Total XP"     value={s.xp}                                                             sub="points earned"      color="#fbbf24" delay={0.1}  />
         <StatCard icon={LocalFireDepartmentRoundedIcon}      label="Streak"       value={`${s.streak}d`}                                                   sub="current streak"     color="#f43f5e" delay={0.15} />
         <StatCard icon={TrendingUpRoundedIcon}               label="Daily Avg"    value={`${s.avg_per_day}m`}                                              sub="minutes/day"        color="#10b981" delay={0.2}  />
-        <StatCard icon={EmojiEventsRoundedIcon}              label="Completed"    value={s.completed}                                                      sub="sessions done"      color="#f59e0b" delay={0.25} />
       </Box>
 
       {/* Charts row */}

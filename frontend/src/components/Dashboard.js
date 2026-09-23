@@ -18,6 +18,7 @@ import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import BoltIcon                from "@mui/icons-material/Bolt";
 
 import { focusAPI, analyticsAPI } from "../services/api";
+import OnboardingTour from "./OnboardingTour";
 
 /* ── Animation variants ───────────────────────────────────────────────────── */
 const stagger = {
@@ -281,6 +282,7 @@ const Dashboard = () => {
         </motion.div>
       </Box>
 
+      <OnboardingTour />
     </Box>
   );
 };

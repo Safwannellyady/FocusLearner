@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Box, Typography, Button, Divider, IconButton, CircularProgress, LinearProgress } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
@@ -151,23 +151,42 @@ const Signup = () => {
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
 
-  /* real-time username check (debounced 500ms) */
+  /* real-time username check (debounced 500ms, abortable, 8s timeout) */
+  // A monotonic sequence guards against stale responses: an older request
+  // that resolves after a newer one is discarded instead of overwriting it.
+  const usernameSeq = useRef(0);
+  const usernameAbort = useRef(null);
+
   const checkUsername = useCallback(async (val) => {
     const clean = val.trim();
     if (!clean || clean.length < 3) { setUsernameStatus("idle"); return; }
     if (!/^[a-zA-Z0-9_]+$/.test(clean)) { setUsernameStatus("invalid"); return; }
+    if (usernameAbort.current) usernameAbort.current.abort();
+    const controller = new AbortController();
+    usernameAbort.current = controller;
+    const seq = ++usernameSeq.current;
     setUsernameStatus("checking");
     try {
-      const res = await authAPI.checkUsername(clean);
-      setUsernameStatus(res.data.available ? "available" : "taken");
-    } catch { setUsernameStatus("idle"); }
+      const res = await authAPI.checkUsername(clean, { signal: controller.signal, timeout: 8000 });
+      if (seq === usernameSeq.current) {
+        setUsernameStatus(res.data.available ? "available" : "taken");
+      }
+    } catch (err) {
+      // Aborted (superseded) requests are silent; only the latest request
+      // may reset the status.
+      if (seq === usernameSeq.current && err?.code !== "ERR_CANCELED") setUsernameStatus("idle");
+    }
   }, []);
 
   useEffect(() => {
     if (checkTimer) clearTimeout(checkTimer);
     const t = setTimeout(() => checkUsername(form.username), 500);
     setCheckTimer(t);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (usernameAbort.current) usernameAbort.current.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.username]);
 
   const handleSubmit = async (e) => {
