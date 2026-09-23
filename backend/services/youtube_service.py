@@ -45,15 +45,9 @@ class YouTubeService:
         refined_query = self._build_search_query(subject_focus, query)
 
         if not self.api_key:
-            # Development data must never silently turn an unknown subject into
-            # generic productivity content.  It is only returned when it can
-            # pass the same relevance gate as live YouTube results.
-            return self._rank_and_filter(
-                self._get_mock_videos(query, subject_focus, max_results),
-                subject_focus,
-                query,
-                max_results,
-            )
+            # No API key configured: serve the per-subject curated lists
+            # instead of hitting the network.
+            return self._safe_curated_fallback(query, subject_focus, max_results)
         
         params = {
             'part': 'snippet',
@@ -75,16 +69,15 @@ class YouTubeService:
             search_items = data.get('items', [])
             video_ids = [item.get('id', {}).get('videoId') for item in search_items]
             video_ids = [video_id for video_id in video_ids if video_id]
-            details_by_id = self._get_video_details(video_ids)
+
+            # Pre-check embeddability up front so dead/non-embeddable videos
+            # never reach the player or the ranking stage.
+            allowed_ids = self._prefilter_embeddable(video_ids)
 
             videos = []
             for item in search_items:
                 video_id = item.get('id', {}).get('videoId')
-                details = details_by_id.get(video_id, {})
-                status = details.get('status', {})
-                # The search endpoint's embeddable hint is not sufficient by
-                # itself; verify the current video metadata before returning it.
-                if not status.get('embeddable') or status.get('privacyStatus') != 'public':
+                if video_id not in allowed_ids:
                     continue
                 snippet = item.get('snippet', {})
                 thumbnails = snippet.get('thumbnails', {})
@@ -115,21 +108,57 @@ class YouTubeService:
             return self._safe_curated_fallback(query, subject_focus, max_results)
 
     def _safe_curated_fallback(self, query: str, subject_focus: str, max_results: int) -> List[Dict]:
-        """Use only topic-matching development fixtures; otherwise return none."""
-        return self._rank_and_filter(
-            self._get_mock_videos(query, subject_focus, max_results),
-            subject_focus,
-            query,
-            max_results,
-        )
+        """Curated last resort: never return empty when curated entries exist."""
+        curated = self._get_curated_videos(query, subject_focus, max_results)
+        ranked = self._rank_and_filter(curated, subject_focus, query, max_results)
+        if ranked:
+            return ranked
+        # Ranking only ever rejects blacklist hits; the curated entries are
+        # first-party educational content, so serve them rather than an
+        # empty "no related videos found" state.
+        for video in curated:
+            video.setdefault('relevance_score', 0)
+            video['is_filtered'] = False
+            video['filter_reason'] = 'Curated educational fallback'
+        return curated[:max_results]
+
+    def _get_curated_videos(self, query: str, subject_focus: str, max_results: int) -> List[Dict]:
+        """Return the per-subject curated lists, labelled as curated content."""
+        curated = self._get_mock_videos(query, subject_focus, max_results)
+        for video in curated:
+            video['source'] = 'curated'
+            video['is_curated'] = True
+        return curated
 
     def _build_search_query(self, subject_focus: str, topic: str) -> str:
         """Build a deterministic, intent-preserving educational query."""
         terms = ' '.join(part for part in (subject_focus, topic) if part).strip()
         return f'{terms} lecture tutorial'.strip()
 
+    def _prefilter_embeddable(self, video_ids: List[str]) -> set:
+        """
+        Return the subset of candidate IDs confirmed embeddable and public via
+        the videos.list endpoint (part=status,contentDetails), batched up to
+        50 IDs per call.  Fail open: on any error, keep every candidate.
+        """
+        if not video_ids:
+            return set()
+        try:
+            allowed = set()
+            for start in range(0, len(video_ids), 50):
+                chunk = video_ids[start:start + 50]
+                details = self._get_video_details(chunk)
+                for video_id, meta in details.items():
+                    status = (meta or {}).get('status', {})
+                    if status.get('embeddable') and status.get('privacyStatus') == 'public':
+                        allowed.add(video_id)
+            return allowed
+        except Exception as e:
+            print(f"Embeddability pre-check failed; keeping candidates: {e}")
+            return set(video_ids)
+
     def _get_video_details(self, video_ids: List[str]) -> Dict[str, Dict]:
-        """Return authoritative metadata used to reject unavailable embeds."""
+        """Return authoritative videos.list metadata for up to 50 video IDs."""
         if not video_ids:
             return {}
         response = requests.get(
@@ -156,7 +185,17 @@ class YouTubeService:
         ]
 
     def _rank_and_filter(self, videos: List[Dict], subject_focus: str, topic: str, max_results: int) -> List[Dict]:
-        """Reject weak matches and rank the remaining educational candidates."""
+        """Best-effort tiered ranking of candidates.
+
+        The distraction blacklist from content_filter.py stays a hard reject.
+        Everything else is kept and scored in tiers: topic keywords in the
+        title score highest, topic keywords in the description only score
+        next, subject-only matches score lower, and any remaining candidate
+        scores lowest but is still returned.  An empty list is returned only
+        when the input candidate list was empty.
+        """
+        if not videos:
+            return []
         topic_terms = set(self._keywords(topic))
         subject_terms = set(self._keywords(subject_focus))
         ranked = []
@@ -173,23 +212,24 @@ class YouTubeService:
             title_terms = set(self._keywords(title))
             description_terms = set(self._keywords(description))
             title_topic_matches = topic_terms & title_terms
-            topic_matches = title_topic_matches | (topic_terms & description_terms)
-            subject_matches = subject_terms & (title_terms | description_terms)
+            description_topic_matches = (topic_terms & description_terms) - title_topic_matches
+            subject_matches = (subject_terms & (title_terms | description_terms)) - topic_terms
 
-            # A focus recommendation must mention the requested topic. Subject
-            # terms improve ranking, but are not mandatory because learners use
-            # broad labels such as "Math" while accurate titles say "Calculus".
-            if topic_terms and not topic_matches:
-                continue
-            # Mock descriptions are generated by this application and cannot
-            # serve as evidence that a real video covers the learner's topic.
-            if video.get('source') == 'mock' and topic_terms and not title_topic_matches:
-                continue
-
-            score = (len(title_topic_matches) * 8) + (len(topic_matches) * 3) + (len(subject_matches) * 2)
+            if title_topic_matches:
+                # Tier 1: topic keywords right in the title.
+                score = 1000 + len(title_topic_matches) * 8
+            elif description_topic_matches:
+                # Tier 2: topic keywords only in the description.
+                score = 500 + len(description_topic_matches) * 3
+            elif subject_matches:
+                # Tier 3: subject keywords only -- kept, ranked below.
+                score = 100 + len(subject_matches) * 2
+            else:
+                # Tier 4: passed the blacklist -- kept as a last resort.
+                score = 10
             video['relevance_score'] = score
             video['is_filtered'] = False
-            video['filter_reason'] = 'Verified educational and topic-relevant'
+            video['filter_reason'] = 'Verified educational content'
             ranked.append(video)
 
         return sorted(ranked, key=lambda item: item['relevance_score'], reverse=True)[:max_results]

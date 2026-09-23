@@ -328,8 +328,8 @@ def send_message(code):
     if not room:
         return jsonify({'error': 'Room not found'}), 404
 
-    # Check message cap
-    msg_count = RoomMessage.query.filter_by(room_id=room.id).count()
+    # Check message cap (system/activity messages don't count)
+    msg_count = RoomMessage.query.filter(RoomMessage.room_id==room.id, RoomMessage.is_system==False).count()
     if msg_count >= MAX_MESSAGES_PER_ROOM:
         return jsonify({
             'error': f'Message limit reached ({MAX_MESSAGES_PER_ROOM}). Delete old messages or create a new room.'

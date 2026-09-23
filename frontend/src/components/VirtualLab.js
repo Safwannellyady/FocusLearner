@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box, Typography, Button, Grid, Chip, Tabs, Tab, TextField, MenuItem, Select,
   FormControl, InputLabel, Slider, Paper, Alert, LinearProgress, IconButton, Divider
@@ -72,7 +72,7 @@ print("Evaluating on sample input:", sample_input)
 output = solve_challenge(sample_input)
 print("Compiler Execution Output:", output)
 `);
-  const [compilerOutput, setCompilerOutput] = useState("Ready for execution. Click 'Run Compiler Engine' above.");
+  const [compilerOutput, setCompilerOutput] = useState("Ready. Select PYTHON and press Run to execute real Python in your browser (Pyodide). Other languages show starter templates only — they do not execute.");
   const [isExecuting, setIsExecuting] = useState(false);
 
   const handleLanguageChange = (lang) => {
@@ -83,31 +83,136 @@ print("Compiler Execution Output:", output)
       setCode(`// JavaScript (Node.js) template for ${topic}\nfunction solveChallenge(data) {\n  return data.map(n => n > 10 ? n * 2 : n);\n}\n\nconsole.log("Output:", solveChallenge([5, 12, 18, 4]));`);
     } else if (lang === 'cpp') {
       setCode(`// C++20 template for ${topic}\n#include <iostream>\n#include <vector>\n\nint main() {\n    std::vector<int> data = {5, 12, 18, 4};\n    std::cout << "Execution Result: ";\n    for(int val : data) {\n        if(val > 10) std::cout << val * 2 << " ";\n    }\n    std::cout << std::endl;\n    return 0;\n}`);
+    } else if (lang === 'rust') {
+      setCode(`// Rust template for ${topic}\nfn main() {\n    let data = vec![5, 12, 18, 4];\n    let result: Vec<i32> = data.iter().map(|&x| if x > 10 { x * 2 } else { x }).collect();\n    println!("Output: {:?}", result);\n}`);
     } else if (lang === 'sql') {
       setCode(`-- SQL query challenge for ${topic}\nSELECT user_id, session_title, neural_score\nFROM focus_sessions\nWHERE neural_score >= 85\nORDER BY created_at DESC;`);
     }
   };
 
-  const handleRunCode = () => {
-    setIsExecuting(true);
-    setCompilerOutput("Compiling and running in sandbox environment...");
-    setAiFeedback('');
-    setTimeout(() => {
-      setIsExecuting(false);
-      if (language === 'python') {
-        setCompilerOutput(`Evaluating on sample input: [12, 5, 8, 21, 34, 19]\nCompiler Execution Output: [24, 5, 16, 21, 68, 19]\n\nProcess exited with return code 0 (0.042s)`);
-        setAiFeedback(`✅ AI Deep-Learning Compiler Check: Excellent implementation! Your conditional list processing correctly doubles even numbers while preserving odd integers. Big-O time complexity is O(n), optimal for this ${topic || 'algorithm'} requirement.`);
-      } else if (language === 'javascript') {
-        setCompilerOutput(`Output: [ 5, 24, 36, 4 ]\n\nNode.js v20.11.0 execution completed.`);
-        setAiFeedback(`✅ AI Code Mentor Analysis: Clean usage of array map and ternary operators. Memory footprint is minimal at 32MB.`);
-      } else if (language === 'cpp') {
-        setCompilerOutput(`Execution Result: 24 36 \n\nFinished in 12ms with 0 memory leaks (Valgrind verified).`);
-        setAiFeedback(`✅ AI Systems Debugger: Zero pointer exceptions detected. Vector iteration utilizes modern C++ range-based loops cleanly.`);
-      } else if (language === 'sql') {
-        setCompilerOutput(`Query executed cleanly. 3 rows returned:\n| user_id | session_title | neural_score |\n|---------|---------------|--------------|\n| u_102   | Master React  | 98           |\n| u_405   | Linux Kernel  | 92           |\n| u_088   | Quantum Math  | 88           |`);
-        setAiFeedback(`✅ AI Database Architect: Query utilizes index on neural_score. Execution cost: 0.0031.`);
+  // --- PYODIDE: real in-browser Python (lazy-loaded from CDN on first Python run) ---
+  const pyodideRef = useRef(null);
+  const pyodideLoadPromiseRef = useRef(null);
+  const [pyodideStatus, setPyodideStatus] = useState('idle'); // 'idle' | 'loading' | 'ready' | 'error'
+  const PYODIDE_CDN_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+
+  const loadPyodideRuntime = () => {
+    if (pyodideRef.current) return Promise.resolve(pyodideRef.current);
+    if (pyodideLoadPromiseRef.current) return pyodideLoadPromiseRef.current;
+
+    setPyodideStatus('loading');
+    setCompilerOutput('Loading Python runtime… (first run downloads the Pyodide WebAssembly runtime from CDN — one-time, ~15 MB)');
+
+    const promise = new Promise((resolve, reject) => {
+      try {
+        const existing = document.getElementById('pyodide-cdn-script');
+        const initFromGlobal = () => {
+          if (!window.loadPyodide) {
+            reject(new Error('Pyodide script loaded but the runtime entry point is missing.'));
+            return;
+          }
+          window.loadPyodide()
+            .then((pyodide) => {
+              pyodideRef.current = pyodide;
+              setPyodideStatus('ready');
+              resolve(pyodide);
+            })
+            .catch(reject);
+        };
+        if (!existing) {
+          const script = document.createElement('script');
+          script.id = 'pyodide-cdn-script';
+          script.src = PYODIDE_CDN_URL;
+          script.async = true;
+          script.onload = initFromGlobal;
+          script.onerror = () => reject(new Error('Could not download the Pyodide runtime (CDN blocked or unreachable). Check your connection and retry.'));
+          document.head.appendChild(script);
+        } else {
+          initFromGlobal();
+        }
+      } catch (err) {
+        reject(err);
       }
-    }, 1200);
+    });
+
+    promise.catch(() => {
+      pyodideLoadPromiseRef.current = null;
+      setPyodideStatus('error');
+    });
+
+    pyodideLoadPromiseRef.current = promise;
+    return promise;
+  };
+
+  const retryPyodideLoad = () => {
+    pyodideLoadPromiseRef.current = null;
+    const oldScript = document.getElementById('pyodide-cdn-script');
+    if (oldScript) oldScript.remove();
+    setPyodideStatus('idle');
+    loadPyodideRuntime().catch(() => {
+      setCompilerOutput('❌ Still unable to load the Python runtime. Check your internet connection / CDN access and try again.');
+    });
+  };
+
+  const handleRunCode = async () => {
+    setAiFeedback('');
+
+    // Only Python executes for real in this lab (via Pyodide/WebAssembly).
+    // Other languages keep their starter templates, but we never fake their output.
+    if (language !== 'python') {
+      setCompilerOutput(
+        `⚠️ Live execution is available for Python only in this lab.\n` +
+        `The ${language.toUpperCase()} starter template above is reference code — it was NOT executed.\n\n` +
+        `Select PYTHON to run code live in your browser (Pyodide).`
+      );
+      return;
+    }
+
+    let pyodide = pyodideRef.current;
+    if (!pyodide) {
+      try {
+        pyodide = await loadPyodideRuntime();
+      } catch (err) {
+        setCompilerOutput(
+          `❌ Could not load the Python runtime.\n${err && err.message ? err.message : String(err)}\n\nPress "Retry" below or click Run again.`
+        );
+        return;
+      }
+    }
+
+    setIsExecuting(true);
+    setCompilerOutput('▶ Running Python code in the browser sandbox…');
+
+    let stdout = '';
+    let stderr = '';
+    pyodide.setStdout({ batched: (text) => { stdout += text + '\n'; } });
+    pyodide.setStderr({ batched: (text) => { stderr += text + '\n'; } });
+
+    const startedAt = performance.now();
+    try {
+      // NOTE: true infinite-loop protection is not possible client-side — a runaway
+      // loop keeps executing until the tab is closed. Kept simple by design.
+      await pyodide.runPythonAsync(code);
+      const secs = ((performance.now() - startedAt) / 1000).toFixed(2);
+      const outText = stdout.trimEnd();
+      const errText = stderr.trimEnd();
+      let out = outText ? outText : '(program produced no output)';
+      if (errText) out += `\n--- stderr ---\n${errText}`;
+      out += `\n\n✔ Process finished — exit code 0 (${secs}s)`;
+      setCompilerOutput(out);
+    } catch (err) {
+      const secs = ((performance.now() - startedAt) / 1000).toFixed(2);
+      const outText = stdout.trimEnd();
+      const errText = stderr.trimEnd();
+      let out = '';
+      if (outText) out += `${outText}\n`;
+      if (errText) out += `${errText}\n`;
+      out += (err && err.message ? err.message : String(err));
+      out += `\n\n✘ Process raised an exception (${secs}s)`;
+      setCompilerOutput(out);
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   // --- CYBERSECURITY / LINUX LAB STATE ---
@@ -188,6 +293,25 @@ print("Compiler Execution Output:", output)
   const calculatedPH = molarityBase === molarityAcid ? 7.0 : molarityBase > molarityAcid ? 12.4 : 1.8;
   const enthalpyChange = -57.3 * (molarityAcid * 10); // kJ/mol exothermic
 
+  // Temperature slider genuinely drives the thermal outcome: the neutralization
+  // heat released warms the mixture above the starting chamber temperature
+  // (1 L solution basis, c ≈ 4.184 J/g·°C).
+  const limitingMolarity = Math.min(molarityAcid, molarityBase);
+  const heatReleasedKJ = 57.3 * limitingMolarity;
+  const tempRiseC = (heatReleasedKJ * 1000) / (1000 * 4.184);
+  const finalMixtureTemp = temperature + tempRiseC;
+
+  // Coding-lab Run button label / disabled state
+  const runButtonLabel =
+    pyodideStatus === 'loading' && language === 'python'
+      ? 'Loading Python runtime…'
+      : isExecuting
+        ? 'Running…'
+        : language === 'python'
+          ? '⚡ Run Python (Pyodide)'
+          : '⚡ Run Code';
+  const isRunDisabled = isExecuting || (language === 'python' && pyodideStatus === 'loading');
+
   return (
     <Box>
       {/* Lab Domain Selector Banner */}
@@ -245,12 +369,12 @@ print("Compiler Execution Output:", output)
             </Box>
             <Button
               onClick={handleRunCode}
-              disabled={isExecuting}
+              disabled={isRunDisabled}
               startIcon={<PlayArrowIcon />}
               className="epic-btn-primary"
               sx={{ py: '10px !important', px: '28px !important', fontSize: '0.95rem !important' }}
             >
-              {isExecuting ? 'Compiling Code...' : '⚡ Run Compiler Engine'}
+              {runButtonLabel}
             </Button>
           </Box>
 
@@ -283,6 +407,16 @@ print("Compiler Execution Output:", output)
             </Grid>
             <Grid item xs={12} md={5}>
               <Paper sx={{ p: 2.5, bgcolor: '#0f172a', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.12)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                {pyodideStatus === 'error' && (
+                  <Alert severity="error" sx={{ mb: 2, borderRadius: '12px', bgcolor: 'rgba(248, 113, 113, 0.12)', border: '1px solid rgba(248, 113, 113, 0.5)' }}>
+                    <Typography variant="body2" fontWeight="700" fontFamily="Outfit, sans-serif" color="#ffffff">
+                      ❌ Couldn't load the Python runtime from the CDN. Check your internet connection and try again.
+                    </Typography>
+                    <Button size="small" variant="outlined" onClick={retryPyodideLoad} sx={{ mt: 1, fontWeight: 800, color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.6)' }}>
+                      ↻ Retry loading Python runtime
+                    </Button>
+                  </Alert>
+                )}
                 <Typography variant="caption" color="#94a3b8" fontWeight="700" display="block" mb={1.5}>
                   🖥️ COMPILER & SANDBOX TERMINAL OUTPUT
                 </Typography>
@@ -405,6 +539,13 @@ print("Compiler Execution Output:", output)
 
                 <Box mb={3}>
                   <Typography variant="body2" color="#e2e8f0" fontWeight="700" gutterBottom>
+                    Gravity: <span style={{ color: '#a78bfa' }}>{gravity} m/s²</span>
+                  </Typography>
+                  <Slider value={gravity} min={1} max={25} step={0.1} onChange={(_, v) => setGravity(v)} sx={{ color: '#a78bfa' }} />
+                </Box>
+
+                <Box mb={3}>
+                  <Typography variant="body2" color="#e2e8f0" fontWeight="700" gutterBottom>
                     Circuit Voltage (Ohm's Law): <span style={{ color: '#34d399' }}>{circuitVoltage} V</span> | Resistance: <span style={{ color: '#ff4b2b' }}>{circuitResistance} Ω</span>
                   </Typography>
                   <Grid container spacing={2}>
@@ -507,6 +648,14 @@ print("Compiler Execution Output:", output)
                   </Typography>
                   <Typography variant="caption" color="#94a3b8" sx={{ display: 'block', mt: 1 }}>
                     Reaction Equation: HCl(aq) + NaOH(aq) ➔ NaCl(aq) + H₂O(l) + Heat Energy
+                  </Typography>
+                  <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.1)' }} />
+                  <Typography variant="body2" color="#facc15" fontWeight="700">ESTIMATED FINAL MIXTURE TEMPERATURE:</Typography>
+                  <Typography variant="h6" color="#ffffff" fontWeight="800" sx={{ mt: 0.5 }}>
+                    {finalMixtureTemp.toFixed(1)}°C
+                    <Typography component="span" variant="caption" color="#94a3b8" sx={{ ml: 1 }}>
+                      (chamber start {temperature}°C + {tempRiseC.toFixed(1)}°C from reaction heat)
+                    </Typography>
                   </Typography>
                 </Box>
               </Paper>

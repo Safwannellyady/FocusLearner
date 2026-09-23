@@ -29,6 +29,7 @@ const LectureDetail = () => {
   const [videos, setVideos] = useState([]);
   const [activeVideo, setActiveVideo] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [skipNotice, setSkipNotice] = useState(null);
 
   const [activeTab, setActiveTab] = useState(0);
 
@@ -114,6 +115,25 @@ const LectureDetail = () => {
     };
     if (id) fetchLectureData();
   }, [id]);
+
+  const handleVideoError = (errorInfo) => {
+    // Auto-advance past dead/non-embeddable videos. If this was the last
+    // video, keep the player's existing fallback UI.
+    if (!activeVideo) return;
+    const keyOf = (v) => v?.video_id || v?.url;
+    const idx = videos.findIndex((v) => keyOf(v) === keyOf(activeVideo));
+    if (idx >= 0 && idx < videos.length - 1) {
+      setSkipNotice('Skipped an unavailable video — playing the next one.');
+      setActiveVideo(videos[idx + 1]);
+    }
+  };
+
+  // Auto-dismiss the skip notice after a few seconds.
+  useEffect(() => {
+    if (!skipNotice) return;
+    const timer = setTimeout(() => setSkipNotice(null), 5000);
+    return () => clearTimeout(timer);
+  }, [skipNotice]);
 
   const handleStartQuiz = async () => {
     try {
@@ -245,6 +265,11 @@ const LectureDetail = () => {
             </Box>
 
             {/* Video Player */}
+            {skipNotice && (
+              <Alert severity="info" onClose={() => setSkipNotice(null)} sx={{ mb: 2, borderRadius: 2 }}>
+                {skipNotice}
+              </Alert>
+            )}
             <Box sx={{
               borderRadius: 0,
               borderBottomLeftRadius: videos.length > 1 ? 0 : 12,
@@ -255,7 +280,7 @@ const LectureDetail = () => {
               position: 'relative',
               mb: videos.length > 1 ? 0 : 4
             }}>
-              <VideoPlayer video={activeVideo} onTimeUpdate={setCurrentTime} />
+              <VideoPlayer video={activeVideo} onTimeUpdate={setCurrentTime} onVideoError={handleVideoError} />
             </Box>
 
             {/* Interactive Video Playlist Bar */}
