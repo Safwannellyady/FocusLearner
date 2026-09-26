@@ -7,9 +7,10 @@ import {
   GroupsRounded, SendRounded, MoreVertRounded,
   EditRounded, PersonAddRounded, DeleteRounded, ShieldRounded,
   ImageRounded, ContentPasteRounded, CheckCircleRounded,
-  CloseRounded
+  CloseRounded, SmartToyRounded, ViewSidebarRounded
 } from "@mui/icons-material";
-import { roomAPI } from "../services/api";
+import { roomAPI, authAPI, chatAPI } from "../services/api";
+import StudyRoomDock from "./StudyRoomDock";
 
 const EMOJI_AVATARS = ["📚","🎓","🔬","💻","🧮","📐","🧪","📝","🎯","💡","🚀","⚡","🔥","🌟","🎨","🎵","🏆","📊","🔍","🧠"];
 
@@ -20,6 +21,20 @@ const StudyRoom = () => {
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [copiedCode, setCopiedCode] = useState(false);
+
+  // Current user (for correct "my message" alignment)
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUsername, setCurrentUsername] = useState("");
+
+  // Docked workspace panel
+  const [dockOpen, setDockOpen] = useState(false);
+  const [participants, setParticipants] = useState([]);
+
+  // AI tutor inside the room
+  const [tutorOpen, setTutorOpen] = useState(false);
+  const [tutorQuestion, setTutorQuestion] = useState("");
+  const [tutorAnswer, setTutorAnswer] = useState("");
+  const [tutorLoading, setTutorLoading] = useState(false);
 
   // Create form
   const [createTitle, setCreateTitle] = useState("");
@@ -62,18 +77,71 @@ const StudyRoom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Poll messages when in a room
+  // Current user — fetched once, used for correct "my message" alignment
+  useEffect(() => {
+    authAPI.getCurrentUser()
+      .then((res) => {
+        setCurrentUserId(res?.data?.user?.id ?? null);
+        setCurrentUsername(res?.data?.user?.username || "");
+      })
+      .catch(() => {});
+  }, []);
+
+  // Participants for the to-do assignee picker
+  useEffect(() => {
+    if (!activeRoom) { setParticipants([]); return; }
+    roomAPI.getStatus(activeRoom.room_code)
+      .then((res) => setParticipants(res?.data?.room?.participants || []))
+      .catch(() => setParticipants([]));
+  }, [activeRoom]);
+
+  // Reset chat when switching rooms
+  useEffect(() => { setMessages([]); }, [activeRoom?.room_code]);
+
+  // Poll messages when in a room — visibility-aware, deduped by id.
+  // Pauses when the tab is hidden, refetches on focus. No websocket in this pass.
   useEffect(() => {
     if (!activeRoom) return;
-    const interval = setInterval(async () => {
+    let interval = null;
+
+    const fetchMsgs = async () => {
       try {
         const res = await roomAPI.getMessages(activeRoom.room_code);
-        setMessages(res?.data?.messages || []);
+        const incoming = res?.data?.messages || [];
+        setMessages((prev) => {
+          const prevIds = new Set(prev.map((m) => m.id));
+          const fresh = incoming.filter((m) => !prevIds.has(m.id));
+          if (fresh.length === 0) return prev;
+          return [...prev, ...fresh].sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          );
+        });
       } catch (err) {
         console.error("Poll messages error:", err);
       }
-    }, 3000);
-    return () => clearInterval(interval);
+    };
+
+    const start = () => {
+      stop();
+      interval = setInterval(fetchMsgs, 8000);
+    };
+    const stop = () => {
+      if (interval) { clearInterval(interval); interval = null; }
+    };
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else { fetchMsgs(); start(); }
+    };
+
+    fetchMsgs();
+    start();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onVisibility);
+    };
   }, [activeRoom]);
 
   const handleCreateRoom = async () => {
@@ -140,6 +208,57 @@ const StudyRoom = () => {
     navigator.clipboard.writeText(activeRoom.room_code);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  // Post a lightweight system activity note into the main chat, then refetch.
+  const notifyActivity = useCallback(async (kind, text) => {
+    if (!activeRoom) return;
+    try {
+      await roomAPI.postDockActivity(activeRoom.room_code, kind, text);
+      const msgRes = await roomAPI.getMessages(activeRoom.room_code);
+      const incoming = msgRes?.data?.messages || [];
+      setMessages((prev) => {
+        const prevIds = new Set(prev.map((m) => m.id));
+        const fresh = incoming.filter((m) => !prevIds.has(m.id));
+        if (fresh.length === 0) return prev;
+        return [...prev, ...fresh].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      });
+    } catch (err) {
+      console.error("Activity note error:", err);
+    }
+  }, [activeRoom]);
+
+  // AI tutor inside the study room. Long answers auto-dock as documents
+  // so the chat stays clean; short answers show inline.
+  const handleAskTutor = async () => {
+    const question = tutorQuestion.trim();
+    if (!question || !activeRoom || tutorLoading) return;
+    setTutorLoading(true);
+    setTutorAnswer("");
+    try {
+      const roomContext = `Study room "${activeRoom.title}" (code ${activeRoom.room_code}). Answer as a study-group tutor.`;
+      const res = await chatAPI.send(question, roomContext, null);
+      const history = res?.data?.history || [];
+      const last = [...history].reverse().find((m) => m.role === "model");
+      const answer = (last?.parts || []).join("\n") || "The tutor had nothing to say.";
+      if (answer.length > 600) {
+        const title = `AI: ${question.slice(0, 48)}${question.length > 48 ? "…" : ""}`;
+        await roomAPI.createDockDocument(activeRoom.room_code, { title, content: answer });
+        setTutorAnswer("");
+        setTutorOpen(false);
+        setTutorQuestion("");
+        setDockOpen(true);
+        notifyActivity("tutor", `🤖 AI tutor docked an answer to "${question.slice(0, 60)}"`);
+        setToast({ open: true, message: "Long answer docked as a document", severity: "info" });
+      } else {
+        setTutorAnswer(answer);
+      }
+    } catch (err) {
+      console.error("Tutor error:", err);
+      setTutorAnswer("Could not reach the AI tutor right now. Try again in a moment.");
+    } finally {
+      setTutorLoading(false);
+    }
   };
 
   const handlePaste = useCallback(async () => {
@@ -310,7 +429,8 @@ const StudyRoom = () => {
         </Box>
       ) : (
         /* ── ACTIVE ROOM ────────────────────────────────────────────── */
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "row", height: "100%", minHeight: 0 }}>
+          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", minWidth: 0 }}>
 
           {/* Room Header */}
           <Box sx={{ px: 2, py: 1.5, bgcolor: "#0b1320", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0 }}>
@@ -328,6 +448,17 @@ const StudyRoom = () => {
             <Tooltip title="Copy code">
               <IconButton size="small" onClick={handleCopyCode} sx={{ color: "var(--text-mid)" }}>
                 {copiedCode ? <CheckCircleRounded sx={{ fontSize: 16, color: "var(--emerald)" }} /> : <ContentPasteRounded sx={{ fontSize: 16 }} />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="AI Tutor">
+              <IconButton size="small" onClick={() => { setTutorOpen(true); setTutorAnswer(""); }} sx={{ color: "var(--text-mid)" }}>
+                <SmartToyRounded sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={dockOpen ? "Hide docked panel" : "Show docked panel"}>
+              <IconButton size="small" onClick={() => setDockOpen((v) => !v)}
+                sx={{ color: dockOpen ? "var(--indigo-lt)" : "var(--text-mid)", bgcolor: dockOpen ? "rgba(99,102,241,0.15)" : "transparent" }}>
+                <ViewSidebarRounded sx={{ fontSize: 18 }} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Menu">
@@ -366,7 +497,17 @@ const StudyRoom = () => {
               </Box>
             )}
             {messages.map((m) => {
-              const isMe = m.user_id === activeRoom.created_by;
+              // System activity notes render as centered subtle entries
+              if (m.is_system) {
+                return (
+                  <Box key={m.id} sx={{ display: "flex", justifyContent: "center", my: 0.5 }}>
+                    <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: "999px", px: 1.75, py: 0.5, textAlign: "center", maxWidth: "90%" }}>
+                      {m.message}
+                    </Typography>
+                  </Box>
+                );
+              }
+              const isMe = currentUserId != null && m.user_id === currentUserId;
               return (
                 <Box key={m.id} sx={{ display: "flex", flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: 0.75 }}>
                   <Avatar sx={{ width: 28, height: 28, fontSize: "0.7rem", bgcolor: isMe ? "var(--indigo)" : "rgba(255,255,255,0.1)", flexShrink: 0 }}>
@@ -428,6 +569,17 @@ const StudyRoom = () => {
               </IconButton>
             </Box>
           </Box>
+          </Box>
+          {dockOpen && (
+            <StudyRoomDock
+              roomCode={activeRoom.room_code}
+              participants={participants}
+              currentUserId={currentUserId}
+              currentUsername={currentUsername}
+              onClose={() => setDockOpen(false)}
+              notifyActivity={notifyActivity}
+            />
+          )}
         </Box>
       )}
 
@@ -559,25 +711,44 @@ const StudyRoom = () => {
         </DialogActions>
       </Dialog>
 
-      {/* ── CREATE ROOM DIALOG ────────────────────────────────────────── */}
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
-        <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Create Study Group</DialogTitle>
-        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-          <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>Pick an avatar for your group</Typography>
-          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-            {EMOJI_AVATARS.map((emoji) => (
-              <Box key={emoji} onClick={() => setCreateAvatar(emoji)} sx={{ width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: createAvatar === emoji ? "2px solid var(--indigo)" : "1px solid var(--border)", bgcolor: createAvatar === emoji ? "rgba(99,102,241,0.15)" : "transparent", fontSize: "1.2rem", transition: "all 0.15s" }}>
-                {emoji}
-              </Box>
-            ))}
+      {/* ── AI TUTOR DIALOG (in-room; long answers auto-dock as documents) ── */}
+      <Dialog open={tutorOpen} onClose={() => setTutorOpen(false)} fullWidth maxWidth="sm"
+        PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)" } }}>
+        <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1rem", display: "flex", alignItems: "center", gap: 1 }}>
+          <SmartToyRounded sx={{ fontSize: 20, color: "var(--indigo-lt)" }} /> Ask AI Tutor
+        </DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, pt: 1 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="Ask about the topic…"
+              value={tutorQuestion}
+              onChange={(e) => setTutorQuestion(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAskTutor()}
+              disabled={tutorLoading}
+              sx={{ "& .MuiOutlinedInput-root": { fontSize: "0.85rem", color: "#f1f5f9", "& fieldset": { borderColor: "var(--border)" } } }}
+            />
+            <Button variant="contained" onClick={handleAskTutor} disabled={tutorLoading || !tutorQuestion.trim()}
+              sx={{ background: "var(--grad-primary)", fontWeight: 700, px: 2.5 }}>
+              {tutorLoading ? "Thinking…" : "Ask"}
+            </Button>
           </Box>
-          <TextField label="Group Name" value={createTitle} onChange={(e) => setCreateTitle(e.target.value)} size="small" fullWidth placeholder="e.g. Biology Exam Prep" autoFocus />
+          {tutorAnswer && (
+            <Box sx={{ bgcolor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: "var(--r-md)", p: 1.5, maxHeight: 320, overflowY: "auto" }}>
+              <Typography sx={{ fontSize: "0.85rem", color: "#f1f5f9", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.6 }}>
+                {tutorAnswer}
+              </Typography>
+            </Box>
+          )}
+          {!tutorAnswer && !tutorLoading && (
+            <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>
+              Long answers are automatically docked as documents so the chat stays clean.
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 1 }}>
-          <Button onClick={() => setCreateOpen(false)} sx={{ color: "var(--text-mid)" }}>Cancel</Button>
-          <Button variant="contained" onClick={handleCreateRoom} disabled={isCreating || !createTitle.trim()} sx={{ background: "var(--grad-primary)", fontWeight: 700 }}>
-            {isCreating ? "Creating..." : "Create Group"}
-          </Button>
+          <Button onClick={() => setTutorOpen(false)} sx={{ color: "var(--text-mid)" }}>Close</Button>
         </DialogActions>
       </Dialog>
 

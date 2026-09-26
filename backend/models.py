@@ -844,6 +844,7 @@ class RoomMessage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     message = db.Column(db.Text, nullable=True)
     is_review_note = db.Column(db.Boolean, default=False)
+    is_system = db.Column(db.Boolean, default=False)  # dock/activity feed entries
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     # Attachment fields — image / document sharing
@@ -861,6 +862,7 @@ class RoomMessage(db.Model):
             'username': self.user.username if self.user else f"User {self.user_id}",
             'message': self.message,
             'is_review_note': self.is_review_note,
+            'is_system': self.is_system,
             'attachment_url': self.attachment_url,
             'attachment_name': self.attachment_name,
             'attachment_type': self.attachment_type,
@@ -890,6 +892,86 @@ class RoomInvite(db.Model):
             'invited_user_id': self.invited_user_id,
             'invited_by_id': self.invited_by_id,
             'status': self.status,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class DockedDocument(db.Model):
+    """Shared document pinned to a study room dock — collaborative notes / resources"""
+    __tablename__ = 'docked_documents'
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, default='')
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    creator = db.relationship('User', foreign_keys=[created_by], lazy='joined')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'room_id': self.room_id,
+            'title': self.title,
+            'content': self.content,
+            'created_by': self.created_by,
+            'created_by_username': self.creator.username if self.creator else None,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class RoomTodo(db.Model):
+    """Task assigned to a room participant (or unassigned) inside a study room dock"""
+    __tablename__ = 'room_todos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
+    title = db.Column(db.String(300), nullable=False)
+    assignee_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True, index=True)
+    status = db.Column(db.String(20), default='open')  # 'open' | 'done'
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    assignee = db.relationship('User', foreign_keys=[assignee_id], lazy='joined')
+    creator = db.relationship('User', foreign_keys=[created_by], lazy='joined')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'room_id': self.room_id,
+            'title': self.title,
+            'assignee_id': self.assignee_id,
+            'assignee_username': self.assignee.username if self.assignee else None,
+            'status': self.status,
+            'created_by': self.created_by,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class DockedItemComment(db.Model):
+    """Comments on docked documents / todos inside a study room"""
+    __tablename__ = 'docked_item_comments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    item_type = db.Column(db.String(20), nullable=False)  # 'document' | 'todo'
+    item_id = db.Column(db.Integer, nullable=False, index=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('study_rooms.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', foreign_keys=[user_id], lazy='joined')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'item_type': self.item_type,
+            'item_id': self.item_id,
+            'room_id': self.room_id,
+            'user_id': self.user_id,
+            'username': self.user.username if self.user else f"User {self.user_id}",
+            'message': self.message,
             'created_at': self.created_at.isoformat()
         }
 

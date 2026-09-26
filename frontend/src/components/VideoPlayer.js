@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { focusAPI, gameAPI } from '../services/api';
 
-const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate }) => {
+const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate, onVideoError }) => {
   const [xpEarned, setXpEarned] = useState(null);
   const [videoError, setVideoError] = useState(null);
 
@@ -41,6 +41,10 @@ const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate }) => {
       errorMsg = "Invalid YouTube video ID or corrupted URL.";
     }
     setVideoError(errorMsg);
+    // Notify the parent so it can auto-advance to the next video.
+    if (onVideoError) {
+      onVideoError({ code: event.data, message: errorMsg, video });
+    }
   };
 
   const handleVideoCompletion = async () => {
@@ -61,9 +65,11 @@ const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate }) => {
   };
 
   const extractVideoId = (url) => {
-    if (!url) return null;
+    if (!url || typeof url !== 'string') return null;
     if (url.length === 11) return url;
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    const match = url.match(
+      /(?:youtube\.com\/(?:watch\?(?:[^#]*[?&])?v=|embed\/|shorts\/|live\/)|(?:music|m)\.youtube\.com\/watch\?(?:[^#]*[?&])?v=|youtu\.be\/)([^&#?\s/]+)/
+    );
     return match ? match[1] : null;
   };
 

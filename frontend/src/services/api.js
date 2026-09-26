@@ -397,6 +397,21 @@ export const roomAPI = {
     }
     return api.post(`/rooms/${code}/messages`, { message: data.message });
   },
+
+  // Docked workspace: documents + todos + per-item discussion threads
+  listDockDocuments: (code) => api.get(`/rooms/${code}/dock/documents`),
+  createDockDocument: (code, data) => api.post(`/rooms/${code}/dock/documents`, data),
+  updateDockDocument: (code, id, data) => api.put(`/rooms/${code}/dock/documents/${id}`, data),
+  deleteDockDocument: (code, id) => api.delete(`/rooms/${code}/dock/documents/${id}`),
+  listTodos: (code) => api.get(`/rooms/${code}/dock/todos`),
+  createTodo: (code, data) => api.post(`/rooms/${code}/dock/todos`, data),
+  updateTodo: (code, id, data) => api.put(`/rooms/${code}/dock/todos/${id}`, data),
+  deleteTodo: (code, id) => api.delete(`/rooms/${code}/dock/todos/${id}`),
+  listItemComments: (code, itemType, itemId) =>
+    api.get(`/rooms/${code}/dock/${itemType === 'todo' ? 'todos' : 'documents'}/${itemId}/comments`),
+  postItemComment: (code, itemType, itemId, message) =>
+    api.post(`/rooms/${code}/dock/${itemType === 'todo' ? 'todos' : 'documents'}/${itemId}/comments`, { message }),
+  postDockActivity: (code, kind, text) => api.post(`/rooms/${code}/dock/activity`, { kind, text }),
 };
 
 export default api;
