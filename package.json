@@ -27,11 +27,11 @@
     "@capacitor/core": "^8.5.0",
     "cors": "^2.8.6",
     "react-router-dom": "^7.18.2",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "electron": "^43.3.0",
+    "electron": "^43.5.0",
     "electron-builder": "^26.15.3"
   }
 }
