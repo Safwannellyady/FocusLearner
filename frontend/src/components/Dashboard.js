@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box, Typography, Grid, Chip, CircularProgress, Alert,
+  Box, Typography, Grid, Chip, CircularProgress, Alert, Button,
 } from "@mui/material";
 import { motion } from "framer-motion";
 
@@ -16,6 +16,7 @@ import SchoolRoundedIcon       from "@mui/icons-material/SchoolRounded";
 import TrendingUpIcon          from "@mui/icons-material/TrendingUp";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import BoltIcon                from "@mui/icons-material/Bolt";
+import LocalCafeIcon           from "@mui/icons-material/LocalCafe";
 
 import { focusAPI, analyticsAPI } from "../services/api";
 import OnboardingTour from "./OnboardingTour";
@@ -280,6 +281,52 @@ const Dashboard = () => {
             ))}
           </Grid>
         </motion.div>
+      </Box>
+
+      {/* ── Support ── */}
+      <Box
+        className="anim-fade-up"
+        sx={{
+          mt: 1, mb: 3, p: "1rem 1.25rem",
+          borderRadius: "var(--r-lg)",
+          border: "1px solid rgba(255,221,0,0.25)",
+          background: "linear-gradient(135deg, rgba(255,221,0,0.08) 0%, rgba(255,221,0,0.02) 100%)",
+          display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap",
+        }}
+      >
+        <Box>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", color: "#f1f5f9" }}>
+            Enjoying FocusLearner?
+          </Typography>
+          <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>
+            Support development with a coffee ☕
+          </Typography>
+        </Box>
+        <Button
+          component="a"
+          href="https://buymeacoffee.com/Safwan_ms"
+          target="_blank"
+          rel="noopener noreferrer"
+          startIcon={<LocalCafeIcon />}
+          sx={{
+            ml: "auto",
+            fontWeight: 700,
+            fontSize: "0.8rem",
+            px: 2, py: 0.75,
+            borderRadius: "var(--r-md)",
+            textTransform: "none",
+            background: "#FFDD00",
+            color: "#000000",
+            boxShadow: "0 4px 14px rgba(255,221,0,0.25)",
+            "&:hover": {
+              background: "#ffe033",
+              transform: "translateY(-1px)",
+              boxShadow: "0 8px 20px rgba(255,221,0,0.35)",
+            },
+          }}
+        >
+          Buy me a coffee
+        </Button>
       </Box>
 
       <OnboardingTour />
