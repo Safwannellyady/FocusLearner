@@ -11,10 +11,13 @@ import NotFound from './components/NotFound';
 import Layout from './components/layout/Layout';
 import { FocusProvider } from './context/FocusContext';
 
-// Eager loaded core routes for instant initial render
-import Login from './components/Login';
-import Signup from './components/Signup';
-import ForgotPassword from './components/ForgotPassword';
+// Auth pages are lazy too: their framer-motion dependency no longer lands in
+// the initial bundle, so first paint only waits on MUI + router + React.
+// Suspense already wraps <Routes> above, so navigation to /login etc. shows
+// the PageFallback spinner while the chunk loads.
+const Login          = lazy(() => import('./components/Login'));
+const Signup         = lazy(() => import('./components/Signup'));
+const ForgotPassword = lazy(() => import('./components/ForgotPassword'));
 
 // Lazy loaded page components for bundle size & main-thread optimization
 const Dashboard          = lazy(() => import('./components/Dashboard'));
