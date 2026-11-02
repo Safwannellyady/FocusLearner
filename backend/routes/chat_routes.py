@@ -3,7 +3,9 @@ FocusLearner Pro - Chat Routes
 API endpoints for AI Tutor chat
 """
 
-from flask import Blueprint, request, jsonify
+import json
+
+from flask import Blueprint, request, jsonify, Response
 from services.ai_service import AIService
 from utils.auth import token_required
 from models import db, ChatMessage
@@ -74,6 +76,76 @@ def send_message():
         db.session.rollback()
         print(f"Chat Error: {e}")
         return jsonify({'error': 'Failed to process message'}), 500
+
+
+@chat_routes.route('/send-stream', methods=['POST'])
+@token_required
+def send_message_stream():
+    """Stream an AI Tutor reply token-by-token (SSE).
+
+    Same prompt, RAG context and DB save as /send — only the delivery
+    differs. Events: {"delta": "..."} per chunk, then {"done": true,
+    "sources": [...]} once the full reply has been saved. If anything
+    fails mid-stream, the client keeps whatever text arrived and the
+    partial reply is NOT saved (a retry re-sends the same question).
+    """
+    data = request.get_json() or {}
+    user_id = request.current_user_id
+    message = data.get('message')
+    context = data.get('context')
+    video_id = data.get('videoId') or data.get('video_id')
+    timestamp = data.get('timestamp')
+
+    if not message:
+        return jsonify({'error': 'Message is required'}), 400
+
+    def generate():
+        try:
+            recent_msgs = ChatMessage.query.filter_by(user_id=user_id)\
+                .order_by(ChatMessage.created_at.asc()).limit(20).all()
+            history_context = _format_db_history(recent_msgs)
+
+            full_text = ""
+            sources = []
+            for delta, chunk_sources in ai_service.chat_stream(
+                message, context, history_context, video_id, timestamp
+            ):
+                if chunk_sources:
+                    sources = chunk_sources
+                if delta:
+                    full_text += delta
+                    yield f"data: {json.dumps({'delta': delta})}\n\n"
+
+            if not full_text:
+                yield f"data: {json.dumps({'error': 'Failed to process message'})}\n\n"
+                return
+
+            new_msg = ChatMessage(
+                user_id=user_id,
+                video_id=video_id,
+                message=message,
+                response=full_text,
+                timestamp=data.get('timestamp')
+            )
+            db.session.add(new_msg)
+            db.session.commit()
+            yield f"data: {json.dumps({'done': True, 'sources': sources})}\n\n"
+        except GeneratorExit:
+            db.session.rollback()
+            raise
+        except Exception as e:
+            db.session.rollback()
+            print(f"Chat Stream Error: {e}")
+            yield f"data: {json.dumps({'error': 'Failed to process message'})}\n\n"
+
+    return Response(
+        generate(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+        },
+    )
 
 
 @chat_routes.route('/history', methods=['GET'])
