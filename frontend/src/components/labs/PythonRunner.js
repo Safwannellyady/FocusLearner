@@ -62,7 +62,7 @@ const PythonRunner = ({ topic }) => {
       }
 
       setOutput("Running Python script in WebAssembly sandbox...");
-      
+
       // Capture stdout
       pyodide.runPython(`
 import sys
@@ -104,7 +104,7 @@ sys.stdout = io.StringIO()
             startIcon={(isRunning || isInitializing) ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : <PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
             sx={{
               px: 2, py: 0.4, borderRadius: "var(--r-md)",
-              background: "linear-gradient(135deg,#38bdf8,#0284c7)", color: "#fff",
+              background: "#38bdf8", color: "#fff",
               fontSize: "0.75rem", fontWeight: 800, textTransform: "none",
               boxShadow: "0 2px 10px rgba(56,189,248,0.3)"
             }}

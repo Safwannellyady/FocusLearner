@@ -5,18 +5,15 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const STEPS = [
   {
-    emoji: "👋",
     title: "Welcome to FocusLearner",
     body: "Your distraction-free study environment. Here's a 30-second tour of what you can do.",
   },
   {
-    emoji: "⚡",
     title: "Start a focus session",
     body: "Hit “New Session”, pick a subject and topic, and we'll find verified videos, launch an AI tutor, and track your time.",
     cta: { label: "Start a session", to: "/courses" },
   },
   {
-    emoji: "📊",
     title: "Track real progress",
     body: "Every completed session earns XP, builds your streak, and feeds your analytics and knowledge graph — all from your actual study time.",
     cta: { label: "See analytics", to: "/analytics" },
@@ -73,8 +70,7 @@ const OnboardingTour = () => {
               boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
             }}
           >
-            <Typography sx={{ fontSize: "2.5rem", mb: 1 }}>{current.emoji}</Typography>
-            <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "#f1f5f9", mb: 1 }}>
+                        <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "#f1f5f9", mb: 1 }}>
               {current.title}
             </Typography>
             <Typography sx={{ fontSize: "0.88rem", color: "var(--text-mid)", lineHeight: 1.65, mb: 2.5 }}>
@@ -115,7 +111,7 @@ const OnboardingTour = () => {
                   onClick={() => (last ? finish() : setStep(s => s + 1))}
                   sx={{ textTransform: "none", fontWeight: 700, borderRadius: "var(--r-md)", background: "var(--grad-primary)", flex: 2 }}
                 >
-                  {last ? "Start studying 🎯" : "Next"}
+                  {last ? "Start studying " : "Next"}
                 </Button>
               )}
             </Box>

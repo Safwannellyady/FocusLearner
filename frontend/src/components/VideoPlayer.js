@@ -145,7 +145,7 @@ const VideoPlayer = ({ video, onVideoEnd, onTimeUpdate, onVideoError }) => {
           </Typography>
           {xpEarned && (
             <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>
-              🎉 Video Completed! +{xpEarned} XP Earned!
+               Video Completed! +{xpEarned} XP Earned!
             </Alert>
           )}
         </Box>

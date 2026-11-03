@@ -75,7 +75,7 @@ const LearningHealthDashboard = () => {
             <Paper sx={{
                 p: 4,
                 mb: 4,
-                background: 'linear-gradient(135deg, #1e1e2e 0%, #1a1a2e 100%)',
+                background: '#1e1e2e',
                 borderRadius: 4,
                 display: 'flex',
                 alignItems: 'center',

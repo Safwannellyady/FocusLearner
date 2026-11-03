@@ -56,7 +56,7 @@ const ForgotPassword = () => {
           <Button type="submit" fullWidth variant="contained" disabled={loading || !email} sx={{
             py: 1.4, fontSize: "0.95rem", fontFamily: "Plus Jakarta Sans, sans-serif",
             fontWeight: 700, borderRadius: "var(--r-md)", mb: 2,
-            background: "var(--grad-primary)", boxShadow: "0 6px 20px rgba(99,102,241,0.35)",
+            background: "var(--grad-primary)", boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
           }}>
             {loading ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Send reset link"}
           </Button>

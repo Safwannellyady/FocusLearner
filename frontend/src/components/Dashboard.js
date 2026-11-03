@@ -199,7 +199,7 @@ const Dashboard = () => {
             lineHeight: 1.1,
           }}
         >
-          {getGreeting()}, {firstName} 👋
+          {getGreeting()}, {firstName}
         </Typography>
         <Typography sx={{ color: "var(--text-mid)", fontSize: "0.85rem", mt: 0.5, fontWeight: 500 }}>
           {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
@@ -217,7 +217,7 @@ const Dashboard = () => {
             mb: 3,
             p: "1rem 1.5rem",
             borderRadius: "var(--r-lg)",
-            background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(59,130,246,0.1) 100%)",
+            background: "rgba(99,102,241,0.15)",
             border: "1px solid rgba(99,102,241,0.35)",
             display: "flex",
             alignItems: "center",
@@ -255,7 +255,7 @@ const Dashboard = () => {
       ) : (
         <Grid container spacing={2} sx={{ mb: 3 }}>
           {[
-            { icon: LocalFireDepartmentIcon, label: "Day Streak",    value: stats?.streak_days ?? user?.streak_days ?? 0, accent: "var(--amber)",   sub: "🔥" },
+            { icon: LocalFireDepartmentIcon, label: "Day Streak",    value: stats?.streak_days ?? user?.streak_days ?? 0, accent: "var(--amber)" },
             { icon: TimerRoundedIcon,        label: "Hours Studied",  value: stats?.total_hours != null ? `${stats.total_hours}h` : "0h", accent: "var(--indigo)" },
             { icon: TrendingUpIcon,          label: "Sessions Done",  value: stats?.total_sessions ?? 0,                accent: "var(--emerald)" },
             { icon: BoltIcon,               label: "XP Earned",      value: stats?.total_xp ?? 0,                      accent: "var(--amber)",   sub: stats?.today_xp > 0 ? `+${stats.today_xp} today` : undefined },
@@ -290,7 +290,7 @@ const Dashboard = () => {
           mt: 1, mb: 3, p: "1rem 1.25rem",
           borderRadius: "var(--r-lg)",
           border: "1px solid rgba(255,221,0,0.25)",
-          background: "linear-gradient(135deg, rgba(255,221,0,0.08) 0%, rgba(255,221,0,0.02) 100%)",
+          background: "rgba(255,221,0,0.08)",
           display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap",
         }}
       >
@@ -299,7 +299,7 @@ const Dashboard = () => {
             Enjoying FocusLearner?
           </Typography>
           <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>
-            Support development with a coffee ☕
+            Support development with a coffee
           </Typography>
         </Box>
         <Button

@@ -10,12 +10,12 @@ const DEFAULT_CPP = `#include <iostream>
 int main() {
     std::cout << "FocusLearner C++ Systems Playground" << std::endl;
     std::vector<int> numbers = {10, 20, 30, 40, 50};
-    
+
     int sum = 0;
     for (int n : numbers) {
         sum += n;
     }
-    
+
     std::cout << "Sum of elements: " << sum << std::endl;
     std::cout << "Memory Address of vector: " << &numbers << std::endl;
     return 0;
@@ -56,9 +56,9 @@ const CppPlayground = () => {
             startIcon={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
             sx={{
               px: 2, py: 0.4, borderRadius: "var(--r-md)",
-              background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff",
+              background: "#6366f1", color: "#fff",
               fontSize: "0.75rem", fontWeight: 800, textTransform: "none",
-              boxShadow: "0 2px 10px rgba(99,102,241,0.3)"
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)"
             }}
           >
             {isRunning ? "Compiling..." : "Compile & Run"}

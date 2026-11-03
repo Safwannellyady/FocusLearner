@@ -26,10 +26,7 @@ const NotFound = () => {
           fontFamily: "Outfit, sans-serif",
           fontWeight: 900,
           fontSize: "4rem",
-          background: "var(--grad-primary)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
+          color: "var(--indigo-lt)",
           lineHeight: 1,
         }}
       >

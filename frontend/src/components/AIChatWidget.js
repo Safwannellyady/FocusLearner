@@ -155,7 +155,7 @@ const AIChatWidget = ({ context, videoId }) => {
                             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.36)',
                         }}>
                             {/* Header */}
-                            <Box sx={{ p: 2, background: 'linear-gradient(135deg, #4f46e5 0%, #00f2fe 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box sx={{ p: 2, background: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Box display="flex" alignItems="center" gap={1.2}>
                                     <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.25)', border: '1px solid #ffffff' }}>
                                         <SmartToyIcon sx={{ color: '#00f2fe' }} />
@@ -255,12 +255,12 @@ const AIChatWidget = ({ context, videoId }) => {
                 <Fab
                     onClick={() => setIsOpen(!isOpen)}
                     sx={{
-                        background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)',
+                        background: '#6b21a8',
                         color: 'white',
                         width: 64,
                         height: 64,
-                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
-                        '&:hover': { background: 'linear-gradient(135deg, #7e22ce 0%, #2563eb 100%)' }
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                        '&:hover': { background: '#7e22ce' }
                     }}>
                     {isOpen ? <CloseIcon fontSize="large" /> : <ChatIcon fontSize="large" />}
                 </Fab>
