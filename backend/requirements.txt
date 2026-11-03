@@ -21,7 +21,7 @@ requests==2.34.2
 youtube-transcript-api==0.6.1
 
 # Google Cloud / AI
-google-cloud-aiplatform==1.38.1
+google-cloud-aiplatform==1.133.0
 google-generativeai
 google-auth==2.58.0
 google-auth-oauthlib==1.1.0
@@ -30,15 +30,15 @@ google-auth-httplib2==0.4.2
 # NLP / ML
 nltk>=3.10.3
 scikit-learn>=1.3.2
-sentence-transformers==2.2.2
+sentence-transformers==5.6.0
 numpy>=1.26.0
 joblib>=1.3.2
 
 # Auth
-PyJWT==2.13.0
+PyJWT==2.15.0
 
 # Vector database
 pinecone-client==2.2.4
 
 # Testing (excluded from Docker image via .dockerignore)
-pytest==7.4.0
+pytest==9.0.3
