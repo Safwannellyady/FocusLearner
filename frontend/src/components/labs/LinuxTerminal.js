@@ -78,13 +78,13 @@ const LinuxTerminal = () => {
 
       <Box sx={{ flex: 1, p: 2, overflowY: "auto", display: "flex", flexDirection: "column" }}>
         {history.map((line, idx) => (
-          <Typography key={idx} sx={{ fontSize: "0.78rem", color: line.startsWith("student@") ? "#38bdf8" : line.startsWith("bash:") ? "#f87171" : "#10b981", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+          <Typography key={idx} sx={{ fontSize: "0.78rem", color: line.startsWith("student@") ? "#818cf8" : line.startsWith("bash:") ? "#f87171" : "#10b981", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
             {line}
           </Typography>
         ))}
 
         <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
-          <Typography sx={{ fontSize: "0.78rem", color: "#38bdf8", mr: 1, fontWeight: 700 }}>
+          <Typography sx={{ fontSize: "0.78rem", color: "#818cf8", mr: 1, fontWeight: 700 }}>
             student@focuslearner-lab:~$
           </Typography>
           <Box

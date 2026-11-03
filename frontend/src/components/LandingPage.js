@@ -84,14 +84,14 @@ const LandingPage = () => {
         position: "absolute", top: "20%", left: "15%",
         width: 320, height: 320,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)",
+        background: "transparent",
         filter: "blur(60px)", pointerEvents: "none",
       }} />
       <Box sx={{
         position: "absolute", bottom: "20%", right: "15%",
         width: 260, height: 260,
         borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
+        background: "transparent",
         filter: "blur(60px)", pointerEvents: "none",
       }} />
 
@@ -143,10 +143,7 @@ const LandingPage = () => {
           <Box
             component="span"
             sx={{
-              background: "var(--grad-primary)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              color: "var(--indigo-lt)",
             }}
           >
             environment.
@@ -195,8 +192,8 @@ const LandingPage = () => {
               borderRadius: "var(--r-md)",
               background: "var(--grad-primary)",
               textTransform: "none",
-              boxShadow: "0 8px 24px rgba(99,102,241,0.35)",
-              "&:hover": { boxShadow: "0 12px 32px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+              "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
             }}
           >
             Get Started Free
@@ -385,7 +382,7 @@ const WaitlistModal = ({ open, onClose }) => {
       <DialogContent>
         {status === "done" ? (
           <Box sx={{ textAlign: "center", py: 2 }}>
-            <Typography sx={{ fontSize: "2rem", mb: 1 }}>🎉</Typography>
+            <Typography sx={{ fontSize: "2rem", mb: 1 }}></Typography>
             <Typography sx={{ fontWeight: 700, color: "#f1f5f9", mb: 0.5 }}>You're on the list!</Typography>
             <Typography sx={{ fontSize: "0.85rem", color: "var(--text-dim)" }}>
               We'll email you when your invite is ready.

@@ -88,14 +88,14 @@ const CustomCursor = () => {
           height: isHovered ? (hoverText ? 36 : 48) : 32,
           paddingLeft: isHovered && hoverText ? 14 : 0,
           paddingRight: isHovered && hoverText ? 14 : 0,
-          backgroundColor: isHovered ? 'rgba(0, 242, 254, 0.18)' : 'transparent',
-          borderColor: isHovered ? '#00f2fe' : 'rgba(255, 255, 255, 0.55)',
+          backgroundColor: isHovered ? 'rgba(99, 102, 241, 0.18)' : 'transparent',
+          borderColor: isHovered ? '#a5b4fc' : 'rgba(255, 255, 255, 0.55)',
           borderWidth: isHovered ? '1.5px' : '1.5px',
           borderStyle: 'solid',
           borderRadius: 9999, // Perfectly round ring or pill, NEVER a square box
           x: '-50%',
           y: '-50%',
-          boxShadow: isHovered ? '0 0 20px rgba(0, 242, 254, 0.45)' : 'none',
+          boxShadow: isHovered ? '0 2px 8px rgba(0,0,0,0.4)' : 'none',
           backdropFilter: isHovered ? 'blur(4px)' : 'none',
         }}
         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -112,7 +112,7 @@ const CustomCursor = () => {
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               whiteSpace: 'nowrap',
-              textShadow: '0 0 8px rgba(0, 242, 254, 0.8)'
+              textShadow: '0 2px 8px rgba(0,0,0,0.4)'
             }}
           >
             {hoverText}
@@ -133,8 +133,8 @@ const CustomCursor = () => {
           width: 6,
           height: 6,
           borderRadius: '50%',
-          backgroundColor: isHovered ? '#00f2fe' : '#ffffff',
-          boxShadow: isHovered ? '0 0 10px #00f2fe' : '0 0 6px rgba(255, 255, 255, 0.9)',
+          backgroundColor: isHovered ? '#a5b4fc' : '#ffffff',
+          boxShadow: isHovered ? '0 0 10px #a5b4fc' : '0 2px 8px rgba(0,0,0,0.4)',
         }}
         animate={{
           x: '-50%',

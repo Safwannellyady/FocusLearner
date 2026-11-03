@@ -21,7 +21,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 /* ── Fallback demo data ────────────────────────────────────────────────────── */
 const SUBJECT_COLORS = {
-  "Computer Science": "#6366f1", "Neurosciences": "#a78bfa", "Physics": "#3b82f6",
+  "Computer Science": "#6366f1", "Neurosciences": "#a5b4fc", "Physics": "#6366f1",
   "Chemistry": "#10b981", "Financial Tech": "#f59e0b", "Data Science & AI": "#ec4899",
   "Biology": "#34d399", "Mathematics": "#fbbf24", "Management": "#fb923c",
 };
@@ -97,7 +97,7 @@ const SessionCard = ({ session, index, onResume, onModify, onDelete }) => {
               transition={{ duration: 0.55, ease: "easeInOut" }}
               style={{
                 position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                background: "linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%)",
+                background: "transparent",
                 pointerEvents: "none", zIndex: 1,
               }}
             />
@@ -168,7 +168,7 @@ const SessionCard = ({ session, index, onResume, onModify, onDelete }) => {
             onClose={(e) => { e && e.stopPropagation(); setEditOpen(false); }}
             onClick={(e) => e.stopPropagation()}
             PaperProps={{
-              sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", p: 1, minWidth: 320 }
+              sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", p: 1, width: "min(320px, calc(100vw - 32px))" }
             }}
           >
             <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", pb: 1 }}>
@@ -312,8 +312,8 @@ const EmptyState = ({ onNew }) => (
       sx={{
         display: "inline-flex", alignItems: "center", gap: 0.75, px: 2.5, py: 1.1,
         borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer",
-        boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
-        "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+        boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+        "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
         transition: "all 0.2s",
       }}
     >
@@ -584,8 +584,8 @@ const MyCourses = () => {
           sx={{
             display: "flex", alignItems: "center", gap: 0.6, px: 1.5, py: 1,
             borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer",
-            boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-            "&:hover": { boxShadow: "0 6px 20px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
             transition: "all 0.18s",
           }}
         >

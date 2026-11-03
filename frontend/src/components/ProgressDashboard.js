@@ -47,7 +47,7 @@ const ProgressDashboard = () => {
                 </Box>
 
                 {/* Subject Summary Cards */}
-                <Typography variant="h6" gutterBottom color="#a78bfa">Subject Mastery</Typography>
+                <Typography variant="h6" gutterBottom color="#a5b4fc">Subject Mastery</Typography>
                 <Grid container spacing={3} mb={6}>
                     {stats?.subject_summary.map((subj) => (
                         <Grid item xs={12} sm={6} md={4} key={subj.subject}>

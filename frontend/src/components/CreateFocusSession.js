@@ -129,7 +129,7 @@ const Step1 = ({ data, setData }) => {
             bgcolor: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
             borderRadius: "var(--r-md)", color: "#f1f5f9",
             fontSize: "0.9rem", fontFamily: "Plus Jakarta Sans, sans-serif",
-            outline: "none", "&:focus": { borderColor: "rgba(99,102,241,0.5)", boxShadow: "0 0 0 3px rgba(99,102,241,0.1)" },
+            outline: "none", "&:focus": { borderColor: "rgba(99,102,241,0.5)", boxShadow: "0 0 2px 8px rgba(0,0,0,0.4)" },
             transition: "all 0.15s",
           }}
         />
@@ -367,8 +367,8 @@ const FEATURES_CONFIG = [
   { key: "gaming",     icon: SportsEsportsRoundedIcon, label: "Gaming Arena",  desc: "Brain-refresh games during break time",    accent: "#10b981" },
   { key: "chatbot",    icon: SmartToyRoundedIcon,      label: "AI Chatbot",   desc: "Ask questions related to your topic",      accent: "#6366f1" },
   { key: "notes",      icon: NoteAltRoundedIcon,       label: "Notes Pad",    desc: "Quick-capture notes during session",       accent: "#f59e0b" },
-  { key: "webSearch",  icon: ManageSearchRoundedIcon,  label: "Web Search",   desc: "Wikipedia + Google inline search",         accent: "#3b82f6" },
-  { key: "summarizer", icon: SummarizeRoundedIcon,     label: "Summarizer",   desc: "AI summary of materials & transcript",     accent: "#a78bfa" },
+  { key: "webSearch",  icon: ManageSearchRoundedIcon,  label: "Web Search",   desc: "Wikipedia + Google inline search",         accent: "#6366f1" },
+  { key: "summarizer", icon: SummarizeRoundedIcon,     label: "Summarizer",   desc: "AI summary of materials & transcript",     accent: "#a5b4fc" },
   { key: "focusLock",  icon: LockRoundedIcon,          label: "Focus Lock",   desc: "Block tab-switching during focus phase",   accent: "#f43f5e" },
 ];
 
@@ -506,7 +506,7 @@ const CreateFocusSession = () => {
       : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     try {
       const ytId = data.youtubeId || (data.youtubeUrl ? extractYouTubeId(data.youtubeUrl) : null);
-      
+
       // Save session/lecture to backend database
       let createdLecture = null;
       try {
@@ -635,8 +635,8 @@ const CreateFocusSession = () => {
             sx={{
               background: "var(--grad-primary)", fontFamily: "Plus Jakarta Sans, sans-serif",
               fontWeight: 700, borderRadius: "var(--r-md)", px: 3,
-              boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-              "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.45)", transform: "translateY(-1px)" },
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+              "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
               "&.Mui-disabled": { opacity: 0.4 },
             }}
           >
@@ -649,14 +649,14 @@ const CreateFocusSession = () => {
             onClick={handleStart}
             disabled={loading}
             sx={{
-              background: "linear-gradient(135deg,#10b981,#059669)",
+              background: "#10b981",
               fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700,
               borderRadius: "var(--r-md)", px: 3,
               boxShadow: "0 4px 14px rgba(16,185,129,0.3)",
               "&:hover": { boxShadow: "0 8px 24px rgba(16,185,129,0.45)", transform: "translateY(-1px)" },
             }}
           >
-            {loading ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Start Session ⚡"}
+            {loading ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Start Session "}
           </Button>
         )}
       </Box>

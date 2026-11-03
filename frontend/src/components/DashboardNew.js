@@ -65,12 +65,12 @@ const DashboardNew = () => {
 
       {/* Stats Grid */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }, gap: 3, mb: 6 }}>
-        <StatCard title="Total Focus Sessions" value={courses.length} icon={<MenuBookIcon />} color="#3b82f6" />
+        <StatCard title="Total Focus Sessions" value={courses.length} icon={<MenuBookIcon />} color="#6366f1" />
         <StatCard
           title="Total Time Spent"
           value="0h 0m"
           icon={<AccessTimeIcon />}
-          color="#3b82f6"
+          color="#6366f1"
           action={
             <select
               value={timeFilter}
@@ -84,8 +84,8 @@ const DashboardNew = () => {
             </select>
           }
         />
-        <StatCard title="Active Sessions" value={courses.length} icon={<SchoolIcon />} color="#3b82f6" />
-        <StatCard title="Completed Sessions" value="0" icon={<CheckCircleOutlineIcon />} color="#3b82f6" />
+        <StatCard title="Active Sessions" value={courses.length} icon={<SchoolIcon />} color="#6366f1" />
+        <StatCard title="Completed Sessions" value="0" icon={<CheckCircleOutlineIcon />} color="#6366f1" />
         <StatCard title="Intelligent Score" value="0/100" icon={<AutoGraphIcon />} color="#10b981" />
       </Box>
 
@@ -95,7 +95,7 @@ const DashboardNew = () => {
         <Box mb={4}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a' }}>My Enrollments</Typography>
-            <Button variant="text" size="small" onClick={() => navigate('/my-courses')} sx={{ color: '#2563eb', fontWeight: 600 }}>View All</Button>
+            <Button variant="text" size="small" onClick={() => navigate('/my-courses')} sx={{ color: '#4f46e5', fontWeight: 600 }}>View All</Button>
           </Box>
           <Grid container spacing={3}>
             {courses.length > 0 ? courses.map((course) => (
@@ -123,7 +123,7 @@ const DashboardNew = () => {
                   <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 600, mb: 1 }}>
                     No enrolled sessions found
                   </Typography>
-                  <Button variant="contained" size="small" onClick={() => navigate('/courses')} sx={{ bgcolor: '#2563eb', fontWeight: 600 }}>
+                  <Button variant="contained" size="small" onClick={() => navigate('/courses')} sx={{ bgcolor: '#4f46e5', fontWeight: 600 }}>
                     Start New Focus Session
                   </Button>
                 </Box>
@@ -136,7 +136,7 @@ const DashboardNew = () => {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a' }}>Manage Focus Period</Typography>
-            <Button variant="text" size="small" sx={{ color: '#2563eb', fontWeight: 600 }}>View All</Button>
+            <Button variant="text" size="small" sx={{ color: '#4f46e5', fontWeight: 600 }}>View All</Button>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 6 }}>
             <Typography variant="body1" sx={{ color: '#64748b', mb: 2 }}>No focus periods set yet.</Typography>

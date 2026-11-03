@@ -12,7 +12,7 @@ import {
 import { roomAPI, authAPI, chatAPI } from "../services/api";
 import StudyRoomDock from "./StudyRoomDock";
 
-const EMOJI_AVATARS = ["📚","🎓","🔬","💻","🧮","📐","🧪","📝","🎯","💡","🚀","⚡","🔥","🌟","🎨","🎵","🏆","📊","🔍","🧠"];
+const LETTER_AVATARS = ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","R","S","T","V","W","X"];
 
 const StudyRoom = () => {
   const [activeRoom, setActiveRoom] = useState(null);
@@ -38,7 +38,7 @@ const StudyRoom = () => {
 
   // Create form
   const [createTitle, setCreateTitle] = useState("");
-  const [createAvatar, setCreateAvatar] = useState("📚");
+  const [createAvatar, setCreateAvatar] = useState("A");
   const [isCreating, setIsCreating] = useState(false);
 
   // Menu state
@@ -58,7 +58,7 @@ const StudyRoom = () => {
 
   // Settings form
   const [editTitle, setEditTitle] = useState("");
-  const [editAvatar, setEditAvatar] = useState("📚");
+  const [editAvatar, setEditAvatar] = useState("");
   const [editPrivate, setEditPrivate] = useState(true);
   const [settingsLoading, setSettingsLoading] = useState(false);
 
@@ -159,7 +159,7 @@ const StudyRoom = () => {
         setRoomData(room);
         setCreateOpen(false);
         setCreateTitle("");
-        setCreateAvatar("📚");
+        setCreateAvatar("");
       }
     } catch (err) {
       console.error("Create room error:", err);
@@ -248,7 +248,7 @@ const StudyRoom = () => {
         setTutorOpen(false);
         setTutorQuestion("");
         setDockOpen(true);
-        notifyActivity("tutor", `🤖 AI tutor docked an answer to "${question.slice(0, 60)}"`);
+        notifyActivity("tutor", ` AI tutor docked an answer to "${question.slice(0, 60)}"`);
         setToast({ open: true, message: "Long answer docked as a document", severity: "info" });
       } else {
         setTutorAnswer(answer);
@@ -300,7 +300,7 @@ const StudyRoom = () => {
     handleMenuClose();
     if (!roomData) return;
     setEditTitle(roomData.title || activeRoom.title);
-    setEditAvatar(roomData.avatar || "📚");
+    setEditAvatar(roomData.avatar || "");
     setEditPrivate(roomData.is_private !== false);
     setSettingsOpen(true);
   };
@@ -402,7 +402,7 @@ const StudyRoom = () => {
     }
     return (
       <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1, px: 1.5, py: 1, bgcolor: "rgba(255,255,255,0.04)", borderRadius: "var(--r-md)", border: "1px solid var(--border)" }}>
-        <span style={{ fontSize: 16 }}>📄</span>
+        <span style={{ fontSize: 16 }}></span>
         <Typography sx={{ fontSize: "0.78rem", color: "var(--text-mid)", flex: 1 }} noWrap>{msg.attachment_name || "Document"}</Typography>
       </Box>
     );
@@ -435,7 +435,7 @@ const StudyRoom = () => {
           {/* Room Header */}
           <Box sx={{ px: 2, py: 1.5, bgcolor: "#0b1320", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0 }}>
             <Box sx={{ width: 38, height: 38, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", flexShrink: 0 }}>
-              {roomData?.avatar || activeRoom.avatar || "📚"}
+              {roomData?.avatar || activeRoom.avatar || ""}
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.95rem", color: "#f1f5f9", lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -534,7 +534,7 @@ const StudyRoom = () => {
             {(selectedFile || pastedContent || filePreview) && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, p: 1, bgcolor: "rgba(255,255,255,0.04)", borderRadius: "var(--r-md)", border: "1px solid var(--border)" }}>
                 {filePreview && <img src={filePreview} alt="preview" style={{ width: 32, height: 32, borderRadius: 4, objectFit: "cover" }} />}
-                {!filePreview && <span style={{ fontSize: 18 }}>📄</span>}
+                {!filePreview && <span style={{ fontSize: 18 }}></span>}
                 <Typography sx={{ fontSize: "0.75rem", color: "var(--text-mid)", flex: 1 }} noWrap>
                   {selectedFile?.name || pastedContent?.name || "Pasted content"}
                 </Typography>
@@ -584,14 +584,14 @@ const StudyRoom = () => {
       )}
 
       {/* ── CREATE ROOM DIALOG ────────────────────────────────────────── */}
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Create Study Group</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
           <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>Pick an avatar for your group</Typography>
           <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-            {EMOJI_AVATARS.map((emoji) => (
-              <Box key={emoji} onClick={() => setCreateAvatar(emoji)} sx={{ width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: createAvatar === emoji ? "2px solid var(--indigo)" : "1px solid var(--border)", bgcolor: createAvatar === emoji ? "rgba(99,102,241,0.15)" : "transparent", fontSize: "1.2rem", transition: "all 0.15s" }}>
-                {emoji}
+            {LETTER_AVATARS.map((letter) => (
+              <Box key={letter} onClick={() => setCreateAvatar(letter)} sx={{ width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: createAvatar === letter ? "2px solid var(--indigo)" : "1px solid var(--border)", bgcolor: createAvatar === letter ? "rgba(99,102,241,0.15)" : "transparent", fontSize: "1.2rem", transition: "all 0.15s" }}>
+                {letter}
               </Box>
             ))}
           </Box>
@@ -606,14 +606,14 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── MODIFY ROOM DIALOG ────────────────────────────────────────── */}
-      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Modify Room</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
           <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>Avatar</Typography>
           <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-            {EMOJI_AVATARS.map((emoji) => (
-              <Box key={emoji} onClick={() => setEditAvatar(emoji)} sx={{ width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: editAvatar === emoji ? "2px solid var(--indigo)" : "1px solid var(--border)", bgcolor: editAvatar === emoji ? "rgba(99,102,241,0.15)" : "transparent", fontSize: "1.1rem" }}>
-                {emoji}
+            {LETTER_AVATARS.map((letter) => (
+              <Box key={letter} onClick={() => setEditAvatar(letter)} sx={{ width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: editAvatar === letter ? "2px solid var(--indigo)" : "1px solid var(--border)", bgcolor: editAvatar === letter ? "rgba(99,102,241,0.15)" : "transparent", fontSize: "1.1rem" }}>
+                {letter}
               </Box>
             ))}
           </Box>
@@ -633,7 +633,7 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── INVITE USERS DIALOG ──────────────────────────────────────── */}
-      <Dialog open={inviteOpen} onClose={() => setInviteOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340, maxHeight: "80vh" } }}>
+      <Dialog open={inviteOpen} onClose={() => setInviteOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))", maxHeight: "80vh" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Invite Users</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, pt: 1 }}>
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -665,7 +665,7 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── SECURITY SETTINGS DIALOG ──────────────────────────────────── */}
-      <Dialog open={securityOpen} onClose={() => setSecurityOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={securityOpen} onClose={() => setSecurityOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Security Settings</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, pt: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, bgcolor: "rgba(255,255,255,0.03)", borderRadius: "var(--r-md)", border: "1px solid var(--border)" }}>
@@ -683,7 +683,7 @@ const StudyRoom = () => {
             </Box>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, bgcolor: "rgba(255,255,255,0.03)", borderRadius: "var(--r-md)", border: "1px solid var(--border)" }}>
-            <span style={{ fontSize: 22 }}>📄</span>
+            <span style={{ fontSize: 22 }}></span>
             <Box>
               <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#f1f5f9" }}>File Sharing</Typography>
               <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>Share images and documents with the group.</Typography>
@@ -696,7 +696,7 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── DELETE CONFIRMATION DIALOG ────────────────────────────────── */}
-      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid rgba(244,63,94,0.3)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid rgba(244,63,94,0.3)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f43f5e", fontSize: "1.1rem" }}>Delete Room?</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Typography sx={{ fontSize: "0.85rem", color: "var(--text-mid)", lineHeight: 1.6 }}>

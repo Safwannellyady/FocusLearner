@@ -17,6 +17,8 @@ const FlashcardsDeck = ({ subject = "General Science", topic = "Core Principles"
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [stats, setStats] = useState({ total_cards: 0, due_cards: 0, mastered_cards: 0 });
+  const [reviewError, setReviewError] = useState(null);
+  const [pendingReviews, setPendingReviews] = useState(0);
 
   const loadDueCards = async () => {
     setLoading(true);
@@ -61,25 +63,48 @@ const FlashcardsDeck = ({ subject = "General Science", topic = "Core Principles"
     }
   };
 
-  const handleRateCard = async (quality) => {
+  const handleRateCard = (quality) => {
     if (cards.length === 0 || currentIndex >= cards.length) return;
     const activeCard = cards[currentIndex];
+    const prevIndex = currentIndex;
+    const isLastCard = currentIndex + 1 >= cards.length;
+    const advancedIndex = isLastCard ? cards.length : currentIndex + 1;
 
-    try {
-      if (activeCard.id) {
-        await srsAPI.submitReview(activeCard.id, quality);
-      }
-    } catch (err) {
-      console.error("Review submit error:", err);
-    }
-
+    // Optimistic UI: advance immediately, submit in the background.
+    // The user never waits on the network for the next card.
+    setReviewError(null);
     setFlipped(false);
-    if (currentIndex + 1 < cards.length) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      setCurrentIndex(cards.length);
-      loadDueCards();
-    }
+    setCurrentIndex(advancedIndex);
+
+    if (!activeCard.id) return;
+
+    setPendingReviews(prev => prev + 1);
+    srsAPI.submitReview(activeCard.id, quality)
+      .then(() => {
+        // Only reload the queue at the end of the deck, once the
+        // final review is confirmed saved — never on a failed save.
+        if (isLastCard) loadDueCards();
+      })
+      .catch((err) => {
+        console.error("Review submit error:", err);
+        // Roll back only if the user is still on the card we advanced
+        // to. If they have already rated further cards, jumping back
+        // would yank them mid-flow; the unsaved card simply stays due
+        // and returns on the next queue reload.
+        setCurrentIndex((now) => {
+          if (now === advancedIndex) {
+            setFlipped(true);
+            return prevIndex;
+          }
+          return now;
+        });
+        setReviewError(
+          "That review didn't save — check your connection and rate again."
+        );
+      })
+      .finally(() => {
+        setPendingReviews(prev => Math.max(0, prev - 1));
+      });
   };
 
   const currentCard = cards[currentIndex];
@@ -116,7 +141,7 @@ const FlashcardsDeck = ({ subject = "General Science", topic = "Core Principles"
               px: 2, py: 0.6, borderRadius: "var(--r-md)",
               background: "var(--grad-primary)", color: "#fff",
               fontSize: "0.78rem", fontWeight: 800, textTransform: "none",
-              boxShadow: "0 4px 14px rgba(99,102,241,0.3)"
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)"
             }}
           >
             {isGenerating ? "Generating..." : "Generate AI Flashcards"}
@@ -133,6 +158,18 @@ const FlashcardsDeck = ({ subject = "General Science", topic = "Core Principles"
           </Box>
           <LinearProgress variant="determinate" value={progressPct} sx={{ height: 4, borderRadius: 2, bgcolor: "rgba(255,255,255,0.06)", "& .MuiLinearProgress-bar": { bgcolor: "var(--indigo)" } }} />
         </Box>
+      )}
+
+      {/* Optimistic-review status: kept visible, never blocking */}
+      {reviewError && (
+        <Typography sx={{ mb: 2, fontSize: "0.78rem", color: "#f87171", fontWeight: 600, textAlign: "center" }}>
+          {reviewError}
+        </Typography>
+      )}
+      {pendingReviews > 0 && !reviewError && (
+        <Typography sx={{ mb: 2, fontSize: "0.72rem", color: "var(--text-dim)", textAlign: "center" }}>
+          Saving review…
+        </Typography>
       )}
 
       {/* Card Content Area */}

@@ -67,7 +67,7 @@ const InputField = ({ label, type = "text", value, onChange, id, required, autoF
             borderRadius: "var(--r-md)", color: "#f1f5f9",
             fontSize: "0.98rem", fontFamily: "Plus Jakarta Sans, sans-serif",
             outline: "none", transition: "all 0.18s ease",
-            boxShadow: focused ? "0 0 0 3px rgba(99,102,241,0.12)" : "none",
+            boxShadow: focused ? "0 0 2px 8px rgba(0,0,0,0.4)" : "none",
             pr: endAdornment ? "48px" : "16px",
           }}
         />
@@ -87,7 +87,7 @@ const UsernameStatus = ({ status }) => {
   if (status === "idle") return null;
   const map = {
     checking: { icon: HourglassTopRoundedIcon, color: "var(--text-dim)",  text: "Checking…"    },
-    available:{ icon: CheckCircleRoundedIcon,  color: "var(--emerald)",   text: "Available ✓"  },
+    available:{ icon: CheckCircleRoundedIcon,  color: "var(--emerald)",   text: "Available "  },
     taken:    { icon: CancelRoundedIcon,       color: "var(--rose)",      text: "Already taken" },
     invalid:  { icon: CancelRoundedIcon,       color: "var(--amber)",     text: "Invalid format" },
   };
@@ -123,7 +123,7 @@ const FEATURES = [
   { icon: BoltIcon,                  label: "Start a focus session in seconds", color: "#818cf8" },
   { icon: SportsEsportsRoundedIcon,  label: "5 brain-refresh games on break",   color: "#34d399" },
   { icon: EmojiEventsRoundedIcon,    label: "Earn badges + freebies as you grow",color: "#fbbf24" },
-  { icon: ShowChartRoundedIcon,      label: "Track mastery across 15 subjects",  color: "#a78bfa" },
+  { icon: ShowChartRoundedIcon,      label: "Track mastery across 15 subjects",  color: "#a5b4fc" },
 ];
 
 /* ── Ambient particle ──────────────────────────────────────────────────────── */
@@ -238,14 +238,14 @@ const Signup = () => {
         width: "45%", flexShrink: 0, position: "relative",
         bgcolor: "#080d16", borderRight: "1px solid var(--border)", overflow: "hidden", minHeight: "100vh",
       }}>
-        <Particle style={{ width: 240, height: 240, top: "10%", left: "15%", background: "radial-gradient(circle,rgba(99,102,241,0.16),transparent 70%)", filter: "blur(50px)", duration: 6, delay: 0 }} />
-        <Particle style={{ width: 160, height: 160, bottom: "25%", right: "5%",  background: "radial-gradient(circle,rgba(16,185,129,0.12),transparent 70%)",  filter: "blur(35px)", duration: 5, delay: 2 }} />
-        <Particle style={{ width: 100, height: 100, top: "55%",  left: "5%",    background: "radial-gradient(circle,rgba(245,158,11,0.1),transparent 70%)",   filter: "blur(25px)", duration: 7, delay: 1 }} />
-        <Box sx={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "linear-gradient(rgba(99,102,241,1) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,1) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
+        <Particle style={{ width: 240, height: 240, top: "10%", left: "15%", background: "transparent", filter: "blur(50px)", duration: 6, delay: 0 }} />
+        <Particle style={{ width: 160, height: 160, bottom: "25%", right: "5%",  background: "transparent",  filter: "blur(35px)", duration: 5, delay: 2 }} />
+        <Particle style={{ width: 100, height: 100, top: "55%",  left: "5%",    background: "transparent",   filter: "blur(25px)", duration: 7, delay: 1 }} />
+        <Box sx={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "none" }} />
 
         <Box sx={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", p: 5 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: "auto" }}>
-            <Box sx={{ width: 40, height: 40, borderRadius: "var(--r-md)", background: "var(--grad-primary)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(99,102,241,0.4)" }}>
+            <Box sx={{ width: 40, height: 40, borderRadius: "var(--r-md)", background: "var(--grad-primary)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
               <AutoAwesomeIcon sx={{ color: "#fff", fontSize: 20 }} />
             </Box>
             <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.1rem", color: "#f1f5f9", letterSpacing: "-0.02em" }}>
@@ -268,7 +268,7 @@ const Signup = () => {
             <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: { md: "2.2rem", lg: "2.6rem" }, lineHeight: 1.1, letterSpacing: "-0.04em", color: "#f1f5f9", mb: 2.5 }}>
               Build your
               <br />
-              <Box component="span" sx={{ background: "var(--grad-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              <Box component="span" sx={{ color: "var(--indigo-lt)" }}>
                 focus stack
               </Box>
               <br />
@@ -412,8 +412,8 @@ const Signup = () => {
                 py: 1.4, fontSize: "0.95rem", fontFamily: "Plus Jakarta Sans, sans-serif",
                 fontWeight: 700, borderRadius: "var(--r-md)", mb: 2,
                 background: "var(--grad-primary)",
-                boxShadow: "0 6px 20px rgba(99,102,241,0.35)",
-                "&:hover": { boxShadow: "0 10px 28px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+                boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
                 "&.Mui-disabled": { opacity: 0.45 },
               }}
             >

@@ -98,7 +98,7 @@ const StudyRoomDock = ({ roomCode, participants, currentUserId, currentUsername,
       setDocTitle("");
       setDocContent("");
       await loadAll();
-      notifyActivity("dock", `📄 ${currentUsername} docked "${title}"`);
+      notifyActivity("dock", ` ${currentUsername} docked "${title}"`);
     } catch (err) {
       console.error("Create doc error:", err);
     } finally {
@@ -119,7 +119,7 @@ const StudyRoomDock = ({ roomCode, participants, currentUserId, currentUsername,
       setTodoTitle("");
       setTodoAssignee("");
       await loadAll();
-      notifyActivity("dock", `📝 ${currentUsername} added to-do "${title}"`);
+      notifyActivity("dock", ` ${currentUsername} added to-do "${title}"`);
     } catch (err) {
       console.error("Create todo error:", err);
     } finally {
@@ -133,7 +133,7 @@ const StudyRoomDock = ({ roomCode, participants, currentUserId, currentUsername,
       await roomAPI.updateTodo(roomCode, todo.id, { status: next });
       await loadAll();
       if (next === "done") {
-        notifyActivity("todo_done", `✅ ${currentUsername} completed "${todo.title}"`);
+        notifyActivity("todo_done", ` ${currentUsername} completed "${todo.title}"`);
       }
     } catch (err) {
       console.error("Toggle todo error:", err);
@@ -169,7 +169,7 @@ const StudyRoomDock = ({ roomCode, participants, currentUserId, currentUsername,
       await roomAPI.postItemComment(roomCode, expanded.type, expanded.id, text);
       setCommentInput("");
       await loadComments(expanded.type, expanded.id);
-      notifyActivity("comment", `💬 ${currentUsername} commented on "${expanded.title}"`);
+      notifyActivity("comment", ` ${currentUsername} commented on "${expanded.title}"`);
     } catch (err) {
       console.error("Post comment error:", err);
     }

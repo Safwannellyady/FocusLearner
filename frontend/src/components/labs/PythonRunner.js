@@ -62,7 +62,7 @@ const PythonRunner = ({ topic }) => {
       }
 
       setOutput("Running Python script in WebAssembly sandbox...");
-      
+
       // Capture stdout
       pyodide.runPython(`
 import sys
@@ -86,7 +86,7 @@ sys.stdout = io.StringIO()
       {/* Code Toolbar */}
       <Box sx={{ px: 2, py: 1, borderBottom: "1px solid var(--border)", bgcolor: "#0f172a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <CodeRoundedIcon sx={{ fontSize: 16, color: "#38bdf8" }} />
+          <CodeRoundedIcon sx={{ fontSize: 16, color: "#818cf8" }} />
           <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#f1f5f9" }}>
             python_main.py {topic ? `— ${topic}` : ""} (Pyodide WASM)
           </Typography>
@@ -104,9 +104,9 @@ sys.stdout = io.StringIO()
             startIcon={(isRunning || isInitializing) ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : <PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
             sx={{
               px: 2, py: 0.4, borderRadius: "var(--r-md)",
-              background: "linear-gradient(135deg,#38bdf8,#0284c7)", color: "#fff",
+              background: "#818cf8", color: "#fff",
               fontSize: "0.75rem", fontWeight: 800, textTransform: "none",
-              boxShadow: "0 2px 10px rgba(56,189,248,0.3)"
+              boxShadow: "0 2px 10px rgba(129,140,248,0.3)"
             }}
           >
             {isInitializing ? "Loading WASM..." : isRunning ? "Running..." : "Run WASM Code"}
@@ -128,7 +128,7 @@ sys.stdout = io.StringIO()
             spellCheck={false}
             sx={{
               flex: 1, width: "100%", border: "none", outline: "none",
-              bgcolor: "transparent", color: "#38bdf8",
+              bgcolor: "transparent", color: "#818cf8",
               fontFamily: "JetBrains Mono, monospace", fontSize: "0.82rem",
               lineHeight: 1.6, resize: "none"
             }}

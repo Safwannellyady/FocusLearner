@@ -37,8 +37,8 @@ const THEMES = [
   { id: "emerald",   name: "Cyber Mint",          primary: "#10b981", bg: "#06130e" },
   { id: "amber",     name: "Solar Gold",          primary: "#f59e0b", bg: "#130f06" },
   { id: "rose",      name: "Neon Rose",           primary: "#f43f5e", bg: "#14070a" },
-  { id: "violet",    name: "Deep Purple",         primary: "#a78bfa", bg: "#0f0918" },
-  { id: "sky",       name: "Midnight Cyan",       primary: "#38bdf8", bg: "#05111a" },
+  { id: "violet",    name: "Deep Purple",         primary: "#a5b4fc", bg: "#0f0918" },
+  { id: "sky",       name: "Midnight Cyan",       primary: "#818cf8", bg: "#05111a" },
 ];
 
 const DEFAULT_FAQS = [
@@ -51,7 +51,7 @@ const DEFAULT_FAQS = [
       },
       {
         q: "Can I adjust session or break durations mid-study?",
-        a: "Yes! Use the ⚡ Quick Focus panel in the top navigation bar or the Focus Timer controls to adjust or skip focus and break phases."
+        a: "Yes! Use the  Quick Focus panel in the top navigation bar or the Focus Timer controls to adjust or skip focus and break phases."
       }
     ]
   },
@@ -419,8 +419,8 @@ const Settings = () => {
                     disabled={saving}
                     sx={{
                       background: "var(--grad-primary)", fontWeight: 700, px: 3, borderRadius: "var(--r-md)",
-                      boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-                      "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.45)", transform: "translateY(-1px)" },
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                      "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
                     }}
                   >
                     Save Profile Changes
@@ -491,8 +491,8 @@ const Settings = () => {
                     disabled={saving}
                     sx={{
                       background: "var(--grad-primary)", fontWeight: 700, px: 3, borderRadius: "var(--r-md)",
-                      boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-                      "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.45)", transform: "translateY(-1px)" },
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                      "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
                     }}
                   >
                     Save Preferences
@@ -587,8 +587,8 @@ const Settings = () => {
                     disabled={saving || !security.currentPassword || !security.newPassword}
                     sx={{
                       background: "var(--grad-primary)", fontWeight: 700, px: 3, borderRadius: "var(--r-md)",
-                      boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-                      "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.45)", transform: "translateY(-1px)" },
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                      "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
                     }}
                   >
                     Update Password
@@ -789,11 +789,11 @@ const Settings = () => {
                         </Typography>
                         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                           {[
-                            { id: "bug",         label: "🐛 Bug Report" },
-                            { id: "feature",     label: "💡 Feature Request" },
-                            { id: "account",     label: "🔐 Account / Data" },
-                            { id: "performance", label: "⚡ Performance" },
-                            { id: "general",     label: "💬 General Question" },
+                            { id: "bug",         label: "Bug Report" },
+                            { id: "feature",     label: "Feature Request" },
+                            { id: "account",     label: "Account / Data" },
+                            { id: "performance", label: "Performance" },
+                            { id: "general",     label: "General Question" },
                           ].map(c => (
                             <Chip
                               key={c.id} label={c.label} size="small"
@@ -881,8 +881,8 @@ const Settings = () => {
                           disabled={submittingTicket || !ticketSubject.trim() || !ticketMessage.trim()}
                           sx={{
                             background: "var(--grad-primary)", fontWeight: 700, px: 3, borderRadius: "var(--r-md)",
-                            boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-                            "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.45)", transform: "translateY(-1px)" },
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                            "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
                             "&.Mui-disabled": { opacity: 0.4 },
                           }}
                         >

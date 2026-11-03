@@ -48,7 +48,7 @@ class ErrorBoundary extends React.Component {
         }}
         role="alert"
       >
-        <Typography sx={{ fontSize: "2.5rem" }}>😵</Typography>
+        <Typography sx={{ fontSize: "2.5rem" }}></Typography>
         <Typography
           sx={{
             fontFamily: "Outfit, sans-serif",

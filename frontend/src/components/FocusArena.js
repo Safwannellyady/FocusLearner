@@ -78,7 +78,7 @@ const FocusArena = () => {
         subject_focus: newRoomSubject.trim(),
         target_duration: Number(targetDuration)
       });
-      
+
       setRoom(res.data.room);
       setSuccessMsg(`Room created! Code: ${res.data.room.room_code}`);
     } catch (err) {
@@ -97,7 +97,7 @@ const FocusArena = () => {
       const res = await api.post('/rooms/join', {
         room_code: joinCodeInput.trim().toUpperCase()
       });
-      
+
       setRoom(res.data.room);
       setSuccessMsg(`Successfully joined ${res.data.room.title}!`);
     } catch (err) {
@@ -113,7 +113,7 @@ const FocusArena = () => {
         message: chatInput.trim(),
         is_review_note: false
       });
-      
+
       setChatInput('');
       fetchMessages(room.room_code);
     } catch (err) {
@@ -137,7 +137,7 @@ const FocusArena = () => {
         topic_summary: reviewSummaryInput.trim(),
         scheduled_at: `${reviewTimeInput}:00Z`
       });
-      
+
       setReviewSummaryInput('');
       setSuccessMsg('After-study review discussion scheduled!');
       fetchRoomStatus(room.room_code);
@@ -158,9 +158,9 @@ const FocusArena = () => {
           </Typography>
         </Box>
         {room && (
-          <Chip 
-            label={`Room Code: ${room.room_code}`} 
-            sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: '#fff', fontWeight: 800, fontSize: '1rem', py: 2.5, px: 2 }} 
+          <Chip
+            label={`Room Code: ${room.room_code}`}
+            sx={{ background: '#6366f1', color: '#fff', fontWeight: 800, fontSize: '1rem', py: 2.5, px: 2 }}
           />
         )}
       </Box>
@@ -175,33 +175,33 @@ const FocusArena = () => {
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#f8fafc', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AddCircle sx={{ color: '#6366f1' }} /> Create a Study Room
               </Typography>
-              <TextField 
-                label="Room Title / Topic" 
-                fullWidth 
-                value={newRoomTitle} 
-                onChange={(e) => setNewRoomTitle(e.target.value)} 
-                sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#94a3b8' } }} 
+              <TextField
+                label="Room Title / Topic"
+                fullWidth
+                value={newRoomTitle}
+                onChange={(e) => setNewRoomTitle(e.target.value)}
+                sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#94a3b8' } }}
               />
-              <TextField 
-                label="Subject Focus" 
-                fullWidth 
-                value={newRoomSubject} 
-                onChange={(e) => setNewRoomSubject(e.target.value)} 
-                sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#94a3b8' } }} 
+              <TextField
+                label="Subject Focus"
+                fullWidth
+                value={newRoomSubject}
+                onChange={(e) => setNewRoomSubject(e.target.value)}
+                sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#94a3b8' } }}
               />
-              <TextField 
-                label="Pomodoro Target Duration (minutes)" 
-                type="number" 
-                fullWidth 
-                value={targetDuration} 
-                onChange={(e) => setTargetDuration(e.target.value)} 
-                sx={{ mb: 2.5, input: { color: '#fff' }, label: { color: '#94a3b8' } }} 
+              <TextField
+                label="Pomodoro Target Duration (minutes)"
+                type="number"
+                fullWidth
+                value={targetDuration}
+                onChange={(e) => setTargetDuration(e.target.value)}
+                sx={{ mb: 2.5, input: { color: '#fff' }, label: { color: '#94a3b8' } }}
               />
-              <Button 
-                variant="contained" 
-                fullWidth 
+              <Button
+                variant="contained"
+                fullWidth
                 onClick={handleCreateRoom}
-                sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', py: 1.2, fontWeight: 700, textTransform: 'none' }}
+                sx={{ background: '#6366f1', py: 1.2, fontWeight: 700, textTransform: 'none' }}
               >
                 Launch New Study Arena
               </Button>
@@ -216,16 +216,16 @@ const FocusArena = () => {
               <Typography variant="body2" sx={{ color: '#94a3b8', mb: 2 }}>
                 Enter the 6-character room code shared by your friend or study group to join their Pomodoro timer and discussion room.
               </Typography>
-              <TextField 
-                label="6-Character Room Code" 
-                fullWidth 
-                value={joinCodeInput} 
-                onChange={(e) => setJoinCodeInput(e.target.value)} 
-                sx={{ mb: 2.5, input: { color: '#fff', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 2 }, label: { color: '#94a3b8' } }} 
+              <TextField
+                label="6-Character Room Code"
+                fullWidth
+                value={joinCodeInput}
+                onChange={(e) => setJoinCodeInput(e.target.value)}
+                sx={{ mb: 2.5, input: { color: '#fff', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 2 }, label: { color: '#94a3b8' } }}
               />
-              <Button 
-                variant="outlined" 
-                fullWidth 
+              <Button
+                variant="outlined"
+                fullWidth
                 onClick={handleJoinRoom}
                 sx={{ borderColor: '#10b981', color: '#10b981', py: 1.2, fontWeight: 700, textTransform: 'none', '&:hover': { background: 'rgba(16, 185, 129, 0.1)' } }}
               >
@@ -237,8 +237,8 @@ const FocusArena = () => {
       ) : (
         <>
           <Paper sx={{ mb: 3, background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 3 }}>
-            <Tabs 
-              value={activeTab} 
+            <Tabs
+              value={activeTab}
               onChange={(e, val) => setActiveTab(val)}
               sx={{ borderBottom: 1, borderColor: 'rgba(255,255,255,0.08)', '.MuiTab-root': { color: '#94a3b8', fontWeight: 600, textTransform: 'none', minHeight: 48 } }}
             >
@@ -254,8 +254,8 @@ const FocusArena = () => {
                 <Paper sx={{ p: 3, background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 3, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                   <Typography variant="h5" sx={{ fontWeight: 800, color: '#f8fafc', mb: 1 }}>{room.title}</Typography>
                   <Chip label={room.subject_focus} size="small" sx={{ background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', mb: 3, fontWeight: 600 }} />
-                  
-                  <Box sx={{ width: 180, height: 180, borderRadius: '50%', border: '5px solid #6366f1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 24px rgba(99, 102, 241, 0.25)', mb: 3 }}>
+
+                  <Box sx={{ width: 180, height: 180, borderRadius: '50%', border: '5px solid #6366f1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.4)', mb: 3 }}>
                     <Typography variant="h3" sx={{ fontWeight: 800, color: '#fff', letterSpacing: -1 }}>
                       {room.target_duration}:00
                     </Typography>
@@ -277,12 +277,12 @@ const FocusArena = () => {
                     <EmojiEvents sx={{ color: '#f59e0b' }} /> Active Classmates ({room.participants?.length || 1})
                   </Typography>
                   <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 2 }} />
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: 1.5, 
-                      overflowY: 'auto', 
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1.5,
+                      overflowY: 'auto',
                       maxHeight: '320px',
                       pr: 0.5,
                       '&::-webkit-scrollbar': { width: '4px' },
@@ -303,7 +303,7 @@ const FocusArena = () => {
                             </Typography>
                           </Box>
                         </Box>
-                        <Chip label={`${p.current_streak || 1} 🔥`} size="small" sx={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', fontWeight: 700 }} />
+                        <Chip label={`${p.current_streak || 1} `} size="small" sx={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', fontWeight: 700 }} />
                       </Box>
                     ))}
                   </Box>
@@ -318,44 +318,44 @@ const FocusArena = () => {
               <Grid item xs={12} md={5}>
                 <Paper sx={{ p: 3, background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#f8fafc', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Schedule sx={{ color: '#8b5cf6' }} /> Scheduled Reviews
+                    <Schedule sx={{ color: '#6366f1' }} /> Scheduled Reviews
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#94a3b8', mb: 2, display: 'block' }}>
                     Schedule when your study group will meet to summarize formulas and analyze tricky concepts.
                   </Typography>
 
                   <Box sx={{ mb: 2, p: 2, background: 'rgba(30, 41, 59, 0.4)', borderRadius: 2 }}>
-                    <TextField 
-                      label="Review Session Title" 
-                      fullWidth 
-                      size="small" 
-                      value={reviewTitleInput} 
-                      onChange={(e) => setReviewTitleInput(e.target.value)} 
-                      sx={{ mb: 1.5, input: { color: '#fff' }, label: { color: '#94a3b8' } }} 
+                    <TextField
+                      label="Review Session Title"
+                      fullWidth
+                      size="small"
+                      value={reviewTitleInput}
+                      onChange={(e) => setReviewTitleInput(e.target.value)}
+                      sx={{ mb: 1.5, input: { color: '#fff' }, label: { color: '#94a3b8' } }}
                     />
-                    <TextField 
-                      label="Key Formulas / Topics to Review" 
-                      fullWidth 
-                      size="small" 
-                      value={reviewSummaryInput} 
-                      onChange={(e) => setReviewSummaryInput(e.target.value)} 
-                      sx={{ mb: 1.5, input: { color: '#fff' }, label: { color: '#94a3b8' } }} 
+                    <TextField
+                      label="Key Formulas / Topics to Review"
+                      fullWidth
+                      size="small"
+                      value={reviewSummaryInput}
+                      onChange={(e) => setReviewSummaryInput(e.target.value)}
+                      sx={{ mb: 1.5, input: { color: '#fff' }, label: { color: '#94a3b8' } }}
                     />
-                    <TextField 
-                      label="Schedule Time" 
-                      type="datetime-local" 
-                      fullWidth 
-                      size="small" 
-                      value={reviewTimeInput} 
-                      onChange={(e) => setReviewTimeInput(e.target.value)} 
-                      sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#94a3b8' } }} 
+                    <TextField
+                      label="Schedule Time"
+                      type="datetime-local"
+                      fullWidth
+                      size="small"
+                      value={reviewTimeInput}
+                      onChange={(e) => setReviewTimeInput(e.target.value)}
+                      sx={{ mb: 2, input: { color: '#fff' }, label: { color: '#94a3b8' } }}
                     />
-                    <Button 
-                      variant="contained" 
-                      fullWidth 
-                      size="small" 
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      size="small"
                       onClick={handleScheduleReview}
-                      sx={{ background: '#8b5cf6', textTransform: 'none', fontWeight: 600, py: 1 }}
+                      sx={{ background: '#6366f1', textTransform: 'none', fontWeight: 600, py: 1 }}
                     >
                       Schedule Classmate Review
                     </Button>
@@ -364,14 +364,14 @@ const FocusArena = () => {
                   <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', my: 1.5 }} />
 
                   <Typography variant="subtitle2" sx={{ color: '#cbd5e1', fontWeight: 700, mb: 1 }}>Upcoming Review Sessions:</Typography>
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: 1, 
-                      overflowY: 'auto', 
-                      flexGrow: 1, 
-                      maxHeight: '180px', 
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1,
+                      overflowY: 'auto',
+                      flexGrow: 1,
+                      maxHeight: '180px',
                       pr: 0.5,
                       '&::-webkit-scrollbar': { width: '4px' },
                       '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }
@@ -381,10 +381,10 @@ const FocusArena = () => {
                       <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>No post-study review sessions scheduled yet.</Typography>
                     ) : (
                       room.scheduled_discussions?.map((sd) => (
-                        <Box key={sd.id} sx={{ p: 1.2, background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: 2 }}>
+                        <Box key={sd.id} sx={{ p: 1.2, background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: 2 }}>
                           <Typography variant="body2" sx={{ fontWeight: 700, color: '#f8fafc' }}>{sd.title}</Typography>
-                          <Typography variant="caption" sx={{ color: '#c4b5fd', display: 'block', mb: 0.5 }}>
-                            ⏰ {new Date(sd.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(sd.scheduled_at).toLocaleDateString()})
+                          <Typography variant="caption" sx={{ color: '#a5b4fc', display: 'block', mb: 0.5 }}>
+                            {new Date(sd.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(sd.scheduled_at).toLocaleDateString()})
                           </Typography>
                           {sd.topic_summary && <Typography variant="caption" sx={{ color: '#e2e8f0', display: 'block', wordBreak: 'break-word' }}>Topic: {sd.topic_summary}</Typography>}
                         </Box>
@@ -405,16 +405,16 @@ const FocusArena = () => {
                   </Typography>
                   <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 2 }} />
 
-                  <Box 
+                  <Box
                     id="chat-scroll-wrapper"
-                    sx={{ 
-                      flex: 1, 
-                      overflowY: 'auto', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: 1.5, 
-                      mb: 2, 
-                      pr: 1, 
+                    sx={{
+                      flex: 1,
+                      overflowY: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1.5,
+                      mb: 2,
+                      pr: 1,
                       maxHeight: '340px',
                       '&::-webkit-scrollbar': { width: '4px' },
                       '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }
@@ -438,18 +438,18 @@ const FocusArena = () => {
                   </Box>
 
                   <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
-                    <TextField 
-                      fullWidth 
-                      size="small" 
-                      placeholder="Type discussion message or formula note..." 
-                      value={chatInput} 
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Type discussion message or formula note..."
+                      value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       disabled={isSending}
                       sx={{ input: { color: '#fff' } }}
                     />
-                    <Button 
-                      variant="contained" 
+                    <Button
+                      variant="contained"
                       onClick={handleSendMessage}
                       disabled={isSending}
                       sx={{ background: '#10b981', minWidth: 48, px: 2 }}

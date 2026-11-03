@@ -34,7 +34,7 @@ const Leaderboard = ({ moduleId = 'global' }) => {
         try {
             const response = await gameAPI.getLeaderboard(moduleId);
             let board = response?.data?.leaderboard || [];
-            
+
             // Check if current user is in leaderboard, else include them
             if (currentUser && !board.some(p => (p.user_name || p.username) === currentName)) {
                 board.push({
@@ -67,7 +67,7 @@ const Leaderboard = ({ moduleId = 'global' }) => {
         <Paper sx={{
             p: 3,
             borderRadius: 4,
-            background: 'linear-gradient(180deg, rgba(20,20,35,0.8) 0%, rgba(30,30,50,0.8) 100%)',
+            background: 'rgba(20,20,35,0.8)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255,255,255,0.1)',
             color: 'white',
@@ -123,7 +123,7 @@ const Leaderboard = ({ moduleId = 'global' }) => {
                                         </Typography>
                                     }
                                 />
-                                <Typography variant="h6" color="#a78bfa" fontWeight="bold">
+                                <Typography variant="h6" color="#a5b4fc" fontWeight="bold">
                                     {(player.score || 0).toLocaleString()} XP
                                 </Typography>
                             </ListItem>

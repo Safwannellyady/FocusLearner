@@ -67,7 +67,7 @@ const InputField = ({ label, type = "text", value, onChange, id, autoFocus, endA
           fontFamily: "Plus Jakarta Sans, sans-serif",
           outline: "none",
           transition: "all 0.18s ease",
-          boxShadow: focused ? "0 0 0 3px rgba(99,102,241,0.12)" : "none",
+          boxShadow: focused ? "0 0 2px 8px rgba(0,0,0,0.4)" : "none",
           pr: endAdornment ? "48px" : "16px",
         }}
       />
@@ -130,7 +130,7 @@ const FEATURES = [
   { icon: BoltIcon,                  label: "AI-powered focus sessions",     color: "#818cf8" },
   { icon: SportsEsportsRoundedIcon,  label: "Brain-refresh games on breaks", color: "#34d399" },
   { icon: ShowChartRoundedIcon,      label: "Deep learning analytics",       color: "#fbbf24" },
-  { icon: SchoolRoundedIcon,         label: "15 subjects, 100+ micro-topics",color: "#a78bfa" },
+  { icon: SchoolRoundedIcon,         label: "15 subjects, 100+ micro-topics",color: "#a5b4fc" },
 ];
 
 /* ── Floating particle (ambient bg) ───────────────────────────────────────── */
@@ -215,21 +215,20 @@ const Login = () => {
         overflow: "hidden", minHeight: "100vh",
       }}>
         {/* Ambient particles */}
-        <Particle style={{ width: 220, height: 220, top: "15%", left: "20%", background: "radial-gradient(circle,rgba(99,102,241,0.18),transparent 70%)", filter: "blur(40px)", duration: 6, delay: 0 }} />
-        <Particle style={{ width: 160, height: 160, bottom: "20%", right: "10%", background: "radial-gradient(circle,rgba(59,130,246,0.14),transparent 70%)", filter: "blur(30px)", duration: 5, delay: 1.5 }} />
-        <Particle style={{ width: 100, height: 100, top: "60%", left: "10%", background: "radial-gradient(circle,rgba(245,158,11,0.1),transparent 70%)", filter: "blur(20px)", duration: 7, delay: 0.8 }} />
+        <Particle style={{ width: 220, height: 220, top: "15%", left: "20%", background: "transparent", filter: "blur(40px)", duration: 6, delay: 0 }} />
+        <Particle style={{ width: 160, height: 160, bottom: "20%", right: "10%", background: "transparent", filter: "blur(30px)", duration: 5, delay: 1.5 }} />
+        <Particle style={{ width: 100, height: 100, top: "60%", left: "10%", background: "transparent", filter: "blur(20px)", duration: 7, delay: 0.8 }} />
 
         {/* Grid overlay */}
         <Box sx={{
           position: "absolute", inset: 0, opacity: 0.04,
-          backgroundImage: "linear-gradient(rgba(99,102,241,1) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,1) 1px,transparent 1px)",
-          backgroundSize: "40px 40px",
+          backgroundImage: "none",
         }} />
 
         <Box sx={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", p: 5 }}>
           {/* Logo */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: "auto" }}>
-            <Box sx={{ width: 40, height: 40, borderRadius: "var(--r-md)", background: "var(--grad-primary)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(99,102,241,0.4)" }}>
+            <Box sx={{ width: 40, height: 40, borderRadius: "var(--r-md)", background: "var(--grad-primary)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
               <AutoAwesomeIcon sx={{ color: "#fff", fontSize: 20 }} />
             </Box>
             <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1.1rem", color: "#f1f5f9", letterSpacing: "-0.02em" }}>
@@ -247,7 +246,7 @@ const Login = () => {
             <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: { md: "2.4rem", lg: "2.8rem" }, lineHeight: 1.08, letterSpacing: "-0.04em", color: "#f1f5f9", mb: 2.5 }}>
               Your mind is
               <br />the lab.{" "}
-              <Box component="span" sx={{ background: "var(--grad-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              <Box component="span" sx={{ color: "var(--indigo-lt)" }}>
                 Focus is
               </Box>
               <br />the experiment.
@@ -362,8 +361,8 @@ const Login = () => {
                 py: 1.4, fontSize: "0.95rem", fontFamily: "Plus Jakarta Sans, sans-serif",
                 fontWeight: 700, borderRadius: "var(--r-md)", mb: 2,
                 background: "var(--grad-primary)",
-                boxShadow: "0 6px 20px rgba(99,102,241,0.35)",
-                "&:hover": { boxShadow: "0 10px 28px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+                boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
                 "&.Mui-disabled": { opacity: 0.5 },
               }}
             >

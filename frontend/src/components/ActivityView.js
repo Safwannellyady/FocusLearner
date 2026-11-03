@@ -87,8 +87,8 @@ const ActivityView = ({ activity, onSubmit, result, onNext }) => {
 
                     {/* Explanation Highlight */}
                     {result.explanation && (
-                        <Box mt={2} p={2} bgcolor="rgba(59, 130, 246, 0.1)" borderRadius={2} borderLeft="4px solid #3b82f6">
-                            <Typography variant="subtitle2" color="#60a5fa" gutterBottom fontWeight="bold">WHY IS THIS?</Typography>
+                        <Box mt={2} p={2} bgcolor="rgba(99, 102, 241, 0.1)" borderRadius={2} borderLeft="4px solid #6366f1">
+                            <Typography variant="subtitle2" color="#818cf8" gutterBottom fontWeight="bold">WHY IS THIS?</Typography>
                             <Typography variant="body2" color="rgb(220, 230, 250)">
                                 {result.explanation}
                             </Typography>
@@ -112,7 +112,7 @@ const ActivityView = ({ activity, onSubmit, result, onNext }) => {
                     onClick={onNext}
                     sx={{
                         px: 6, py: 1.5, fontSize: '1.1rem', borderRadius: 2,
-                        background: result.is_correct ? 'linear-gradient(90deg, #16a34a 0%, #15803d 100%)' : 'rgba(255,255,255,0.1)'
+                        background: result.is_correct ? '#16a34a' : 'rgba(255,255,255,0.1)'
                     }}
                 >
                     {result.is_correct ? "Continue Journey" : "Okay, Got it"}
@@ -198,13 +198,13 @@ const VirtualLab = ({ activity, onSubmit }) => {
     return (
         <Paper sx={{ p: 3, bgcolor: '#0f172a', color: 'white', borderRadius: 3, border: '1px solid #334155' }}>
             <Box display="flex" alignItems="center" mb={2}>
-                <ScienceIcon sx={{ color: '#38bdf8', mr: 1, fontSize: 28 }} />
+                <ScienceIcon sx={{ color: '#818cf8', mr: 1, fontSize: 28 }} />
                 <Typography variant="h6" fontWeight={700} color="#fff">{activity.title || 'AI Interactive Lab'}</Typography>
             </Box>
 
             {activity.scenario && (
-                <Box sx={{ p: 2, mb: 3, bgcolor: '#1e293b', borderRadius: 2, borderLeft: '4px solid #38bdf8' }}>
-                    <Typography variant="caption" fontWeight={700} color="#38bdf8" display="block" mb={0.5}>LAB SCENARIO</Typography>
+                <Box sx={{ p: 2, mb: 3, bgcolor: '#1e293b', borderRadius: 2, borderLeft: '4px solid #818cf8' }}>
+                    <Typography variant="caption" fontWeight={700} color="#818cf8" display="block" mb={0.5}>LAB SCENARIO</Typography>
                     <Typography variant="body2" sx={{ color: '#e2e8f0', lineHeight: 1.6 }}>
                         {activity.scenario}
                     </Typography>
@@ -232,7 +232,7 @@ const VirtualLab = ({ activity, onSubmit }) => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             transition: 'all 0.2s',
-                                            '&:hover': { borderColor: '#38bdf8' }
+                                            '&:hover': { borderColor: '#818cf8' }
                                         }}
                                     >
                                         <Box sx={{
@@ -271,9 +271,9 @@ const VirtualLab = ({ activity, onSubmit }) => {
                         <FormControlLabel
                             key={opt}
                             value={opt}
-                            control={<Radio sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#38bdf8' } }} />}
+                            control={<Radio sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#818cf8' } }} />}
                             label={<Typography variant="body2" sx={{ color: selectedOption === opt ? '#fff' : '#cbd5e1', fontWeight: selectedOption === opt ? 600 : 400 }}>{opt}</Typography>}
-                            sx={{ mb: 1, p: 1, borderRadius: 1.5, bgcolor: selectedOption === opt ? 'rgba(56, 189, 248, 0.1)' : 'transparent', border: selectedOption === opt ? '1px solid #38bdf8' : '1px solid transparent' }}
+                            sx={{ mb: 1, p: 1, borderRadius: 1.5, bgcolor: selectedOption === opt ? 'rgba(129, 140, 248, 0.1)' : 'transparent', border: selectedOption === opt ? '1px solid #818cf8' : '1px solid transparent' }}
                         />
                     ))}
                 </RadioGroup>

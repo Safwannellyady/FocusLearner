@@ -158,10 +158,10 @@ const FocusLock = () => {
                 <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#94a3b8' }}>Analyzing recent study cadence...</Typography>
               </Box>
             ) : recommendation ? (
-              <Box sx={{ p: 2.5, background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(139, 92, 246, 0.1) 100%)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: 2.5 }}>
+              <Box sx={{ p: 2.5, background: 'rgba(99, 102, 241, 0.18)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: 2.5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Chip label={recommendation.mode} size="small" sx={{ background: '#6366f1', color: '#fff', fontWeight: 800 }} />
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#c4b5fd' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#a5b4fc' }}>
                     {recommendation.sprint_minutes}m Focus / {recommendation.break_minutes}m Break
                   </Typography>
                 </Box>
@@ -226,7 +226,7 @@ const FocusLock = () => {
                 disabled={loading}
                 startIcon={<PlayArrow />}
                 sx={{
-                  background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                  background: '#6366f1',
                   color: '#fff',
                   fontWeight: 700,
                   py: 1.5,

@@ -75,7 +75,7 @@ const WeeklyChart = ({ data }) => {
                   width: "100%", height: "100%", minHeight: 4,
                   borderRadius: "6px 6px 4px 4px",
                   background: isToday ? "var(--grad-primary)" : "rgba(99,102,241,0.25)",
-                  boxShadow: isToday ? "0 0 12px rgba(99,102,241,0.4)" : "none",
+                  boxShadow: isToday ? "0 2px 8px rgba(0,0,0,0.4)" : "none",
                   transition: "background 0.2s",
                 }} />
               </motion.div>
@@ -165,7 +165,7 @@ const Heatmap = ({ daysData }) => {
               sx={{
                 width: "100%", aspectRatio: "1", borderRadius: "4px",
                 bgcolor: intensities[v] || intensities[0],
-                boxShadow: v === 3 ? "0 0 6px rgba(99,102,241,0.5)" : "none",
+                boxShadow: v === 3 ? "0 2px 8px rgba(0,0,0,0.4)" : "none",
                 transition: "all 0.15s",
                 "&:hover": { transform: "scale(1.2)", cursor: "default" },
               }}
@@ -221,7 +221,7 @@ const AnalyticsDashboard = () => {
           }
 
           if (Array.isArray(d.distribution) && d.distribution.length > 0) {
-            const colors = ["#6366f1", "#ec4899", "#a78bfa", "#10b981", "#3b82f6"];
+            const colors = ["#6366f1", "#ec4899", "#a5b4fc", "#10b981", "#818cf8"];
             // Backend now returns actual focus minutes per subject (no proxy).
             const formattedSubj = d.distribution.map((item, idx) => ({
               name: item.name || "General",
@@ -266,7 +266,7 @@ const AnalyticsDashboard = () => {
       {/* Stats grid */}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3,1fr)", md: "repeat(5,1fr)" }, gap: 1.5, mb: 2.5 }}>
         <StatCard icon={AccessTimeRoundedIcon}              label="Total Focus"  value={`${Math.floor(s.total_minutes / 60)}h ${s.total_minutes % 60}m`} sub="all-time"            color="#6366f1" delay={0}    />
-        <StatCard icon={CalendarMonthRoundedIcon}            label="Sessions"     value={s.total_sessions}                                                 sub="completed"          color="#a78bfa" delay={0.05} />
+        <StatCard icon={CalendarMonthRoundedIcon}            label="Sessions"     value={s.total_sessions}                                                 sub="completed"          color="#a5b4fc" delay={0.05} />
         <StatCard icon={BoltRoundedIcon}                     label="Total XP"     value={s.xp}                                                             sub="points earned"      color="#fbbf24" delay={0.1}  />
         <StatCard icon={LocalFireDepartmentRoundedIcon}      label="Streak"       value={`${s.streak}d`}                                                   sub="current streak"     color="#f43f5e" delay={0.15} />
         <StatCard icon={TrendingUpRoundedIcon}               label="Daily Avg"    value={`${s.avg_per_day}m`}                                              sub="minutes/day"        color="#10b981" delay={0.2}  />
