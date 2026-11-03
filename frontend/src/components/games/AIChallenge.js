@@ -85,7 +85,7 @@ const AIChallenge = () => {
                 </Button>
                 <Typography variant="h4" sx={{ fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}>
                     <AutoAwesomeIcon sx={{ color: '#a78bfa' }} />
-                    <span style={{ background: 'linear-gradient(45deg, #a78bfa, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <span style={{ color: '#a78bfa' }}>
                         AI Adaptive Challenge
                     </span>
                 </Typography>
@@ -120,7 +120,7 @@ const AIChallenge = () => {
                         <Chip
                             label={`${challenge.points} XP`}
                             sx={{
-                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                background: '#f59e0b',
                                 color: 'black',
                                 fontWeight: 700
                             }}
@@ -181,7 +181,7 @@ const AIChallenge = () => {
                                 fullWidth
                                 sx={{
                                     py: 1.5,
-                                    background: 'linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%)',
+                                    background: '#6b21a8',
                                     fontWeight: 700,
                                     fontSize: '1rem'
                                 }}

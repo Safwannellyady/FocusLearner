@@ -17,7 +17,7 @@ const FocusMonitor = ({ active, onDistractionStart, onDistractionEnd }) => {
             if (document.hidden) {
                 // User left the tab
                 lastHiddenTime.current = Date.now();
-                console.log("🙈 Distraction Started at", new Date(lastHiddenTime.current).toLocaleTimeString());
+                console.log("Distraction Started at", new Date(lastHiddenTime.current).toLocaleTimeString());
                 if (onDistractionStart) onDistractionStart();
             } else {
                 // User returned to tab
@@ -25,7 +25,7 @@ const FocusMonitor = ({ active, onDistractionStart, onDistractionEnd }) => {
                     const now = Date.now();
                     const durationSeconds = Math.floor((now - lastHiddenTime.current) / 1000);
 
-                    console.log(`👀 Distraction Ended. Duration: ${durationSeconds}s`);
+                    console.log(` Distraction Ended. Duration: ${durationSeconds}s`);
 
                     // Only log significant distractions (> 2 seconds to avoid accidental flicks)
                     if (durationSeconds > 2) {

@@ -331,43 +331,43 @@ const LectureDetail = () => {
             )}
 
             {/* High-Tech Cockpit Tabs Switcher */}
-            <Box sx={{ 
-              bgcolor: 'rgba(14, 18, 38, 0.75)', 
+            <Box sx={{
+              bgcolor: 'rgba(14, 18, 38, 0.75)',
               backdropFilter: 'blur(20px)',
-              borderRadius: '20px', 
-              border: '1px solid rgba(255, 255, 255, 0.12)', 
-              p: 0.8, 
+              borderRadius: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              p: 0.8,
               mb: 3,
               boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
             }}>
-              <Tabs 
-                value={activeTab} 
-                onChange={(e, val) => setActiveTab(val)} 
+              <Tabs
+                value={activeTab}
+                onChange={(e, val) => setActiveTab(val)}
                 variant="fullWidth"
-                sx={{ 
-                  '& .MuiTabs-indicator': { 
-                    height: '100%', 
-                    borderRadius: '16px', 
-                    bgcolor: 'rgba(0, 242, 254, 0.15)', 
+                sx={{
+                  '& .MuiTabs-indicator': {
+                    height: '100%',
+                    borderRadius: '16px',
+                    bgcolor: 'rgba(0, 242, 254, 0.15)',
                     border: '1px solid rgba(0, 242, 254, 0.45)',
-                    boxShadow: '0 0 20px rgba(0, 242, 254, 0.25)',
-                    zIndex: 0 
-                  }, 
-                  '& .MuiTab-root': { 
-                    textTransform: 'none', 
-                    fontWeight: 700, 
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                    zIndex: 0
+                  },
+                  '& .MuiTab-root': {
+                    textTransform: 'none',
+                    fontWeight: 700,
                     fontFamily: 'Outfit, sans-serif',
                     fontSize: '0.95rem',
-                    color: '#94a3b8', 
+                    color: '#94a3b8',
                     zIndex: 1,
                     minHeight: 46,
                     borderRadius: '16px',
                     transition: 'all 0.3s ease'
-                  }, 
-                  '& .Mui-selected': { 
+                  },
+                  '& .Mui-selected': {
                     color: '#00f2fe !important',
-                    textShadow: '0 0 12px rgba(0, 242, 254, 0.6)'
-                  } 
+                    textShadow: 'none'
+                  }
                 }}
               >
                 <Tab icon={<ScienceIcon fontSize="small" />} iconPosition="start" label="Virtual AI Lab" />
@@ -396,7 +396,7 @@ const LectureDetail = () => {
                         <Box className="epic-card" p={3.5} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '20px !important' }}>
                           <Box>
                             <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff">
-                              ⚡ Want a Scored Problem Challenge?
+                               Want a Scored Problem Challenge?
                             </Typography>
                             <Typography variant="body2" color="#94a3b8">
                               Our AI will generate a specific hypothesis & multi-step practice challenge for {lecture?.topic}.
@@ -409,7 +409,7 @@ const LectureDetail = () => {
                             startIcon={labLoading ? <CircularProgress size={18} color="inherit" /> : <ScienceIcon />}
                             sx={{ fontSize: '0.95rem !important', py: '12px !important', px: '28px !important' }}
                           >
-                            {labLoading ? 'Generating Challenge...' : '⚡ Generate Practice Problem →'}
+                            {labLoading ? 'Generating Challenge...' : 'Generate Practice Problem →'}
                           </Button>
                         </Box>
                       ) : (
@@ -422,12 +422,12 @@ const LectureDetail = () => {
                               </Typography>
                             </Box>
                             <Button className="epic-btn-outline" size="small" onClick={() => { setLabActivity(null); setLabResult(null); }}>
-                              🔄 Close Problem
+                               Close Problem
                             </Button>
                           </Box>
                           {labResult && (
                             <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 3, borderRadius: '16px', bgcolor: labResult.is_correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 242, 254, 0.15)', color: '#ffffff', border: labResult.is_correct ? '1px solid #10b981' : '1px solid #00f2fe' }}>
-                              <Typography fontWeight="800" fontFamily="Outfit, sans-serif">{labResult.is_correct ? "🏆 Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
+                              <Typography fontWeight="800" fontFamily="Outfit, sans-serif">{labResult.is_correct ? "Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
                               <Typography variant="body2" sx={{ mt: 0.5 }}>{labResult.feedback}</Typography>
                             </Alert>
                           )}
@@ -442,7 +442,7 @@ const LectureDetail = () => {
                         <Typography variant="h5" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                           <SportsEsportsIcon sx={{ color: '#34d399', fontSize: 30 }} /> Gamified Arena: <span style={{ color: '#34d399' }}>{lecture?.subject || 'Curriculum'}</span>
                         </Typography>
-                        <span className="epic-badge-emerald">🎮 REAL-TIME ENGINE</span>
+                        <span className="epic-badge-emerald"> REAL-TIME ENGINE</span>
                       </Box>
                       <Box sx={{ minHeight: '520px' }}>
                         <GameLab embedded={true} subject={lecture?.subject} topic={lecture?.topic} gameConfig={lecture?.game_config} />
@@ -453,10 +453,10 @@ const LectureDetail = () => {
                     <Box sx={{ mt: 1 }}>
                       {!showQuiz ? (
                         <Box className="epic-card" p={6} sx={{ textAlign: 'center', borderRadius: '24px !important', border: '1px solid rgba(157, 78, 221, 0.4) !important' }}>
-                          <Box sx={{ width: 84, height: 84, mx: 'auto', mb: 3, borderRadius: '24px', background: 'radial-gradient(circle, rgba(157, 78, 221, 0.35) 0%, rgba(14, 18, 38, 0.8) 100%)', border: '1px solid rgba(157, 78, 221, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 35px rgba(157, 78, 221, 0.4)' }}>
+                          <Box sx={{ width: 84, height: 84, mx: 'auto', mb: 3, borderRadius: '24px', background: 'rgba(157, 78, 221, 0.35)', border: '1px solid rgba(157, 78, 221, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
                             <AssignmentIcon sx={{ fontSize: 44, color: '#d8b4fe' }} />
                           </Box>
-                          <span className="epic-badge-purple" style={{ marginBottom: '16px' }}>⚡ NEURAL COMPREHENSION TEST</span>
+                          <span className="epic-badge-purple" style={{ marginBottom: '16px' }}> NEURAL COMPREHENSION TEST</span>
                           <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 1.5 }}>
                             AI Assessment Quiz: <span style={{ color: '#d8b4fe' }}>{lecture?.topic}</span>
                           </Typography>
@@ -464,7 +464,7 @@ const LectureDetail = () => {
                             Test your comprehension with dynamically generated multiple-choice challenges based on this exact video sequence. Answer accurately to unlock progression gates.
                           </Typography>
                           <Button onClick={handleStartQuiz} className="epic-btn-purple" sx={{ fontSize: '1.05rem !important', py: '15px !important', px: '38px !important' }}>
-                            ⚡ Start Neural Quiz Assessment →
+                             Start Neural Quiz Assessment →
                           </Button>
                         </Box>
                       ) : (
@@ -477,13 +477,13 @@ const LectureDetail = () => {
                               </Typography>
                             </Box>
                             <Button className="epic-btn-outline" size="small" onClick={handleRetakeQuiz}>
-                              🔄 Generate New Assessment
+                               Generate New Assessment
                             </Button>
                           </Box>
                           {quizResult ? (
                             <Alert severity={quizResult.score >= 3 ? "success" : "warning"} sx={{ mb: 4, borderRadius: '16px', bgcolor: quizResult.score >= 3 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(245, 158, 11, 0.18)', color: '#ffffff', border: quizResult.score >= 3 ? '1px solid #10b981' : '1px solid #f59e0b' }}>
                               <Typography variant="h6" fontWeight="900" fontFamily="Outfit, sans-serif">
-                                🏆 Quiz Completed! Neural Mastery Score: {quizResult.score} / {quizResult.total}
+                                 Quiz Completed! Neural Mastery Score: {quizResult.score} / {quizResult.total}
                               </Typography>
                               <Typography variant="body2" sx={{ mt: 0.5, color: '#e2e8f0' }}>
                                 {quizResult.score >= 3 ? 'Outstanding achievement! You have mastered this module and unlocked progression.' : 'Review the synchronized video sequence above and re-try to boost your neural score.'}
@@ -536,7 +536,7 @@ const LectureDetail = () => {
                                             color: btnColor,
                                             bgcolor: btnBgcolor,
                                             border: `1.5px solid ${borderColor}`,
-                                            boxShadow: answered && opt === correctAns ? '0 0 20px rgba(16, 185, 129, 0.4)' : 'none',
+                                            boxShadow: answered && opt === correctAns ? '0 2px 8px rgba(0,0,0,0.4)' : 'none',
                                             transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                                             '&:hover': answered ? {} : { bgcolor: 'rgba(0, 242, 254, 0.12)', borderColor: '#00f2fe', color: '#ffffff', transform: 'translateX(6px)' },
                                             '&.Mui-disabled': {
@@ -562,7 +562,7 @@ const LectureDetail = () => {
                               fullWidth
                               sx={{ mt: 2, py: '16px !important', fontSize: '1.08rem !important' }}
                             >
-                              ⚡ Submit Neural Quiz Answers & Evaluate Score →
+                               Submit Neural Quiz Answers & Evaluate Score →
                             </Button>
                           )}
                         </Box>
@@ -634,7 +634,7 @@ const LectureDetail = () => {
           {gateActivity && (
             <Box height="100%">
               <Box display="flex" justifyContent="space-between" mb={2}>
-                <Typography variant="h6" color="error" fontWeight={700}>⚠️ Mandatory Check</Typography>
+                <Typography variant="h6" color="error" fontWeight={700}> Mandatory Check</Typography>
                 <Button color="inherit" onClick={() => setGateOpen(false)}>Exit (Stays Locked)</Button>
               </Box>
               <ActivityView activity={gateActivity} onSubmit={handleGateSubmit} result={gateResult} onNext={handleGateNext} />

@@ -116,7 +116,7 @@ const FlashcardsDeck = ({ subject = "General Science", topic = "Core Principles"
               px: 2, py: 0.6, borderRadius: "var(--r-md)",
               background: "var(--grad-primary)", color: "#fff",
               fontSize: "0.78rem", fontWeight: 800, textTransform: "none",
-              boxShadow: "0 4px 14px rgba(99,102,241,0.3)"
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)"
             }}
           >
             {isGenerating ? "Generating..." : "Generate AI Flashcards"}

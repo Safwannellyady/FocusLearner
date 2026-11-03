@@ -97,7 +97,7 @@ const SessionCard = ({ session, index, onResume, onModify, onDelete }) => {
               transition={{ duration: 0.55, ease: "easeInOut" }}
               style={{
                 position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                background: "linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%)",
+                background: "transparent",
                 pointerEvents: "none", zIndex: 1,
               }}
             />
@@ -312,8 +312,8 @@ const EmptyState = ({ onNew }) => (
       sx={{
         display: "inline-flex", alignItems: "center", gap: 0.75, px: 2.5, py: 1.1,
         borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer",
-        boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
-        "&:hover": { boxShadow: "0 8px 24px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+        boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+        "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
         transition: "all 0.2s",
       }}
     >
@@ -584,8 +584,8 @@ const MyCourses = () => {
           sx={{
             display: "flex", alignItems: "center", gap: 0.6, px: 1.5, py: 1,
             borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer",
-            boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-            "&:hover": { boxShadow: "0 6px 20px rgba(99,102,241,0.5)", transform: "translateY(-1px)" },
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
             transition: "all 0.18s",
           }}
         >

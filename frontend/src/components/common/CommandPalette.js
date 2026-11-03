@@ -42,7 +42,7 @@ const CommandPalette = ({ isOpen, onClose, onNavigate }) => {
         message: query.trim(),
         context: 'Quick Command Palette Instant RAG Query'
       });
-      
+
       setAiAnswer(res.data.response || res.data.message || 'No instant response generated.');
     } catch (err) {
       console.error('Command Palette AI error:', err);
@@ -58,10 +58,10 @@ const CommandPalette = ({ isOpen, onClose, onNavigate }) => {
   };
 
   return (
-    <Dialog 
-      open={isOpen} 
-      onClose={onClose} 
-      maxWidth="md" 
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
@@ -105,7 +105,7 @@ const CommandPalette = ({ isOpen, onClose, onNavigate }) => {
               onClick={handleAskAI}
               sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%)',
+                background: 'rgba(99, 102, 241, 0.25)',
                 border: '1px solid #6366f1',
                 borderRadius: 2.5,
                 cursor: 'pointer',
@@ -133,7 +133,7 @@ const CommandPalette = ({ isOpen, onClose, onNavigate }) => {
             {aiAnswer && (
               <Box sx={{ mt: 2, p: 2.5, background: 'rgba(30, 41, 59, 0.8)', borderRadius: 2.5, borderLeft: '3px solid #10b981', maxHeight: 300, overflowY: 'auto' }}>
                 <Typography variant="caption" sx={{ fontWeight: 800, color: '#10b981', textTransform: 'uppercase', display: 'block', mb: 1 }}>
-                  ✨ Instant AI Tutor Briefing:
+                   Instant AI Tutor Briefing:
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#e2e8f0', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
                   {aiAnswer}

@@ -68,7 +68,7 @@ const DropdownPanel = ({ children, onClose, right = false }) => {
       minWidth: 190,
       bgcolor: "var(--bg-card)", border: "1px solid var(--border)",
       borderRadius: "var(--r-lg)",
-      boxShadow: "0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+      boxShadow: "0 16px 40px rgba(0,0,0,0.5), 0 0 2px 8px rgba(0,0,0,0.4)",
       py: 0.75, zIndex: 1300, backdropFilter: "blur(20px)", overflow: "hidden",
     }}>
       {children}
@@ -129,11 +129,11 @@ const QuickFocusPanel = ({ onClose }) => {
       backdropFilter: "blur(24px)", overflow: "hidden",
     }}>
       {/* Accent top bar */}
-      <Box sx={{ height: 3, background: `linear-gradient(90deg,${accent},transparent)`, transition: "background 0.4s" }} />
+      <Box sx={{ height: 3, background: `transparent`, transition: "background 0.4s" }} />
 
       <Box sx={{ p: 2.5 }}>
         <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.9rem", color: "#f1f5f9", mb: 0.4 }}>
-          ⚡ Quick Focus
+           Quick Focus
         </Typography>
         <Typography sx={{ fontSize: "0.72rem", color: "var(--text-dim)", mb: 2.5 }}>
           {phase === "idle" ? "Configure and start your session" : phase === "focus" ? "Focus phase — stay locked in" : "Break phase — rest your mind"}
@@ -179,7 +179,7 @@ const QuickFocusPanel = ({ onClose }) => {
         {/* Controls */}
         <Box sx={{ display: "flex", gap: 1 }}>
           {phase === "idle" ? (
-            <Box onClick={start} sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75, py: 1, borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer", boxShadow: "0 4px 14px rgba(99,102,241,0.35)", "&:hover": { boxShadow: "0 6px 20px rgba(99,102,241,0.5)", transform: "translateY(-1px)" }, transition: "all 0.15s" }}>
+            <Box onClick={start} sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75, py: 1, borderRadius: "var(--r-md)", background: "var(--grad-primary)", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.4)", "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" }, transition: "all 0.15s" }}>
               <PlayArrowRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
               <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", fontFamily: "Plus Jakarta Sans, sans-serif" }}>Start Session</Typography>
             </Box>
@@ -440,7 +440,7 @@ const Navbar = ({ onMenuClick, onCmdClick }) => {
                 background: "var(--grad-primary)", cursor: "pointer",
                 border: `2px solid ${profileOpen ? "var(--indigo)" : "rgba(255,255,255,0.1)"}`,
                 transition: "all 0.15s",
-                "&:hover": { borderColor: "var(--indigo)", boxShadow: "0 0 10px rgba(99,102,241,0.35)" },
+                "&:hover": { borderColor: "var(--indigo)", boxShadow: "0 2px 8px rgba(0,0,0,0.4)" },
               }}
             >
               {initials}

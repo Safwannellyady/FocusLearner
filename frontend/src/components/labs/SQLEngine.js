@@ -35,7 +35,7 @@ const SQLEngine = () => {
           size="small"
           onClick={handleRun}
           startIcon={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
-          sx={{ px: 2, py: 0.4, borderRadius: "var(--r-md)", background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "#fff", fontSize: "0.75rem", fontWeight: 800, textTransform: "none" }}
+          sx={{ px: 2, py: 0.4, borderRadius: "var(--r-md)", background: "#f59e0b", color: "#fff", fontSize: "0.75rem", fontWeight: 800, textTransform: "none" }}
         >
           Run Query
         </Button>
@@ -73,7 +73,7 @@ const SQLEngine = () => {
                   <TableCell sx={{ color: "#f1f5f9", fontSize: "0.75rem" }}>{r.id}</TableCell>
                   <TableCell sx={{ color: "#fbbf24", fontSize: "0.75rem", fontWeight: 600 }}>{r.username}</TableCell>
                   <TableCell sx={{ color: "var(--text-mid)", fontSize: "0.75rem" }}>{r.email}</TableCell>
-                  <TableCell sx={{ color: "#10b981", fontSize: "0.75rem", fontWeight: 700 }}>{r.streak_days} 🔥</TableCell>
+                  <TableCell sx={{ color: "#10b981", fontSize: "0.75rem", fontWeight: 700 }}>{r.streak_days} </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -86,7 +86,7 @@ const FocusCheckModal = ({ open, duration, onResume }) => {
                         disabled={!canResume}
                         onClick={onResume}
                         sx={{
-                            background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                            background: '#ef4444',
                             boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
                             color: 'white',
                         }}

@@ -10,21 +10,30 @@ import CloseRoundedIcon        from "@mui/icons-material/CloseRounded";
 import BoltRoundedIcon         from "@mui/icons-material/BoltRounded";
 import StarRoundedIcon         from "@mui/icons-material/StarRounded";
 import CheckCircleRoundedIcon  from "@mui/icons-material/CheckCircleRounded";
+import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
+import LocalFireDepartmentRoundedIcon from "@mui/icons-material/LocalFireDepartmentRounded";
+import TimerRoundedIcon from "@mui/icons-material/TimerRounded";
+import WavesRoundedIcon from "@mui/icons-material/WavesRounded";
+import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
+import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
+import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 
 /* ── Badge definitions ──────────────────────────────────────────────────────── */
 const BADGES = [
-  { id: "first-session",  emoji: "🚀", name: "Launchpad",        desc: "Completed your very first focus session",  earned: false, xp: 50,  freebie: { type: "xp",     label: "+100 Bonus XP",              detail: "Added to your XP total immediately" } },
-  { id: "streak-3",       emoji: "🔥", name: "Heat Seeker",      desc: "Maintained a 3-day study streak",           earned: false, xp: 75,  freebie: { type: "theme",  label: "Cyber Theme Unlocked",        detail: "Now available in Settings → Appearance" } },
-  { id: "hour-club",      emoji: "⏱️", name: "Hour Club",        desc: "Accumulated 1 full hour of focused study", earned: false, xp: 100, freebie: { type: "xp",     label: "+200 Bonus XP",              detail: "Added to your XP total" } },
-  { id: "five-sessions",  emoji: "⚡", name: "Spark Five",       desc: "Completed 5 focus sessions",                earned: false, xp: 120, freebie: { type: "break",  label: "+2 min Break Time",          detail: "Session break time extended by 2 min" } },
-  { id: "deep-diver",     emoji: "🌊", name: "Deep Diver",       desc: "Finished a 60-minute deep focus session",  earned: false, xp: 150, freebie: { type: "avatar", label: "Ocean Avatar Border",        detail: "Unlocked in your profile settings" } },
-  { id: "streak-7",       emoji: "🏅", name: "Week Warrior",     desc: "Maintain a 7-day streak",                  earned: false, xp: 200, freebie: { type: "theme",  label: "Matrix Theme Unlocked",      detail: "Available in Settings → Appearance" } },
-  { id: "subject-master", emoji: "📚", name: "Subject Master",   desc: "Study 5 different subjects",               earned: false, xp: 175, freebie: { type: "xp",     label: "+300 Bonus XP",              detail: "" } },
-  { id: "night-owl",      emoji: "🦉", name: "Night Owl",        desc: "Complete a session after 10 PM",           earned: false, xp: 80,  freebie: { type: "game",   label: "Exclusive Prompt Pack",      detail: "New prompts unlocked in Game Lab" } },
-  { id: "speed-run",      emoji: "💨", name: "Speed Runner",     desc: "Complete 3 sessions in one day",           earned: false, xp: 150, freebie: { type: "break",  label: "+3 min Break Time",          detail: "Your breaks just got longer" } },
-  { id: "century",        emoji: "💯", name: "The Century",      desc: "Reach 100 total study sessions",           earned: false, xp: 500, freebie: { type: "avatar", label: "Gold Avatar Border",         detail: "Exclusive elite status indicator" } },
-  { id: "scholar-gold",   emoji: "🏆", name: "Scholar Gold",     desc: "Earn 5,000 total XP",                      earned: false, xp: 300, freebie: { type: "theme",  label: "Scholar Gold Theme",         detail: "Available in Settings → Appearance" } },
-  { id: "consistent",     emoji: "📅", name: "Steady Rhythm",    desc: "Study every day for 30 days",              earned: false, xp: 600, freebie: { type: "xp",     label: "+1000 Bonus XP",             detail: "Massive XP reward" } },
+  { id: "first-session",  icon: RocketLaunchRoundedIcon, name: "Launchpad",        desc: "Completed your very first focus session",  earned: false, xp: 50,  freebie: { type: "xp",     label: "+100 Bonus XP",              detail: "Added to your XP total immediately" } },
+  { id: "streak-3",       icon: LocalFireDepartmentRoundedIcon, name: "Heat Seeker",      desc: "Maintained a 3-day study streak",           earned: false, xp: 75,  freebie: { type: "theme",  label: "Cyber Theme Unlocked",        detail: "Now available in Settings → Appearance" } },
+  { id: "hour-club",      icon: TimerRoundedIcon, name: "Hour Club",        desc: "Accumulated 1 full hour of focused study", earned: false, xp: 100, freebie: { type: "xp",     label: "+200 Bonus XP",              detail: "Added to your XP total" } },
+  { id: "five-sessions",  icon: BoltRoundedIcon, name: "Spark Five",       desc: "Completed 5 focus sessions",                earned: false, xp: 120, freebie: { type: "break",  label: "+2 min Break Time",          detail: "Session break time extended by 2 min" } },
+  { id: "deep-diver",     icon: WavesRoundedIcon, name: "Deep Diver",       desc: "Finished a 60-minute deep focus session",  earned: false, xp: 150, freebie: { type: "avatar", label: "Ocean Avatar Border",        detail: "Unlocked in your profile settings" } },
+  { id: "streak-7",       icon: EmojiEventsRoundedIcon, name: "Week Warrior",     desc: "Maintain a 7-day streak",                  earned: false, xp: 200, freebie: { type: "theme",  label: "Matrix Theme Unlocked",      detail: "Available in Settings → Appearance" } },
+  { id: "subject-master", icon: SchoolRoundedIcon, name: "Subject Master",   desc: "Study 5 different subjects",               earned: false, xp: 175, freebie: { type: "xp",     label: "+300 Bonus XP",              detail: "" } },
+  { id: "night-owl",      icon: DarkModeRoundedIcon, name: "Night Owl",        desc: "Complete a session after 10 PM",           earned: false, xp: 80,  freebie: { type: "game",   label: "Exclusive Prompt Pack",      detail: "New prompts unlocked in Game Lab" } },
+  { id: "speed-run",      icon: SpeedRoundedIcon, name: "Speed Runner",     desc: "Complete 3 sessions in one day",           earned: false, xp: 150, freebie: { type: "break",  label: "+3 min Break Time",          detail: "Your breaks just got longer" } },
+  { id: "century",        icon: StarRoundedIcon, name: "The Century",      desc: "Reach 100 total study sessions",           earned: false, xp: 500, freebie: { type: "avatar", label: "Gold Avatar Border",         detail: "Exclusive elite status indicator" } },
+  { id: "scholar-gold",   icon: WorkspacePremiumRoundedIcon, name: "Scholar Gold",     desc: "Earn 5,000 total XP",                      earned: false, xp: 300, freebie: { type: "theme",  label: "Scholar Gold Theme",         detail: "Available in Settings → Appearance" } },
+  { id: "consistent",     icon: CalendarMonthRoundedIcon, name: "Steady Rhythm",    desc: "Study every day for 30 days",              earned: false, xp: 600, freebie: { type: "xp",     label: "+1000 Bonus XP",             detail: "Massive XP reward" } },
 ];
 
 const FREEBIE_COLORS = {
@@ -74,13 +83,13 @@ const FreebieModal = ({ badge, onClose }) => {
               borderRadius: "var(--r-xl)", p: { xs: 2.5, sm: 3.5 },
               textAlign: "center", position: "relative",
               overflowY: "auto", maxHeight: "calc(100vh - 40px)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.8), 0 0 2px 8px rgba(0,0,0,0.4)",
             }}>
               {/* Shimmer */}
               <motion.div
                 animate={{ x: ["-100%", "200%"] }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
-                style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.05) 50%,transparent 70%)", pointerEvents: "none" }}
+                style={{ position: "absolute", inset: 0, background: "transparent", pointerEvents: "none" }}
               />
 
               <Box onClick={onClose} sx={{ position: "absolute", top: 12, right: 12, cursor: "pointer", color: "var(--text-dim)", "&:hover": { color: "#f1f5f9" } }}>
@@ -94,14 +103,12 @@ const FreebieModal = ({ badge, onClose }) => {
                   transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                   style={{ display: "inline-block" }}
                 >
-                  <Typography sx={{ fontSize: "3.5rem", lineHeight: 1, filter: "drop-shadow(0 0 20px rgba(255,200,50,0.6))" }}>
-                    {badge.emoji}
-                  </Typography>
+                  {(() => { const BadgeIcon = badge.icon || EmojiEventsRoundedIcon; return <BadgeIcon sx={{ fontSize: 56, color: "var(--amber)" }} />; })()}
                 </motion.div>
               </Box>
 
               <Typography sx={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--amber)", letterSpacing: "0.12em", textTransform: "uppercase", mb: 0.5 }}>
-                🎉 Badge Unlocked!
+                 Badge Unlocked!
               </Typography>
               <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 900, fontSize: "1.4rem", color: "#f1f5f9", mb: 0.5 }}>
                 {badge.name}
@@ -135,8 +142,8 @@ const FreebieModal = ({ badge, onClose }) => {
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75,
                   py: 1.2, borderRadius: "var(--r-md)", cursor: "pointer",
                   background: "var(--grad-primary)",
-                  boxShadow: "0 6px 20px rgba(99,102,241,0.4)",
-                  "&:hover": { boxShadow: "0 10px 28px rgba(99,102,241,0.55)", transform: "translateY(-1px)" },
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                  "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.4)", transform: "translateY(-1px)" },
                   transition: "all 0.2s",
                 }}
               >
@@ -172,7 +179,7 @@ const BadgeCard = ({ badge, index, onClaim }) => {
         p: 2.5, borderRadius: "var(--r-lg)", textAlign: "center",
         bgcolor: "var(--bg-card)",
         border: `1px solid ${badge.earned ? "rgba(245,158,11,0.25)" : "var(--border)"}`,
-        boxShadow: badge.earned && hovered ? "0 12px 32px rgba(245,158,11,0.15)" : "0 2px 10px rgba(0,0,0,0.15)",
+        boxShadow: badge.earned && hovered ? "0 2px 8px rgba(0,0,0,0.4)" : "0 2px 10px rgba(0,0,0,0.15)",
         opacity: badge.earned ? 1 : 0.55,
         filter: badge.earned ? "none" : "grayscale(0.7)",
         transition: "all 0.25s",
@@ -188,7 +195,7 @@ const BadgeCard = ({ badge, index, onClaim }) => {
                 animate={{ x: "250%" }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg,transparent 30%,rgba(255,220,100,0.08) 50%,transparent 70%)", pointerEvents: "none", zIndex: 1 }}
+                style={{ position: "absolute", inset: 0, background: "transparent", pointerEvents: "none", zIndex: 1 }}
               />
             )}
           </AnimatePresence>
@@ -196,16 +203,16 @@ const BadgeCard = ({ badge, index, onClaim }) => {
 
         {/* Earned glow border */}
         {badge.earned && (
-          <Box sx={{ position: "absolute", inset: 0, borderRadius: "var(--r-lg)", boxShadow: "inset 0 0 20px rgba(245,158,11,0.05)", pointerEvents: "none" }} />
+          <Box sx={{ position: "absolute", inset: 0, borderRadius: "var(--r-lg)", boxShadow: "inset 0 2px 8px rgba(0,0,0,0.4)", pointerEvents: "none" }} />
         )}
 
         {/* Emoji */}
         <Typography sx={{
           fontSize: "2.6rem", lineHeight: 1, mb: 1,
-          filter: badge.earned ? "drop-shadow(0 0 12px rgba(255,200,50,0.5))" : "none",
+          filter: badge.earned ? "drop-shadow(0 2px 8px rgba(0,0,0,0.4))" : "none",
           ...(badge.earned && { animation: hovered ? undefined : "none" }),
         }}>
-          {badge.earned ? badge.emoji : "🔒"}
+          {badge.earned ? (() => { const BadgeIcon = badge.icon || EmojiEventsRoundedIcon; return <BadgeIcon sx={{ fontSize: "2.6rem", color: "var(--amber)" }} />; })() : <LockRoundedIcon sx={{ fontSize: "2.6rem", color: "var(--text-dim)" }} />}
         </Typography>
 
         {/* Name */}

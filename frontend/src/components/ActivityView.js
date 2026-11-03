@@ -112,7 +112,7 @@ const ActivityView = ({ activity, onSubmit, result, onNext }) => {
                     onClick={onNext}
                     sx={{
                         px: 6, py: 1.5, fontSize: '1.1rem', borderRadius: 2,
-                        background: result.is_correct ? 'linear-gradient(90deg, #16a34a 0%, #15803d 100%)' : 'rgba(255,255,255,0.1)'
+                        background: result.is_correct ? '#16a34a' : 'rgba(255,255,255,0.1)'
                     }}
                 >
                     {result.is_correct ? "Continue Journey" : "Okay, Got it"}

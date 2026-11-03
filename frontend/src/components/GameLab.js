@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Box, Typography } from "@mui/material";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
+import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
+import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
+import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
+import PetsRoundedIcon from "@mui/icons-material/PetsRounded";
 import { motion, AnimatePresence } from "framer-motion";
 
 import RefreshRoundedIcon      from "@mui/icons-material/RefreshRounded";
@@ -19,7 +24,7 @@ const GAMES = [
   {
     id:    "chrono",
     name:  "Chrono-Fixer",
-    emoji: "⏳",
+    icon: AccessTimeRoundedIcon,
     color: "#6366f1",
     tagline: "Stranded in time. Improvise or perish.",
     instructions: "You're a time-traveller whose machine broke. Survive using only what you have.",
@@ -34,7 +39,7 @@ const GAMES = [
   {
     id:    "alien",
     name:  "Alien Tourism Board",
-    emoji: "👽",
+    icon: PublicRoundedIcon,
     color: "#10b981",
     tagline: "They came. They were confused.",
     instructions: "Explain a common human object to an alien species that has never seen Earth.",
@@ -49,7 +54,7 @@ const GAMES = [
   {
     id:    "spellbook",
     name:  "3-Ingredient Spellbook",
-    emoji: "📖",
+    icon: MenuBookRoundedIcon,
     color: "#a78bfa",
     tagline: "Magic is just chemistry you haven't named yet.",
     instructions: "Combine two ingredients to create a named spell with a specific effect.",
@@ -79,7 +84,7 @@ const GAMES = [
   {
     id:    "rogue",
     name:  "Rogue AI Decryptor",
-    emoji: "🤖",
+    icon: SecurityRoundedIcon,
     color: "#f59e0b",
     tagline: "The AI doesn't understand humans. Help it.",
     instructions: "Describe a human concept using only cold, mechanical computer terminology to fool the AI.",
@@ -94,7 +99,7 @@ const GAMES = [
   {
     id:    "monster",
     name:  "Monster Taxonomy",
-    emoji: "🦎",
+    icon: PetsRoundedIcon,
     color: "#f43f5e",
     tagline: "Science demands classification. Even of nightmares.",
     instructions: "Fuse two things together and give the result a scientific name and diet.",
@@ -121,12 +126,12 @@ const GameCard = ({ game, onClick }) => (
     <Box sx={{
       p: 2, borderRadius: "var(--r-lg)",
       bgcolor: "var(--bg-card)", border: `1px solid ${game.color}33`,
-      boxShadow: `0 4px 20px ${game.color}11`,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
       transition: "all 0.2s",
-      "&:hover": { borderColor: `${game.color}66`, boxShadow: `0 8px 30px ${game.color}22` },
+      "&:hover": { borderColor: `${game.color}66`, boxShadow: "0 4px 12px rgba(0,0,0,0.45)" },
       textAlign: "center",
     }}>
-      <Typography sx={{ fontSize: "2rem", mb: 0.5 }}>{game.emoji}</Typography>
+      {(() => { const GameIcon = game.icon || AccessTimeRoundedIcon; return <GameIcon sx={{ fontSize: 32, color: game.color, mb: 0.5 }} />; })()}
       <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "0.9rem", color: "#f1f5f9", mb: 0.25 }}>
         {game.name}
       </Typography>
@@ -165,7 +170,7 @@ const GamePlay = ({ game, breakSec, onDone, onNewPrompt }) => {
           bgcolor: `${game.color}18`, border: `1px solid ${game.color}33`,
           display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem",
         }}>
-          {game.emoji}
+          {(() => { const GameIcon = game.icon || AccessTimeRoundedIcon; return <GameIcon sx={{ fontSize: 24, color: game.color }} />; })()}
         </Box>
         <Box>
           <Typography sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "1rem", color: "#f1f5f9" }}>
@@ -236,7 +241,7 @@ const GamePlay = ({ game, breakSec, onDone, onNewPrompt }) => {
         >
           <RefreshRoundedIcon sx={{ fontSize: 17, color: "var(--text-mid)" }} />
           <Typography sx={{ fontSize: "0.84rem", fontWeight: 700, color: "var(--text-mid)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-            🎲 New Prompt
+             New Prompt
           </Typography>
         </Box>
 
@@ -245,7 +250,7 @@ const GamePlay = ({ game, breakSec, onDone, onNewPrompt }) => {
           sx={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75,
             py: 1, borderRadius: "var(--r-md)", cursor: "pointer",
-            background: "linear-gradient(135deg,#10b981,#059669)",
+            background: "#10b981",
             boxShadow: "0 4px 14px rgba(16,185,129,0.3)",
             transition: "all 0.18s", "&:hover": { boxShadow: "0 6px 20px rgba(16,185,129,0.45)", transform: "translateY(-1px)" },
           }}

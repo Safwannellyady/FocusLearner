@@ -75,7 +75,7 @@ const WeeklyChart = ({ data }) => {
                   width: "100%", height: "100%", minHeight: 4,
                   borderRadius: "6px 6px 4px 4px",
                   background: isToday ? "var(--grad-primary)" : "rgba(99,102,241,0.25)",
-                  boxShadow: isToday ? "0 0 12px rgba(99,102,241,0.4)" : "none",
+                  boxShadow: isToday ? "0 2px 8px rgba(0,0,0,0.4)" : "none",
                   transition: "background 0.2s",
                 }} />
               </motion.div>
@@ -165,7 +165,7 @@ const Heatmap = ({ daysData }) => {
               sx={{
                 width: "100%", aspectRatio: "1", borderRadius: "4px",
                 bgcolor: intensities[v] || intensities[0],
-                boxShadow: v === 3 ? "0 0 6px rgba(99,102,241,0.5)" : "none",
+                boxShadow: v === 3 ? "0 2px 8px rgba(0,0,0,0.4)" : "none",
                 transition: "all 0.15s",
                 "&:hover": { transform: "scale(1.2)", cursor: "default" },
               }}

@@ -99,10 +99,10 @@ const KnowledgeGraph = ({ subject: subjectProp, onSelectTopic }) => {
             Prerequisite concept tree with real-time retention state tracking
           </Typography>
         </Box>
-        <Button 
-          variant="outlined" 
-          size="small" 
-          startIcon={<Refresh />} 
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<Refresh />}
           onClick={fetchGraph}
           sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#e2e8f0', textTransform: 'none' }}
         >
@@ -156,20 +156,20 @@ const KnowledgeGraph = ({ subject: subjectProp, onSelectTopic }) => {
             {graphData?.nodes?.map((node, index) => {
               const isSelected = selectedNode && selectedNode.id === node.id;
               const statusColor = getStatusColor(node.status);
-              
+
               return (
                 <Box key={node.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Box sx={{ width: 32, textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '0.85rem' }}>
                     L{node.level || index + 1}
                   </Box>
-                  
+
                   <Box
                     onClick={() => setSelectedNode(node)}
                     sx={{
                       flex: 1,
                       p: 2,
-                      background: isSelected 
-                        ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%)' 
+                      background: isSelected
+                        ? 'rgba(99, 102, 241, 0.25)'
                         : 'rgba(30, 41, 59, 0.7)',
                       border: `1.5px solid ${isSelected ? statusColor : 'rgba(255, 255, 255, 0.07)'}`,
                       borderRadius: 2.5,
@@ -199,16 +199,16 @@ const KnowledgeGraph = ({ subject: subjectProp, onSelectTopic }) => {
                       </Box>
                     </Box>
 
-                    <Chip 
-                      label={node.status} 
-                      size="small" 
-                      sx={{ 
-                        background: `${statusColor}22`, 
-                        color: statusColor, 
-                        fontWeight: 600, 
+                    <Chip
+                      label={node.status}
+                      size="small"
+                      sx={{
+                        background: `${statusColor}22`,
+                        color: statusColor,
+                        fontWeight: 600,
                         fontSize: '0.72rem',
                         border: `1px solid ${statusColor}44`
-                      }} 
+                      }}
                     />
                   </Box>
 
@@ -238,14 +238,14 @@ const KnowledgeGraph = ({ subject: subjectProp, onSelectTopic }) => {
             <>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 {getStatusIcon(selectedNode.status)}
-                <Chip 
-                  label={`Level ${selectedNode.level || 1}: ${selectedNode.status}`} 
+                <Chip
+                  label={`Level ${selectedNode.level || 1}: ${selectedNode.status}`}
                   size="small"
-                  sx={{ 
-                    background: `${getStatusColor(selectedNode.status)}22`, 
-                    color: getStatusColor(selectedNode.status), 
-                    fontWeight: 700 
-                  }} 
+                  sx={{
+                    background: `${getStatusColor(selectedNode.status)}22`,
+                    color: getStatusColor(selectedNode.status),
+                    fontWeight: 700
+                  }}
                 />
               </Box>
 
@@ -281,7 +281,7 @@ const KnowledgeGraph = ({ subject: subjectProp, onSelectTopic }) => {
                   fullWidth
                   onClick={() => onSelectTopic && onSelectTopic(selectedNode.label)}
                   sx={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                    background: '#6366f1',
                     color: '#fff',
                     fontWeight: 600,
                     textTransform: 'none',
