@@ -135,7 +135,7 @@ const LearningHealthDashboard = () => {
                         title="Deep Focus"
                         value={metrics.focus}
                         icon={<VisibilityIcon />}
-                        color="#8b5cf6"
+                        color="#6366f1"
                         description="Attention span during tasks"
                     />
                 </Grid>
@@ -144,7 +144,7 @@ const LearningHealthDashboard = () => {
                         title="Resilience"
                         value={metrics.resilience}
                         icon={<RefreshIcon />}
-                        color="#3b82f6"
+                        color="#6366f1"
                         description="Recovery from failure"
                     />
                 </Grid>

@@ -161,7 +161,7 @@ const FocusLock = () => {
               <Box sx={{ p: 2.5, background: 'rgba(99, 102, 241, 0.18)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: 2.5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Chip label={recommendation.mode} size="small" sx={{ background: '#6366f1', color: '#fff', fontWeight: 800 }} />
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#c4b5fd' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#a5b4fc' }}>
                     {recommendation.sprint_minutes}m Focus / {recommendation.break_minutes}m Break
                   </Typography>
                 </Box>

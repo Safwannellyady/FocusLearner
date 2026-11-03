@@ -318,7 +318,7 @@ const FocusArena = () => {
               <Grid item xs={12} md={5}>
                 <Paper sx={{ p: 3, background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#f8fafc', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Schedule sx={{ color: '#8b5cf6' }} /> Scheduled Reviews
+                    <Schedule sx={{ color: '#6366f1' }} /> Scheduled Reviews
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#94a3b8', mb: 2, display: 'block' }}>
                     Schedule when your study group will meet to summarize formulas and analyze tricky concepts.
@@ -355,7 +355,7 @@ const FocusArena = () => {
                       fullWidth
                       size="small"
                       onClick={handleScheduleReview}
-                      sx={{ background: '#8b5cf6', textTransform: 'none', fontWeight: 600, py: 1 }}
+                      sx={{ background: '#6366f1', textTransform: 'none', fontWeight: 600, py: 1 }}
                     >
                       Schedule Classmate Review
                     </Button>
@@ -381,9 +381,9 @@ const FocusArena = () => {
                       <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>No post-study review sessions scheduled yet.</Typography>
                     ) : (
                       room.scheduled_discussions?.map((sd) => (
-                        <Box key={sd.id} sx={{ p: 1.2, background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: 2 }}>
+                        <Box key={sd.id} sx={{ p: 1.2, background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: 2 }}>
                           <Typography variant="body2" sx={{ fontWeight: 700, color: '#f8fafc' }}>{sd.title}</Typography>
-                          <Typography variant="caption" sx={{ color: '#c4b5fd', display: 'block', mb: 0.5 }}>
+                          <Typography variant="caption" sx={{ color: '#a5b4fc', display: 'block', mb: 0.5 }}>
                             {new Date(sd.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(sd.scheduled_at).toLocaleDateString()})
                           </Typography>
                           {sd.topic_summary && <Typography variant="caption" sx={{ color: '#e2e8f0', display: 'block', wordBreak: 'break-word' }}>Topic: {sd.topic_summary}</Typography>}

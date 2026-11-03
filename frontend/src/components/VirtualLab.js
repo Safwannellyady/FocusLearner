@@ -317,7 +317,7 @@ print("Compiler Execution Output:", output)
       {/* Lab Domain Selector Banner */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, p: 2, bgcolor: 'rgba(255, 255, 255, 0.04)', borderRadius: '18px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <Box display="flex" alignItems="center" gap={1.5}>
-          <AutoAwesomeIcon sx={{ color: '#00f2fe', fontSize: 26 }} />
+          <AutoAwesomeIcon sx={{ color: '#a5b4fc', fontSize: 26 }} />
           <Typography variant="subtitle1" fontWeight="800" fontFamily="Outfit, sans-serif" color="#ffffff">
             AI-Featured Virtual Laboratory & Simulation Sandbox
           </Typography>
@@ -335,11 +335,11 @@ print("Compiler Execution Output:", output)
               label={d.label}
               onClick={() => setActiveDomain(d.id)}
               sx={{
-                bgcolor: activeDomain === d.id ? '#2563eb' : 'rgba(255, 255, 255, 0.06)',
+                bgcolor: activeDomain === d.id ? '#4f46e5' : 'rgba(255, 255, 255, 0.06)',
                 color: '#ffffff',
                 fontWeight: 700,
                 borderRadius: '10px',
-                border: activeDomain === d.id ? '1px solid #60a5fa' : '1px solid transparent',
+                border: activeDomain === d.id ? '1px solid #818cf8' : '1px solid transparent',
                 cursor: 'pointer',
                 '&:hover': { bgcolor: activeDomain === d.id ? '#1d4ed8' : 'rgba(255, 255, 255, 0.12)' }
               }}
@@ -359,7 +359,7 @@ print("Compiler Execution Output:", output)
                   label={lang.toUpperCase()}
                   onClick={() => handleLanguageChange(lang)}
                   sx={{
-                    bgcolor: language === lang ? '#00f2fe' : 'rgba(255, 255, 255, 0.05)',
+                    bgcolor: language === lang ? '#a5b4fc' : 'rgba(255, 255, 255, 0.05)',
                     color: language === lang ? '#0f172a' : '#ffffff',
                     fontWeight: 800,
                     borderRadius: '8px'
@@ -380,8 +380,8 @@ print("Compiler Execution Output:", output)
 
           <Grid container spacing={3}>
             <Grid item xs={12} md={7}>
-              <Paper sx={{ p: 2.5, bgcolor: '#0f172a', borderRadius: '16px', border: '1px solid rgba(0, 242, 254, 0.3)' }}>
-                <Typography variant="caption" color="#00f2fe" fontWeight="700" display="block" mb={1}>
+              <Paper sx={{ p: 2.5, bgcolor: '#0f172a', borderRadius: '16px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+                <Typography variant="caption" color="#a5b4fc" fontWeight="700" display="block" mb={1}>
                    LIVE SANDBOX EDITOR ({language.toUpperCase()}) | TOPIC: {topic || 'Core Module'}
                 </Typography>
                 <TextField
@@ -395,7 +395,7 @@ print("Compiler Execution Output:", output)
                     sx: {
                       fontFamily: 'Consolas, "Courier New", monospace',
                       fontSize: '0.92rem',
-                      color: '#38bdf8',
+                      color: '#818cf8',
                       bgcolor: '#080d1a',
                       borderRadius: '10px',
                       p: 2,
@@ -421,7 +421,7 @@ print("Compiler Execution Output:", output)
                    COMPILER & SANDBOX TERMINAL OUTPUT
                 </Typography>
                 <Box sx={{ p: 2, bgcolor: '#050b14', borderRadius: '10px', flexGrow: 1, fontFamily: 'Consolas, monospace', fontSize: '0.88rem', color: '#10b981', whiteSpace: 'pre-wrap', border: '1px solid rgba(16, 185, 129, 0.2)', minHeight: 220 }}>
-                  {isExecuting && <LinearProgress sx={{ mb: 2, bgcolor: '#1e293b', '& .MuiLinearProgress-bar': { bgcolor: '#00f2fe' } }} />}
+                  {isExecuting && <LinearProgress sx={{ mb: 2, bgcolor: '#1e293b', '& .MuiLinearProgress-bar': { bgcolor: '#a5b4fc' } }} />}
                   {compilerOutput}
                 </Box>
                 {aiFeedback && (
@@ -477,7 +477,7 @@ print("Compiler Execution Output:", output)
               </Typography>
             </Box>
 
-            <Box sx={{ minHeight: 300, maxHeight: 420, overflowY: 'auto', p: 2, bgcolor: '#04070e', borderRadius: '10px', fontFamily: 'Consolas, monospace', fontSize: '0.88rem', color: '#38bdf8', mb: 2 }}>
+            <Box sx={{ minHeight: 300, maxHeight: 420, overflowY: 'auto', p: 2, bgcolor: '#04070e', borderRadius: '10px', fontFamily: 'Consolas, monospace', fontSize: '0.88rem', color: '#818cf8', mb: 2 }}>
               {terminalHistory.map((line, idx) => (
                 <Box key={idx} sx={{ mb: 0.8, color: line.startsWith('root@kali') ? '#facc15' : line.includes('Alert') || line.includes('open') ? '#34d399' : '#e2e8f0' }}>
                   {line}
@@ -518,16 +518,16 @@ print("Compiler Execution Output:", output)
         <Box>
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: '20px', border: '1px solid rgba(167, 139, 250, 0.4)' }}>
-                <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#a78bfa" mb={3}>
+              <Paper sx={{ p: 3, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: '20px', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
+                <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#a5b4fc" mb={3}>
                    Kinematics & Circuit Board Simulation Controls
                 </Typography>
 
                 <Box mb={3}>
                   <Typography variant="body2" color="#e2e8f0" fontWeight="700" gutterBottom>
-                    Launch Velocity: <span style={{ color: '#00f2fe' }}>{velocity} m/s</span>
+                    Launch Velocity: <span style={{ color: '#a5b4fc' }}>{velocity} m/s</span>
                   </Typography>
-                  <Slider value={velocity} min={5} max={100} onChange={(_, v) => setVelocity(v)} sx={{ color: '#00f2fe' }} />
+                  <Slider value={velocity} min={5} max={100} onChange={(_, v) => setVelocity(v)} sx={{ color: '#a5b4fc' }} />
                 </Box>
 
                 <Box mb={3}>
@@ -539,9 +539,9 @@ print("Compiler Execution Output:", output)
 
                 <Box mb={3}>
                   <Typography variant="body2" color="#e2e8f0" fontWeight="700" gutterBottom>
-                    Gravity: <span style={{ color: '#a78bfa' }}>{gravity} m/s²</span>
+                    Gravity: <span style={{ color: '#a5b4fc' }}>{gravity} m/s²</span>
                   </Typography>
-                  <Slider value={gravity} min={1} max={25} step={0.1} onChange={(_, v) => setGravity(v)} sx={{ color: '#a78bfa' }} />
+                  <Slider value={gravity} min={1} max={25} step={0.1} onChange={(_, v) => setGravity(v)} sx={{ color: '#a5b4fc' }} />
                 </Box>
 
                 <Box mb={3}>
@@ -557,14 +557,14 @@ print("Compiler Execution Output:", output)
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, bgcolor: '#090d1a', borderRadius: '20px', border: '1px solid rgba(0, 242, 254, 0.4)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <Paper sx={{ p: 3, bgcolor: '#090d1a', borderRadius: '20px', border: '1px solid rgba(99, 102, 241, 0.4)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="subtitle1" fontWeight="800" color="#ffffff" mb={2}>
                      Real-Time Simulation Calculation & Physics Output
                   </Typography>
 
-                  <Box sx={{ p: 2.5, bgcolor: 'rgba(0, 242, 254, 0.08)', borderRadius: '14px', border: '1px solid rgba(0, 242, 254, 0.25)', mb: 2.5 }}>
-                    <Typography variant="body2" color="#00f2fe" fontWeight="700">PROJECTILE TRAJECTORY METRICS:</Typography>
+                  <Box sx={{ p: 2.5, bgcolor: 'rgba(99, 102, 241, 0.08)', borderRadius: '14px', border: '1px solid rgba(99, 102, 241, 0.25)', mb: 2.5 }}>
+                    <Typography variant="body2" color="#a5b4fc" fontWeight="700">PROJECTILE TRAJECTORY METRICS:</Typography>
                     <Typography variant="h6" color="#ffffff" fontWeight="800" sx={{ mt: 0.5 }}>
                       Time of Flight: {timeOfFlight.toFixed(2)}s | Max Range: {maxRange.toFixed(1)} meters
                     </Typography>
@@ -612,9 +612,9 @@ print("Compiler Execution Output:", output)
 
                 <Box mb={3}>
                   <Typography variant="body2" color="#e2e8f0" fontWeight="700" gutterBottom>
-                    Sodium Hydroxide [NaOH] Molarity: <span style={{ color: '#60a5fa' }}>{molarityBase} M</span>
+                    Sodium Hydroxide [NaOH] Molarity: <span style={{ color: '#818cf8' }}>{molarityBase} M</span>
                   </Typography>
-                  <Slider value={molarityBase} min={0.1} max={2.0} step={0.1} onChange={(_, v) => setMolarityBase(v)} sx={{ color: '#60a5fa' }} />
+                  <Slider value={molarityBase} min={0.1} max={2.0} step={0.1} onChange={(_, v) => setMolarityBase(v)} sx={{ color: '#818cf8' }} />
                 </Box>
 
                 <Box mb={3}>
@@ -636,7 +636,7 @@ print("Compiler Execution Output:", output)
                   <Typography variant="h3" fontWeight="900" fontFamily="Outfit, sans-serif" color="#ffffff">
                     pH = {calculatedPH.toFixed(1)}
                   </Typography>
-                  <Typography variant="subtitle1" fontWeight="800" color={calculatedPH === 7.0 ? '#34d399' : calculatedPH > 7 ? '#60a5fa' : '#f87171'}>
+                  <Typography variant="subtitle1" fontWeight="800" color={calculatedPH === 7.0 ? '#34d399' : calculatedPH > 7 ? '#818cf8' : '#f87171'}>
                     {calculatedPH === 7.0 ? 'EQUIVALENCE POINT REACHED (NEUTRAL SALINE H2O + NaCl)' : calculatedPH > 7 ? 'BASIC / ALKALINE SOLUTION EXCESS' : 'ACIDIC SOLUTION EXCESS'}
                   </Typography>
                 </Box>
@@ -666,24 +666,24 @@ print("Compiler Execution Output:", output)
 
       {/* 5. DEMO COMPUTER / OS ARCHITECT LAB */}
       {activeDomain === 'computer' && (
-        <Paper sx={{ p: 4, bgcolor: '#0b1329', borderRadius: '20px', border: '1px solid #38bdf8' }}>
-          <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#38bdf8" mb={3}>
+        <Paper sx={{ p: 4, bgcolor: '#0b1329', borderRadius: '20px', border: '1px solid #818cf8' }}>
+          <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" color="#818cf8" mb={3}>
              Operating System CPU Scheduler & Memory Architecture Simulation
           </Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
-              <Box sx={{ p: 2.5, bgcolor: 'rgba(56, 189, 248, 0.1)', borderRadius: '14px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-                <Typography variant="subtitle2" color="#38bdf8" fontWeight="700">ACTIVE CPU SCHEDULER:</Typography>
+              <Box sx={{ p: 2.5, bgcolor: 'rgba(129, 140, 248, 0.1)', borderRadius: '14px', border: '1px solid rgba(129, 140, 248, 0.3)' }}>
+                <Typography variant="subtitle2" color="#818cf8" fontWeight="700">ACTIVE CPU SCHEDULER:</Typography>
                 <Typography variant="h6" color="#ffffff" fontWeight="800" sx={{ mt: 0.5 }}>Round-Robin (Time Quantum: 4ms)</Typography>
-                <LinearProgress variant="determinate" value={76} sx={{ mt: 2, height: 8, borderRadius: 4, bgcolor: '#1e293b', '& .MuiLinearProgress-bar': { bgcolor: '#38bdf8' } }} />
+                <LinearProgress variant="determinate" value={76} sx={{ mt: 2, height: 8, borderRadius: 4, bgcolor: '#1e293b', '& .MuiLinearProgress-bar': { bgcolor: '#818cf8' } }} />
                 <Typography variant="caption" color="#94a3b8" sx={{ mt: 1, display: 'block' }}>CPU Utilization: 76% (4 threads running)</Typography>
               </Box>
             </Grid>
             <Grid item xs={12} sm={4}>
-              <Box sx={{ p: 2.5, bgcolor: 'rgba(167, 139, 250, 0.1)', borderRadius: '14px', border: '1px solid rgba(167, 139, 250, 0.3)' }}>
-                <Typography variant="subtitle2" color="#a78bfa" fontWeight="700">RAM VIRTUAL MEMORY PAGES:</Typography>
+              <Box sx={{ p: 2.5, bgcolor: 'rgba(99, 102, 241, 0.1)', borderRadius: '14px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+                <Typography variant="subtitle2" color="#a5b4fc" fontWeight="700">RAM VIRTUAL MEMORY PAGES:</Typography>
                 <Typography variant="h6" color="#ffffff" fontWeight="800" sx={{ mt: 0.5 }}>4.8 GB / 16.0 GB Allocated</Typography>
-                <LinearProgress variant="determinate" value={30} sx={{ mt: 2, height: 8, borderRadius: 4, bgcolor: '#1e293b', '& .MuiLinearProgress-bar': { bgcolor: '#a78bfa' } }} />
+                <LinearProgress variant="determinate" value={30} sx={{ mt: 2, height: 8, borderRadius: 4, bgcolor: '#1e293b', '& .MuiLinearProgress-bar': { bgcolor: '#a5b4fc' } }} />
                 <Typography variant="caption" color="#94a3b8" sx={{ mt: 1, display: 'block' }}>Page Faults: 0 | LRU Eviction Active</Typography>
               </Box>
             </Grid>

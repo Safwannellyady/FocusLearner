@@ -257,8 +257,8 @@ const LectureDetail = () => {
               gap: 1,
               bgcolor: '#f8fafc'
             }}>
-              <PlayCircleOutlineIcon fontSize="small" sx={{ color: '#2563eb' }} />
-              <Typography variant="body2" sx={{ color: '#2563eb', fontWeight: 600 }}>
+              <PlayCircleOutlineIcon fontSize="small" sx={{ color: '#4f46e5' }} />
+              <Typography variant="body2" sx={{ color: '#4f46e5', fontWeight: 600 }}>
                 {lecture?.title || 'Interactive Lecture Session'} — {lecture?.topic || ''}
               </Typography>
               <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto' }}>• {lecture?.subject || 'FocusLearner'}</Typography>
@@ -309,14 +309,14 @@ const LectureDetail = () => {
                           maxWidth: 240,
                           cursor: 'pointer',
                           flexShrink: 0,
-                          border: isSelected ? '2px solid #2563eb' : '1px solid #e2e8f0',
-                          bgcolor: isSelected ? '#eff6ff' : '#ffffff',
+                          border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                          bgcolor: isSelected ? '#eef2ff' : '#ffffff',
                           transition: 'all 0.2s',
-                          '&:hover': { borderColor: '#3b82f6', transform: 'translateY(-2px)' }
+                          '&:hover': { borderColor: '#6366f1', transform: 'translateY(-2px)' }
                         }}
                       >
                         <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                          <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ color: isSelected ? '#1e40af' : '#0f172a' }}>
+                          <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ color: isSelected ? '#3730a3' : '#0f172a' }}>
                             {idx + 1}. {v.title}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" noWrap display="block">
@@ -348,8 +348,8 @@ const LectureDetail = () => {
                   '& .MuiTabs-indicator': {
                     height: '100%',
                     borderRadius: '16px',
-                    bgcolor: 'rgba(0, 242, 254, 0.15)',
-                    border: '1px solid rgba(0, 242, 254, 0.45)',
+                    bgcolor: 'rgba(99, 102, 241, 0.15)',
+                    border: '1px solid rgba(99, 102, 241, 0.45)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
                     zIndex: 0
                   },
@@ -365,7 +365,7 @@ const LectureDetail = () => {
                     transition: 'all 0.3s ease'
                   },
                   '& .Mui-selected': {
-                    color: '#00f2fe !important',
+                    color: '#a5b4fc !important',
                     textShadow: 'none'
                   }
                 }}
@@ -426,7 +426,7 @@ const LectureDetail = () => {
                             </Button>
                           </Box>
                           {labResult && (
-                            <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 3, borderRadius: '16px', bgcolor: labResult.is_correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 242, 254, 0.15)', color: '#ffffff', border: labResult.is_correct ? '1px solid #10b981' : '1px solid #00f2fe' }}>
+                            <Alert severity={labResult.is_correct ? "success" : "info"} sx={{ mb: 3, borderRadius: '16px', bgcolor: labResult.is_correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)', color: '#ffffff', border: labResult.is_correct ? '1px solid #10b981' : '1px solid #a5b4fc' }}>
                               <Typography fontWeight="800" fontFamily="Outfit, sans-serif">{labResult.is_correct ? "Lab Challenge Passed! +XP Earned" : "Check Your Solution"}</Typography>
                               <Typography variant="body2" sx={{ mt: 0.5 }}>{labResult.feedback}</Typography>
                             </Alert>
@@ -454,11 +454,11 @@ const LectureDetail = () => {
                       {!showQuiz ? (
                         <Box className="epic-card" p={6} sx={{ textAlign: 'center', borderRadius: '24px !important', border: '1px solid rgba(157, 78, 221, 0.4) !important' }}>
                           <Box sx={{ width: 84, height: 84, mx: 'auto', mb: 3, borderRadius: '24px', background: 'rgba(157, 78, 221, 0.35)', border: '1px solid rgba(157, 78, 221, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
-                            <AssignmentIcon sx={{ fontSize: 44, color: '#d8b4fe' }} />
+                            <AssignmentIcon sx={{ fontSize: 44, color: '#a5b4fc' }} />
                           </Box>
                           <span className="epic-badge-purple" style={{ marginBottom: '16px' }}> NEURAL COMPREHENSION TEST</span>
                           <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 1.5 }}>
-                            AI Assessment Quiz: <span style={{ color: '#d8b4fe' }}>{lecture?.topic}</span>
+                            AI Assessment Quiz: <span style={{ color: '#a5b4fc' }}>{lecture?.topic}</span>
                           </Typography>
                           <Typography variant="body1" sx={{ color: '#94a3b8', mb: 4, maxWidth: 620, mx: 'auto', lineHeight: 1.7 }}>
                             Test your comprehension with dynamically generated multiple-choice challenges based on this exact video sequence. Answer accurately to unlock progression gates.
@@ -493,9 +493,9 @@ const LectureDetail = () => {
                           {quiz?.map((q, index) => {
                             const answered = quizAnswers[q.id];
                             return (
-                              <Box key={q.id} sx={{ mb: 3, p: 3, borderRadius: '20px', bgcolor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', transition: 'all 0.3s ease', '&:hover': { borderColor: 'rgba(0, 242, 254, 0.3)', bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
+                              <Box key={q.id} sx={{ mb: 3, p: 3, borderRadius: '20px', bgcolor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', transition: 'all 0.3s ease', '&:hover': { borderColor: 'rgba(99, 102, 241, 0.3)', bgcolor: 'rgba(255, 255, 255, 0.05)' } }}>
                                 <Typography variant="h6" fontWeight="800" fontFamily="Outfit, sans-serif" sx={{ mb: 2, color: '#ffffff', display: 'flex', gap: 1.2 }}>
-                                  <span style={{ color: '#00f2fe' }}>{index + 1}.</span> {q.question}
+                                  <span style={{ color: '#a5b4fc' }}>{index + 1}.</span> {q.question}
                                 </Typography>
                                 <Grid container spacing={1.5}>
                                   {q.options.map(opt => {
@@ -538,7 +538,7 @@ const LectureDetail = () => {
                                             border: `1.5px solid ${borderColor}`,
                                             boxShadow: answered && opt === correctAns ? '0 2px 8px rgba(0,0,0,0.4)' : 'none',
                                             transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                            '&:hover': answered ? {} : { bgcolor: 'rgba(0, 242, 254, 0.12)', borderColor: '#00f2fe', color: '#ffffff', transform: 'translateX(6px)' },
+                                            '&:hover': answered ? {} : { bgcolor: 'rgba(99, 102, 241, 0.12)', borderColor: '#a5b4fc', color: '#ffffff', transform: 'translateX(6px)' },
                                             '&.Mui-disabled': {
                                               bgcolor: btnBgcolor,
                                               color: answered && opt === correctAns ? '#ffffff' : 'rgba(255, 255, 255, 0.25)',
@@ -572,7 +572,7 @@ const LectureDetail = () => {
                   {activeTab === 3 && (
                     <Box className="epic-card" p={4} sx={{ borderRadius: '24px !important' }}>
                       <Typography variant="h5" sx={{ fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#ffffff', mb: 1, display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                        <FolderIcon sx={{ color: '#a78bfa' }} /> Workspace Vault & Knowledge Base
+                        <FolderIcon sx={{ color: '#a5b4fc' }} /> Workspace Vault & Knowledge Base
                       </Typography>
                       <Typography variant="body1" sx={{ color: '#94a3b8', mb: 3 }}>
                         Store, query, and search all your essential study materials, encyclopedia references, and code docs right inside this focus zone.
@@ -593,23 +593,23 @@ const LectureDetail = () => {
                 <Typography variant="body2" sx={{ color: '#475569', fontWeight: 600 }}>{loopStatus?.stage === 'completed' ? '100%' : '50%'} Complete</Typography>
                 <Typography variant="body2" sx={{ color: '#64748b' }}>{loopStatus?.stage === 'completed' ? '1/1' : '0/1'} Lessons</Typography>
               </Box>
-              <LinearProgress variant="determinate" value={loopStatus?.stage === 'completed' ? 100 : 50} sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e7ff', '& .MuiLinearProgress-bar': { bgcolor: '#2563eb' } }} />
+              <LinearProgress variant="determinate" value={loopStatus?.stage === 'completed' ? 100 : 50} sx={{ height: 8, borderRadius: 4, bgcolor: '#e0e7ff', '& .MuiLinearProgress-bar': { bgcolor: '#4f46e5' } }} />
 
               <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#0f172a', mt: 4, mb: 2 }}>Curriculum Track</Typography>
 
               {/* Dynamic Single-Session List */}
-              <Accordion sx={{ boxShadow: 'none', border: '1px solid #2563eb', borderRadius: '8px !important', '&:before': { display: 'none' } }} defaultExpanded>
+              <Accordion sx={{ boxShadow: 'none', border: '1px solid #4f46e5', borderRadius: '8px !important', '&:before': { display: 'none' } }} defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#0f172a' }}>{lecture?.subject || 'Active Focus Module'}</Typography>
-                  <Typography variant="caption" sx={{ color: '#2563eb', ml: 'auto', alignSelf: 'center', fontWeight: 'bold' }}>Current</Typography>
+                  <Typography variant="caption" sx={{ color: '#4f46e5', ml: 'auto', alignSelf: 'center', fontWeight: 'bold' }}>Current</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center', bgcolor: '#eff6ff', borderRadius: 2, color: '#2563eb', border: '1px solid #bfdbfe' }}>
+                  <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center', bgcolor: '#eef2ff', borderRadius: 2, color: '#4f46e5', border: '1px solid #bfdbfe' }}>
                     <PlayCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
                     <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {lecture?.topic || 'Session Core'}
                     </Typography>
-                    <Chip label={loopStatus?.stage === 'completed' ? 'Done' : 'Playing'} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'transparent', color: loopStatus?.stage === 'completed' ? 'green' : '#2563eb', border: 'none' }} />
+                    <Chip label={loopStatus?.stage === 'completed' ? 'Done' : 'Playing'} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'transparent', color: loopStatus?.stage === 'completed' ? 'green' : '#4f46e5', border: 'none' }} />
                   </Box>
                 </AccordionDetails>
               </Accordion>

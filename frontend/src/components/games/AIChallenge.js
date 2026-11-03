@@ -84,8 +84,8 @@ const AIChallenge = () => {
                     Back
                 </Button>
                 <Typography variant="h4" sx={{ fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AutoAwesomeIcon sx={{ color: '#a78bfa' }} />
-                    <span style={{ color: '#a78bfa' }}>
+                    <AutoAwesomeIcon sx={{ color: '#a5b4fc' }} />
+                    <span style={{ color: '#a5b4fc' }}>
                         AI Adaptive Challenge
                     </span>
                 </Typography>
@@ -93,7 +93,7 @@ const AIChallenge = () => {
 
             {loading ? (
                 <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="400px">
-                    <CircularProgress sx={{ color: '#8b5cf6' }} />
+                    <CircularProgress sx={{ color: '#6366f1' }} />
                     <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
                         Consulting the neural network...
                     </Typography>
@@ -111,9 +111,9 @@ const AIChallenge = () => {
                         <Chip
                             label={subjectFocus}
                             sx={{
-                                background: 'rgba(139, 92, 246, 0.15)',
-                                color: '#a78bfa',
-                                border: '1px solid rgba(139, 92, 246, 0.3)',
+                                background: 'rgba(99, 102, 241, 0.15)',
+                                color: '#a5b4fc',
+                                border: '1px solid rgba(99, 102, 241, 0.3)',
                                 fontWeight: 600
                             }}
                         />
@@ -131,7 +131,7 @@ const AIChallenge = () => {
                     </Typography>
 
                     {challenge.context && (
-                        <Typography variant="body1" paragraph sx={{ color: 'text.secondary', fontStyle: 'italic', borderLeft: '3px solid #6b21a8', pl: 2, py: 1, background: 'rgba(0,0,0,0.2)' }}>
+                        <Typography variant="body1" paragraph sx={{ color: 'text.secondary', fontStyle: 'italic', borderLeft: '3px solid #6366f1', pl: 2, py: 1, background: 'rgba(0,0,0,0.2)' }}>
                             {challenge.context}
                         </Typography>
                     )}
@@ -181,7 +181,7 @@ const AIChallenge = () => {
                                 fullWidth
                                 sx={{
                                     py: 1.5,
-                                    background: '#6b21a8',
+                                    background: '#6366f1',
                                     fontWeight: 700,
                                     fontSize: '1rem'
                                 }}

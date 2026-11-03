@@ -584,7 +584,7 @@ const StudyRoom = () => {
       )}
 
       {/* ── CREATE ROOM DIALOG ────────────────────────────────────────── */}
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Create Study Group</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
           <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>Pick an avatar for your group</Typography>
@@ -606,7 +606,7 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── MODIFY ROOM DIALOG ────────────────────────────────────────── */}
-      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Modify Room</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
           <Typography sx={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>Avatar</Typography>
@@ -633,7 +633,7 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── INVITE USERS DIALOG ──────────────────────────────────────── */}
-      <Dialog open={inviteOpen} onClose={() => setInviteOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340, maxHeight: "80vh" } }}>
+      <Dialog open={inviteOpen} onClose={() => setInviteOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))", maxHeight: "80vh" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Invite Users</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, pt: 1 }}>
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -665,7 +665,7 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── SECURITY SETTINGS DIALOG ──────────────────────────────────── */}
-      <Dialog open={securityOpen} onClose={() => setSecurityOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={securityOpen} onClose={() => setSecurityOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid var(--border)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f1f5f9", fontSize: "1.1rem" }}>Security Settings</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, pt: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, bgcolor: "rgba(255,255,255,0.03)", borderRadius: "var(--r-md)", border: "1px solid var(--border)" }}>
@@ -696,7 +696,7 @@ const StudyRoom = () => {
       </Dialog>
 
       {/* ── DELETE CONFIRMATION DIALOG ────────────────────────────────── */}
-      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid rgba(244,63,94,0.3)", borderRadius: "var(--r-lg)", minWidth: 340 } }}>
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} PaperProps={{ sx: { bgcolor: "#0b1320", border: "1px solid rgba(244,63,94,0.3)", borderRadius: "var(--r-lg)", width: "min(340px, calc(100vw - 32px))" } }}>
         <DialogTitle sx={{ fontFamily: "Outfit, sans-serif", fontWeight: 800, color: "#f43f5e", fontSize: "1.1rem" }}>Delete Room?</DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Typography sx={{ fontSize: "0.85rem", color: "var(--text-mid)", lineHeight: 1.6 }}>

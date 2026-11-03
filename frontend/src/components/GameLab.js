@@ -55,7 +55,7 @@ const GAMES = [
     id:    "spellbook",
     name:  "3-Ingredient Spellbook",
     icon: MenuBookRoundedIcon,
-    color: "#a78bfa",
+    color: "#a5b4fc",
     tagline: "Magic is just chemistry you haven't named yet.",
     instructions: "Combine two ingredients to create a named spell with a specific effect.",
     generatePrompt: () => {

@@ -131,7 +131,7 @@ const AIChatWidget = ({ context, videoId }) => {
     };
 
     return (
-        <Box sx={{ position: 'fixed', bottom: 30, right: 30, zIndex: 1200 }}>
+        <Box sx={{ position: 'fixed', bottom: { xs: 16, sm: 30 }, right: { xs: 16, sm: 30 }, zIndex: 1200 }}>
             {/* Chat Window */}
             <AnimatePresence>
                 {isOpen && (
@@ -143,8 +143,8 @@ const AIChatWidget = ({ context, videoId }) => {
                         style={{ marginBottom: 16 }}
                     >
                         <Paper sx={{
-                            width: 380,
-                            height: 500,
+                            width: "min(380px, calc(100vw - 32px))",
+                            height: "min(500px, calc(100dvh - 120px))",
                             display: 'flex',
                             flexDirection: 'column',
                             background: 'rgba(20, 20, 35, 0.95)',
@@ -158,14 +158,14 @@ const AIChatWidget = ({ context, videoId }) => {
                             <Box sx={{ p: 2, background: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Box display="flex" alignItems="center" gap={1.2}>
                                     <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.25)', border: '1px solid #ffffff' }}>
-                                        <SmartToyIcon sx={{ color: '#00f2fe' }} />
+                                        <SmartToyIcon sx={{ color: '#a5b4fc' }} />
                                     </Avatar>
                                     <Box>
                                         <Typography variant="subtitle1" fontWeight="800" fontFamily="Outfit, sans-serif" color="white" lineHeight={1.2}>
                                             Deep-Learned AI Mentor
                                         </Typography>
                                         <Typography variant="caption" color="rgba(255,255,255,0.9)" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                            <span className="pulse-dot-cyan" /> 100% Curriculum & Vault Synced
+                                            <span className="pulse-dot-indigo" /> Your study mentor
                                         </Typography>
                                     </Box>
                                 </Box>
@@ -194,7 +194,7 @@ const AIChatWidget = ({ context, videoId }) => {
                                                 borderRadius: 3,
                                                 borderTopRightRadius: isUser ? 0 : 12,
                                                 borderTopLeftRadius: isUser ? 12 : 0,
-                                                background: isUser ? '#3b82f6' : 'rgba(255,255,255,0.08)',
+                                                background: isUser ? '#6366f1' : 'rgba(255,255,255,0.08)',
                                                 color: 'white'
                                             }}>
                                                 <Typography variant="body2" sx={{ wordWrap: 'break-word' }}>
@@ -228,7 +228,7 @@ const AIChatWidget = ({ context, videoId }) => {
                                                 backgroundColor: 'rgba(255,255,255,0.05)',
                                                 '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
                                                 '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                                                '&.Mui-focused fieldset': { borderColor: '#3b82f6' },
+                                                '&.Mui-focused fieldset': { borderColor: '#6366f1' },
                                             }
                                         }}
                                     />
@@ -237,8 +237,8 @@ const AIChatWidget = ({ context, videoId }) => {
                                         disabled={!message.trim() || streaming}
                                         sx={{
                                             color: 'white',
-                                            background: '#3b82f6',
-                                            '&:hover': { background: '#2563eb' },
+                                            background: '#6366f1',
+                                            '&:hover': { background: '#4f46e5' },
                                             '&.Mui-disabled': { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }
                                         }}>
                                         <SendIcon />
@@ -255,12 +255,12 @@ const AIChatWidget = ({ context, videoId }) => {
                 <Fab
                     onClick={() => setIsOpen(!isOpen)}
                     sx={{
-                        background: '#6b21a8',
+                        background: '#6366f1',
                         color: 'white',
                         width: 64,
                         height: 64,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                        '&:hover': { background: '#7e22ce' }
+                        '&:hover': { background: '#6366f1' }
                     }}>
                     {isOpen ? <CloseIcon fontSize="large" /> : <ChatIcon fontSize="large" />}
                 </Fab>

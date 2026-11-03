@@ -123,7 +123,7 @@ const Leaderboard = ({ moduleId = 'global' }) => {
                                         </Typography>
                                     }
                                 />
-                                <Typography variant="h6" color="#a78bfa" fontWeight="bold">
+                                <Typography variant="h6" color="#a5b4fc" fontWeight="bold">
                                     {(player.score || 0).toLocaleString()} XP
                                 </Typography>
                             </ListItem>

@@ -367,8 +367,8 @@ const FEATURES_CONFIG = [
   { key: "gaming",     icon: SportsEsportsRoundedIcon, label: "Gaming Arena",  desc: "Brain-refresh games during break time",    accent: "#10b981" },
   { key: "chatbot",    icon: SmartToyRoundedIcon,      label: "AI Chatbot",   desc: "Ask questions related to your topic",      accent: "#6366f1" },
   { key: "notes",      icon: NoteAltRoundedIcon,       label: "Notes Pad",    desc: "Quick-capture notes during session",       accent: "#f59e0b" },
-  { key: "webSearch",  icon: ManageSearchRoundedIcon,  label: "Web Search",   desc: "Wikipedia + Google inline search",         accent: "#3b82f6" },
-  { key: "summarizer", icon: SummarizeRoundedIcon,     label: "Summarizer",   desc: "AI summary of materials & transcript",     accent: "#a78bfa" },
+  { key: "webSearch",  icon: ManageSearchRoundedIcon,  label: "Web Search",   desc: "Wikipedia + Google inline search",         accent: "#6366f1" },
+  { key: "summarizer", icon: SummarizeRoundedIcon,     label: "Summarizer",   desc: "AI summary of materials & transcript",     accent: "#a5b4fc" },
   { key: "focusLock",  icon: LockRoundedIcon,          label: "Focus Lock",   desc: "Block tab-switching during focus phase",   accent: "#f43f5e" },
 ];
 

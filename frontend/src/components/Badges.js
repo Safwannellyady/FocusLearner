@@ -38,7 +38,7 @@ const BADGES = [
 
 const FREEBIE_COLORS = {
   xp:     { color: "#fbbf24", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.3)",  icon: BoltRoundedIcon   },
-  theme:  { color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.3)", icon: AutoAwesomeRoundedIcon },
+  theme:  { color: "#a5b4fc", bg: "rgba(99,102,241,0.1)", border: "rgba(99,102,241,0.3)", icon: AutoAwesomeRoundedIcon },
   break:  { color: "#10b981", bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.3)",  icon: CheckCircleRoundedIcon },
   avatar: { color: "#6366f1", bg: "rgba(99,102,241,0.1)",  border: "rgba(99,102,241,0.3)",  icon: StarRoundedIcon   },
   game:   { color: "#f43f5e", bg: "rgba(244,63,94,0.1)",   border: "rgba(244,63,94,0.3)",   icon: AutoAwesomeRoundedIcon },
