@@ -309,6 +309,51 @@ export const chatAPI = {
   send: (message, context, videoId) => api.post('/chat/send', { message, context, videoId }),
   getHistory: () => api.get('/chat/history'),
   clearHistory: () => api.post('/chat/clear'),
+  // Streaming twin of send(). Uses fetch, not axios: axios cannot
+  // deliver a readable response stream in the browser. The caller
+  // gets each delta via onDelta and completion via onDone; any SSE
+  // {"error": ...} event or non-OK status rejects, so the widget can
+  // fall back to the non-streaming send() instead of hanging.
+  sendStream: async (message, context, videoId, { onDelta, onDone, signal } = {}) => {
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/chat/send-stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, context, videoId }),
+      signal,
+    });
+    if (!response.ok || !response.body) {
+      throw new Error(`Stream request failed (${response.status})`);
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    const handleEvent = (rawEvent) => {
+      for (const line of rawEvent.split('\n')) {
+        if (!line.startsWith('data:')) continue;
+        const payload = JSON.parse(line.slice(5).trim());
+        if (payload.delta) onDelta?.(payload.delta);
+        if (payload.error) throw new Error(payload.error);
+        if (payload.done) onDone?.(payload.sources || []);
+      }
+    };
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let boundary = buffer.indexOf('\n\n');
+      while (boundary !== -1) {
+        handleEvent(buffer.slice(0, boundary));
+        buffer = buffer.slice(boundary + 2);
+        boundary = buffer.indexOf('\n\n');
+      }
+    }
+    if (buffer.trim()) handleEvent(buffer);
+  },
 };
 
 // Analytics API

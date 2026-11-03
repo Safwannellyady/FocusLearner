@@ -406,19 +406,19 @@ class AIService:
              return {"analysis": "Incorrect answer. Review the basic concepts.", "remediation_focus": subject}
         return parsed
 
-    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, Any]] = None, video_id: Optional[str] = None, timestamp: Optional[float] = None) -> Dict[str, Any]:
+    def _prepare_chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, Any]] = None, video_id: Optional[str] = None, timestamp: Optional[float] = None):
         """
-        Main chat interface called by chat_routes.py.
-        Handles video context, subject context, history, and RAG retrieval.
-        
-        Returns:
-            Dict with 'response' (str) and optional 'sources' (list of citations)
+        Shared prompt-building for chat() and chat_stream().
+
+        Returns (full_prompt, sources). Kept separate from the Gemini call
+        so the non-streaming and streaming paths can never drift apart:
+        same system instruction, same RAG excerpts, same history window.
         """
         if history is None:
             history = []
-        
+
         sources = []
-        
+
         if video_id:
             from services.vector_service import vector_service
             if not vector_service.is_video_processed(video_id):
@@ -428,25 +428,19 @@ class AIService:
                 except Exception as e:
                     print(f"Transcript load error in chat: {e}")
 
-        if not self.api_key:
-            return {
-                'response': self._get_fallback_chat_response(message, context, video_id),
-                'sources': sources
-            }
-            
         system_instruction = (
             "You are FocusLearner AI, an encouraging and expert AI mentor assisting a student. "
             "Explain concepts clearly, concisely, and accurately without any fluff. "
         )
         if context:
             system_instruction += f"\nCurrent Study Subject/Video Context: {context}\n"
-            
+
         if video_id:
             try:
                 from services.vector_service import vector_service
                 relevant_chunks = vector_service.query_context(
-                    video_id, 
-                    message, 
+                    video_id,
+                    message,
                     top_k=5,
                     timestamp_filter=timestamp
                 )
@@ -457,7 +451,7 @@ class AIService:
                         for chunk in relevant_chunks[:3]
                     ])
                     system_instruction += f"\nRelevant Video Transcript Excerpts:\n{context_text}\n"
-                    
+
                     # Collect sources for citation
                     sources = [
                         {
@@ -476,9 +470,114 @@ class AIService:
             parts = msg.get("parts", [""])
             content = parts[0] if parts else ""
             full_prompt += f"{role}: {content}\n"
-            
+
         full_prompt += f"User: {message}\nTutor:"
-        
+        return full_prompt, sources
+
+    def _iter_gemini_stream(self, prompt: str):
+        """Yield text deltas from Gemini's SSE streaming endpoint.
+
+        Never raises: on any streaming failure it simply stops, so the
+        caller can fall back to the non-streaming call. The API key is
+        only ever sent server-side, in the query string to Google.
+        """
+        if not self.api_key:
+            return
+        stream_url = self.base_url.replace(
+            ":generateContent", ":streamGenerateContent"
+        )
+        try:
+            with requests.post(
+                f"{stream_url}?key={self.api_key}&alt=sse",
+                headers={'Content-Type': 'application/json'},
+                json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {
+                        "temperature": 0.7,
+                        "topK": 40,
+                        "topP": 0.95,
+                        "maxOutputTokens": 1024,
+                    },
+                },
+                stream=True,
+                timeout=60,
+            ) as response:
+                if response.status_code != 200:
+                    logger.error(
+                        "Gemini stream error: status=%s body=%s",
+                        response.status_code, response.text[:500],
+                    )
+                    return
+                for line in response.iter_lines(decode_unicode=True):
+                    if not line or not line.startswith("data:"):
+                        continue
+                    payload = line[5:].strip()
+                    if not payload or payload == "[DONE]":
+                        continue
+                    try:
+                        chunk = json.loads(payload)
+                    except ValueError:
+                        continue
+                    for candidate in chunk.get("candidates", []):
+                        content = candidate.get("content", {})
+                        for part in content.get("parts", []):
+                            text = part.get("text")
+                            if text:
+                                yield text
+        except Exception as e:
+            logger.error("Gemini stream error: %s", e)
+            return
+
+    def chat_stream(self, message: str, context: Optional[str] = None, history: List[Dict[str, Any]] = None, video_id: Optional[str] = None, timestamp: Optional[float] = None):
+        """
+        Streaming twin of chat(): yields (delta, sources) tuples.
+
+        sources is sent with the first delta (empty string if there are
+        no RAG sources) so the route can forward it before saving.
+        If streaming yields nothing (API down, key missing), yields the
+        fallback / non-streaming answer as a single delta instead, so
+        the widget never hangs on a blank bubble.
+        """
+        full_prompt, sources = self._prepare_chat(
+            message, context, history, video_id, timestamp
+        )
+        if not self.api_key:
+            yield self._get_fallback_chat_response(message, context, video_id), sources
+            return
+        seen_any = False
+        for delta in self._iter_gemini_stream(full_prompt):
+            yield delta, sources if not seen_any else []
+            seen_any = True
+        if not seen_any:
+            resp = self._call_gemini(full_prompt)
+            yield (
+                resp or self._get_fallback_chat_response(message, context, video_id),
+                sources,
+            )
+
+    def chat(self, message: str, context: Optional[str] = None, history: List[Dict[str, Any]] = None, video_id: Optional[str] = None, timestamp: Optional[float] = None) -> Dict[str, Any]:
+        """
+        Main chat interface called by chat_routes.py.
+        Handles video context, subject context, history, and RAG retrieval.
+
+        Returns:
+            Dict with 'response' (str) and optional 'sources' (list of citations)
+        """
+        if history is None:
+            history = []
+
+        sources = []
+
+        if not self.api_key:
+            return {
+                'response': self._get_fallback_chat_response(message, context, video_id),
+                'sources': sources
+            }
+
+        full_prompt, sources = self._prepare_chat(
+            message, context, history, video_id, timestamp
+        )
+
         resp = self._call_gemini(full_prompt)
         if not resp:
             return {

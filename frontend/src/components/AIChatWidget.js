@@ -9,7 +9,6 @@ import {
     ListItem,
     ListItemText,
     Fab,
-    CircularProgress,
     Avatar,
     Divider
 } from '@mui/material';
@@ -25,8 +24,9 @@ const AIChatWidget = ({ context, videoId }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [history, setHistory] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [streaming, setStreaming] = useState(false);
     const messagesEndRef = useRef(null);
+    const streamControllerRef = useRef(null);
 
     useEffect(() => {
         if (isOpen && history.length === 0) {
@@ -52,29 +52,76 @@ const AIChatWidget = ({ context, videoId }) => {
     };
 
     const handleSend = async () => {
-        if (!message.trim()) return;
+        if (!message.trim() || streaming) return;
 
         const userMsg = message;
         setMessage('');
 
-        // Optimistic UI update
-        setHistory(prev => [...prev, { role: 'user', parts: [userMsg] }]);
-        setLoading(true);
+        // Optimistic UI update: user message plus an empty tutor bubble
+        // that fills in token-by-token as the stream arrives.
+        setHistory(prev => [
+            ...prev,
+            { role: 'user', parts: [userMsg] },
+            { role: 'model', parts: [''] },
+        ]);
+        setStreaming(true);
+        const controller = new AbortController();
+        streamControllerRef.current = controller;
+        let receivedAny = false;
+
+        const appendDelta = (delta) => {
+            receivedAny = true;
+            setHistory(prev => {
+                const next = [...prev];
+                const last = next[next.length - 1];
+                next[next.length - 1] = {
+                    ...last,
+                    parts: [(last.parts[0] || '') + delta],
+                };
+                return next;
+            });
+        };
 
         try {
-            const response = await chatAPI.send(userMsg, context, videoId);
-            // Replace history with backend version to ensure sync
-            setHistory(response.data.history);
+            await chatAPI.sendStream(userMsg, context, videoId, {
+                onDelta: appendDelta,
+                signal: controller.signal,
+            });
         } catch (error) {
-            console.error("Error sending message:", error);
-            // Fallback optimistic error
-            setHistory(prev => [...prev, { role: 'model', parts: ["Error: Could not reach FocusBot."] }]);
+            if (controller.signal.aborted) return;
+            console.error("Error streaming message:", error);
+            if (receivedAny) {
+                // Keep the partial reply visible rather than wiping it;
+                // the full reply was not saved, so a retry re-asks cleanly.
+                return;
+            }
+            // No token arrived (stream blocked, 401, proxy buffering):
+            // fall back to the non-streaming endpoint, which also runs
+            // the axios token-refresh path, instead of showing a blank.
+            try {
+                const response = await chatAPI.send(userMsg, context, videoId);
+                setHistory(response.data.history);
+            } catch (fallbackError) {
+                console.error("Error sending message:", fallbackError);
+                setHistory(prev => {
+                    const next = [...prev];
+                    next[next.length - 1] = {
+                        role: 'model',
+                        parts: ["Error: Could not reach FocusBot."],
+                    };
+                    return next;
+                });
+            }
         } finally {
-            setLoading(false);
+            if (streamControllerRef.current === controller) {
+                streamControllerRef.current = null;
+            }
+            setStreaming(false);
         }
     };
 
     const handleClear = async () => {
+        streamControllerRef.current?.abort();
         try {
             await chatAPI.clearHistory();
             setHistory([]);
@@ -136,6 +183,9 @@ const AIChatWidget = ({ context, videoId }) => {
                             <List sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                                 {history.map((msg, index) => {
                                     const isUser = msg.role === 'user';
+                                    const isLiveReply = streaming
+                                        && !isUser
+                                        && index === history.length - 1;
                                     return (
                                         <Box key={index} sx={{ alignSelf: isUser ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                                             <Paper sx={{
@@ -148,20 +198,12 @@ const AIChatWidget = ({ context, videoId }) => {
                                                 color: 'white'
                                             }}>
                                                 <Typography variant="body2" sx={{ wordWrap: 'break-word' }}>
-                                                    {msg.parts[0]}
+                                                    {msg.parts[0]}{isLiveReply ? '▍' : ''}
                                                 </Typography>
                                             </Paper>
                                         </Box>
                                     );
                                 })}
-                                {/* Loading Indicator */}
-                                {loading && (
-                                    <Box sx={{ alignSelf: 'flex-start', maxWidth: '85%' }}>
-                                        <Paper sx={{ p: 2, borderRadius: 3, background: 'rgba(255,255,255,0.08)' }}>
-                                            <CircularProgress size={20} sx={{ color: '#aaa' }} />
-                                        </Paper>
-                                    </Box>
-                                )}
                                 <div ref={messagesEndRef} />
                             </List>
 
@@ -178,7 +220,7 @@ const AIChatWidget = ({ context, videoId }) => {
                                         value={message}
                                         onChange={(e) => setMessage(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                        disabled={loading}
+                                        disabled={streaming}
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 color: 'white',
@@ -192,7 +234,7 @@ const AIChatWidget = ({ context, videoId }) => {
                                     />
                                     <IconButton
                                         onClick={handleSend}
-                                        disabled={!message.trim() || loading}
+                                        disabled={!message.trim() || streaming}
                                         sx={{
                                             color: 'white',
                                             background: '#3b82f6',
