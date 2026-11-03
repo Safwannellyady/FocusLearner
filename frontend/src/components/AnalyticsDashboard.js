@@ -221,7 +221,7 @@ const AnalyticsDashboard = () => {
           }
 
           if (Array.isArray(d.distribution) && d.distribution.length > 0) {
-            const colors = ["#6366f1", "#ec4899", "#a78bfa", "#10b981", "#3b82f6"];
+            const colors = ["#6366f1", "#ec4899", "#a5b4fc", "#10b981", "#818cf8"];
             // Backend now returns actual focus minutes per subject (no proxy).
             const formattedSubj = d.distribution.map((item, idx) => ({
               name: item.name || "General",
@@ -266,7 +266,7 @@ const AnalyticsDashboard = () => {
       {/* Stats grid */}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3,1fr)", md: "repeat(5,1fr)" }, gap: 1.5, mb: 2.5 }}>
         <StatCard icon={AccessTimeRoundedIcon}              label="Total Focus"  value={`${Math.floor(s.total_minutes / 60)}h ${s.total_minutes % 60}m`} sub="all-time"            color="#6366f1" delay={0}    />
-        <StatCard icon={CalendarMonthRoundedIcon}            label="Sessions"     value={s.total_sessions}                                                 sub="completed"          color="#a78bfa" delay={0.05} />
+        <StatCard icon={CalendarMonthRoundedIcon}            label="Sessions"     value={s.total_sessions}                                                 sub="completed"          color="#a5b4fc" delay={0.05} />
         <StatCard icon={BoltRoundedIcon}                     label="Total XP"     value={s.xp}                                                             sub="points earned"      color="#fbbf24" delay={0.1}  />
         <StatCard icon={LocalFireDepartmentRoundedIcon}      label="Streak"       value={`${s.streak}d`}                                                   sub="current streak"     color="#f43f5e" delay={0.15} />
         <StatCard icon={TrendingUpRoundedIcon}               label="Daily Avg"    value={`${s.avg_per_day}m`}                                              sub="minutes/day"        color="#10b981" delay={0.2}  />

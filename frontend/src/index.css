@@ -16,7 +16,7 @@
 
   --indigo:    #6366f1;
   --indigo-lt: #a5a6f6;
-  --blue:      #3b82f6;
+  --blue:      #6366f1;
   --emerald:   #10b981;
   --amber:     #f59e0b;
   --rose:      #f43f5e;
@@ -337,6 +337,17 @@ body::before {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Mobile: no dialog or panel may exceed the viewport ──────────────────── */
+@media (max-width: 600px) {
+  .MuiDialog-paper {
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px !important;
+  }
+  .MuiMenu-paper {
+    max-width: calc(100vw - 32px) !important;
   }
 }
 

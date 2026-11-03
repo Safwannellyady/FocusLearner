@@ -123,7 +123,7 @@ const FEATURES = [
   { icon: BoltIcon,                  label: "Start a focus session in seconds", color: "#818cf8" },
   { icon: SportsEsportsRoundedIcon,  label: "5 brain-refresh games on break",   color: "#34d399" },
   { icon: EmojiEventsRoundedIcon,    label: "Earn badges + freebies as you grow",color: "#fbbf24" },
-  { icon: ShowChartRoundedIcon,      label: "Track mastery across 15 subjects",  color: "#a78bfa" },
+  { icon: ShowChartRoundedIcon,      label: "Track mastery across 15 subjects",  color: "#a5b4fc" },
 ];
 
 /* ── Ambient particle ──────────────────────────────────────────────────────── */

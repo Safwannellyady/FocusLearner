@@ -130,7 +130,7 @@ const FEATURES = [
   { icon: BoltIcon,                  label: "AI-powered focus sessions",     color: "#818cf8" },
   { icon: SportsEsportsRoundedIcon,  label: "Brain-refresh games on breaks", color: "#34d399" },
   { icon: ShowChartRoundedIcon,      label: "Deep learning analytics",       color: "#fbbf24" },
-  { icon: SchoolRoundedIcon,         label: "15 subjects, 100+ micro-topics",color: "#a78bfa" },
+  { icon: SchoolRoundedIcon,         label: "15 subjects, 100+ micro-topics",color: "#a5b4fc" },
 ];
 
 /* ── Floating particle (ambient bg) ───────────────────────────────────────── */

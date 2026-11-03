@@ -66,6 +66,7 @@ const DropdownPanel = ({ children, onClose, right = false }) => {
       position: "absolute", top: "calc(100% + 8px)",
       ...(right ? { right: 0 } : { left: "50%", transform: "translateX(-50%)" }),
       minWidth: 190,
+      maxWidth: "calc(100vw - 32px)",
       bgcolor: "var(--bg-card)", border: "1px solid var(--border)",
       borderRadius: "var(--r-lg)",
       boxShadow: "0 16px 40px rgba(0,0,0,0.5), 0 0 2px 8px rgba(0,0,0,0.4)",
@@ -123,7 +124,7 @@ const QuickFocusPanel = ({ onClose }) => {
   return (
     <Box ref={ref} sx={{
       position: "absolute", top: "calc(100% + 10px)", right: 0,
-      width: 280, bgcolor: "var(--bg-card)",
+      width: "min(280px, calc(100vw - 32px))", bgcolor: "var(--bg-card)",
       border: "1px solid var(--border)", borderRadius: "var(--r-lg)",
       boxShadow: "0 20px 50px rgba(0,0,0,0.6)", zIndex: 1300,
       backdropFilter: "blur(24px)", overflow: "hidden",

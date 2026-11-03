@@ -5,8 +5,8 @@ import BiotechRoundedIcon from "@mui/icons-material/BiotechRounded";
 const ORGANELLES = [
   { name: "Nucleus", role: "Contains genetic material (DNA) and controls cellular activity.", color: "#84cc16" },
   { name: "Mitochondria", role: "Powerhouse of the cell, generates ATP via cellular respiration.", color: "#f59e0b" },
-  { name: "Ribosomes", role: "Synthesizes proteins based on mRNA sequences.", color: "#38bdf8" },
-  { name: "Endoplasmic Reticulum", role: "Folds proteins and synthesizes lipids.", color: "#a855f7" },
+  { name: "Ribosomes", role: "Synthesizes proteins based on mRNA sequences.", color: "#818cf8" },
+  { name: "Endoplasmic Reticulum", role: "Folds proteins and synthesizes lipids.", color: "#6366f1" },
 ];
 
 const BiologyLab = () => {

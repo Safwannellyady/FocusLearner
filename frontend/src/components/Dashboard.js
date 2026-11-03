@@ -172,7 +172,7 @@ const Dashboard = () => {
       icon:        EmojiEventsRoundedIcon,
       label:       "Badges",
       description: "View earned achievements and milestones in your journey.",
-      accent:      "#a78bfa",
+      accent:      "#a5b4fc",
       onClick:     () => navigate("/badges"),
     },
     {

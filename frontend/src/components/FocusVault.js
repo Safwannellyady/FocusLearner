@@ -253,7 +253,7 @@ const FocusVault = ({ subjectFocus }) => {
               borderRadius: 8,
               '& fieldset': { borderColor: 'transparent' },
               '&:hover fieldset': { borderColor: '#e2e8f0' },
-              '&.Mui-focused fieldset': { borderColor: '#3b82f6' },
+              '&.Mui-focused fieldset': { borderColor: '#6366f1' },
             }
           }}
           InputProps={{
@@ -335,14 +335,14 @@ const FocusVault = ({ subjectFocus }) => {
                         cursor: 'pointer',
                         transition: 'all 0.25s ease',
                         '&:hover': {
-                          bgcolor: 'rgba(0, 242, 254, 0.08)',
-                          borderColor: '#00f2fe',
+                          bgcolor: 'rgba(99, 102, 241, 0.08)',
+                          borderColor: '#a5b4fc',
                           transform: 'translateX(6px)'
                         }
                       }}
                     >
                       <Box display="flex" alignItems="center" gap={2} sx={{ overflow: 'hidden' }}>
-                        <Box sx={{ p: 1.6, borderRadius: '12px', bgcolor: mat.material_type === 'document' ? 'rgba(56, 189, 248, 0.15)' : mat.material_type === 'image' ? 'rgba(244, 114, 182, 0.15)' : 'rgba(52, 211, 153, 0.15)', color: mat.material_type === 'document' ? '#38bdf8' : mat.material_type === 'image' ? '#f472b6' : '#34d399' }}>
+                        <Box sx={{ p: 1.6, borderRadius: '12px', bgcolor: mat.material_type === 'document' ? 'rgba(129, 140, 248, 0.15)' : mat.material_type === 'image' ? 'rgba(244, 114, 182, 0.15)' : 'rgba(52, 211, 153, 0.15)', color: mat.material_type === 'document' ? '#818cf8' : mat.material_type === 'image' ? '#f472b6' : '#34d399' }}>
                           {getIconForType(mat.material_type)}
                         </Box>
                         <Box sx={{ overflow: 'hidden' }}>
@@ -354,7 +354,7 @@ const FocusVault = ({ subjectFocus }) => {
                             <Typography variant="caption" color="#94a3b8">
                               Added {new Date(mat.created_at).toLocaleDateString()}
                             </Typography>
-                            <Typography variant="caption" color="#00f2fe" fontWeight="700">
+                            <Typography variant="caption" color="#a5b4fc" fontWeight="700">
                               (Click to Open • Long-Press to Delete)
                             </Typography>
                           </Box>
@@ -366,7 +366,7 @@ const FocusVault = ({ subjectFocus }) => {
                           size="small"
                           startIcon={<OpenInNewIcon />}
                           onClick={() => handleView(mat)}
-                          sx={{ color: '#00f2fe', fontWeight: 700, borderRadius: '10px', px: 2, '&:hover': { bgcolor: 'rgba(0, 242, 254, 0.15)' } }}
+                          sx={{ color: '#a5b4fc', fontWeight: 700, borderRadius: '10px', px: 2, '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.15)' } }}
                         >
                           Open
                         </Button>
@@ -439,7 +439,7 @@ const FocusVault = ({ subjectFocus }) => {
                       <Box>
                         <Box display="flex" alignItems="center" gap={1} mb={0.5}>
                           {item.source && (
-                            <Typography variant="caption" sx={{ px: 1.5, py: 0.3, borderRadius: 4, bgcolor: item.source.includes('Academic') ? '#eff6ff' : item.source === 'Wikipedia' ? '#f1f5f9' : '#f0fdf4', color: item.source.includes('Academic') ? '#1e40af' : item.source === 'Wikipedia' ? '#475569' : '#166534', fontWeight: 700 }}>
+                            <Typography variant="caption" sx={{ px: 1.5, py: 0.3, borderRadius: 4, bgcolor: item.source.includes('Academic') ? '#eef2ff' : item.source === 'Wikipedia' ? '#f1f5f9' : '#f0fdf4', color: item.source.includes('Academic') ? '#3730a3' : item.source === 'Wikipedia' ? '#475569' : '#166534', fontWeight: 700 }}>
                               {item.source}
                             </Typography>
                           )}
@@ -488,7 +488,7 @@ const FocusVault = ({ subjectFocus }) => {
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={() => setOpenModal(false)} disabled={uploading}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={uploading} startIcon={uploading ? <LinearProgress size={20} /> : <AddIcon />} sx={{ bgcolor: '#2563eb' }}>
+          <Button variant="contained" onClick={handleSubmit} disabled={uploading} startIcon={uploading ? <LinearProgress size={20} /> : <AddIcon />} sx={{ bgcolor: '#4f46e5' }}>
             {uploading ? 'Adding...' : 'Add to Vault'}
           </Button>
         </DialogActions>

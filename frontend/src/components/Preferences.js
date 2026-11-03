@@ -37,8 +37,8 @@ const THEMES = [
   { id: "emerald",   name: "Cyber Mint",          primary: "#10b981", bg: "#06130e" },
   { id: "amber",     name: "Solar Gold",          primary: "#f59e0b", bg: "#130f06" },
   { id: "rose",      name: "Neon Rose",           primary: "#f43f5e", bg: "#14070a" },
-  { id: "violet",    name: "Deep Purple",         primary: "#a78bfa", bg: "#0f0918" },
-  { id: "sky",       name: "Midnight Cyan",       primary: "#38bdf8", bg: "#05111a" },
+  { id: "violet",    name: "Deep Purple",         primary: "#a5b4fc", bg: "#0f0918" },
+  { id: "sky",       name: "Midnight Cyan",       primary: "#818cf8", bg: "#05111a" },
 ];
 
 const DEFAULT_FAQS = [
