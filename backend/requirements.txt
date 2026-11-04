@@ -35,7 +35,7 @@ numpy>=1.26.0
 joblib>=1.3.2
 
 # Auth
-PyJWT==2.13.0
+PyJWT==2.15.0
 
 # Vector database
 pinecone-client==2.2.4
